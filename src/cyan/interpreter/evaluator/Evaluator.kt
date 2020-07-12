@@ -10,7 +10,7 @@ import cyan.interpreter.stack.StackFrame
 import cyan.interpreter.iprintln
 
 fun evaluate(expression: CyanExpression, stackFrame: StackFrame): Any {
-    iprintln("evaluating expression of type ${expression::class.simpleName}")
+    iprintln("evaluating ${expression::class.simpleName} { $expression }")
 
     return when (expression) {
         is CyanNumericLiteralExpression -> expression.value

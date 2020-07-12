@@ -1,4 +1,5 @@
 package cyan.compiler.parser.items.operator
 
-interface CyanBinaryOperator {
-}
+import cyan.compiler.parser.items.CyanItem
+
+interface CyanBinaryOperator : CyanItem

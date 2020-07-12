@@ -17,11 +17,10 @@ fun main() {
     var source: CyanSource
     val timeTakenToParse = measureTime {
         source = CyanSourceParser().parseToEnd("""
-            |let a = 1847899
-            |let b = hello
-            |let c
-            |let d
+            |let a = 1847899 + 301111
             |print(5 + 5)
+            |print(5 - 7)
+            |print(a)
             """.trimMargin())
     }
 

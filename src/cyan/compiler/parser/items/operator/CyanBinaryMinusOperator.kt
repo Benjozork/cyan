@@ -1,3 +1,5 @@
 package cyan.compiler.parser.items.operator
 
-object CyanBinaryMinusOperator : CyanBinaryOperator
+object CyanBinaryMinusOperator : CyanBinaryOperator {
+    override fun toString() = "-"
+}
