@@ -1,7 +1,7 @@
-package cyan.compiler.parser.items.function
+package cyan.compiler.parser.ast.function
 
-import cyan.compiler.parser.items.expression.CyanIdentifierExpression
-import cyan.compiler.parser.items.CyanStatement
+import cyan.compiler.parser.ast.expression.CyanIdentifierExpression
+import cyan.compiler.parser.ast.CyanStatement
 
 class CyanFunctionSignature (
     val name: CyanIdentifierExpression,

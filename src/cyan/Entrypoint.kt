@@ -4,7 +4,7 @@ import cyan.compiler.parser.CyanSourceParser
 import cyan.interpreter.Interpreter
 
 import com.github.h0tk3y.betterParse.grammar.parseToEnd
-import cyan.compiler.parser.items.CyanSource
+import cyan.compiler.parser.ast.CyanSource
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 

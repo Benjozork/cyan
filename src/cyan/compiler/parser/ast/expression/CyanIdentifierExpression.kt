@@ -1,4 +1,4 @@
-package cyan.compiler.parser.items.expression
+package cyan.compiler.parser.ast.expression
 
 data class CyanIdentifierExpression(val value: String): CyanExpression {
     override fun toString() = value

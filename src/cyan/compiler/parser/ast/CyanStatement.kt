@@ -1,3 +1,3 @@
-package cyan.compiler.parser.items
+package cyan.compiler.parser.ast
 
 interface CyanStatement : CyanItem

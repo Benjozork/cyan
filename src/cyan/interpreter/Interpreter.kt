@@ -1,9 +1,9 @@
 package cyan.interpreter
 
-import cyan.compiler.parser.items.*
-import cyan.compiler.parser.items.expression.CyanIdentifierExpression
-import cyan.compiler.parser.items.function.CyanFunctionCall
-import cyan.compiler.parser.items.function.CyanFunctionDeclaration
+import cyan.compiler.parser.ast.*
+import cyan.compiler.parser.ast.expression.CyanIdentifierExpression
+import cyan.compiler.parser.ast.function.CyanFunctionCall
+import cyan.compiler.parser.ast.function.CyanFunctionDeclaration
 import cyan.interpreter.evaluator.evaluate
 import cyan.interpreter.stack.StackFrame
 
