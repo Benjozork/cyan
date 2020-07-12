@@ -5,6 +5,7 @@ import cyan.compiler.parser.ast.CyanSource
 import cyan.interpreter.Interpreter
 
 import com.github.h0tk3y.betterParse.grammar.parseToEnd
+import cyan.compiler.codegen.js.JsCompilerBackend
 
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
@@ -40,4 +41,13 @@ fun main() {
     }
 
     println("\ninterpreting code took ${timeTakenToInterpret.inMilliseconds} ms\n")
+
+    var jsSource: String
+    val timeTakenToTranslate =  measureTime {
+        jsSource = JsCompilerBackend().translateSource(source, isRoot = true)
+    }
+
+    println(jsSource)
+
+    println("\ncompiling code to js took ${timeTakenToTranslate.inMilliseconds} ms\n")
 }
