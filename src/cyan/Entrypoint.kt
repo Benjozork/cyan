@@ -1,11 +1,12 @@
-package cyan.compiler
+package cyan
 
 import cyan.compiler.parser.CyanSourceParser
+import cyan.interpreter.Interpreter
 
 import com.github.h0tk3y.betterParse.grammar.parseToEnd
 
 fun main() {
-    val result = CyanSourceParser().parseToEnd("""
+    val source = CyanSourceParser().parseToEnd("""
     |let a = 1847899
     |let b = 6
     |let c
@@ -13,5 +14,7 @@ fun main() {
     |let e = 4
     """.trimMargin())
 
-    println(result)
+    val interpreter = Interpreter()
+
+    interpreter.run(source)
 }

@@ -1,3 +1,5 @@
 package cyan.compiler.parser.models
 
-class CyanSource
+import cyan.compiler.parser.VariableDeclaration
+
+class CyanSource(val declarations: List<VariableDeclaration>);

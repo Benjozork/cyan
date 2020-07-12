@@ -1,5 +1,7 @@
 package cyan.compiler.parser
 
+import cyan.compiler.parser.models.CyanSource
+
 import com.github.h0tk3y.betterParse.combinators.*
 import com.github.h0tk3y.betterParse.grammar.Grammar
 import com.github.h0tk3y.betterParse.lexer.literalToken
@@ -10,7 +12,7 @@ interface Item
 data class VariableDeclaration(val name: String, val value: Int?) : Item
 
 @Suppress("MemberVisibilityCanBePrivate")
-class CyanSourceParser : Grammar<List<VariableDeclaration>>() {
+class CyanSourceParser : Grammar<CyanSource>() {
 
     val newLine         by regexToken("\n|\r\n")
     val ws              by regexToken("\\s+")
@@ -25,7 +27,7 @@ class CyanSourceParser : Grammar<List<VariableDeclaration>>() {
     val variableDeclaration by (-optional(ws) * variableIdentification and optional(variableInitialization) * -optional(ws))
         .use { VariableDeclaration(t1, t2) }
 
-    val sourceParser = separatedTerms(variableDeclaration, newLine)
+    val sourceParser = separatedTerms(variableDeclaration, newLine) use { CyanSource(this) }
 
     override val rootParser = sourceParser
 
