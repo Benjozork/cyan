@@ -1,5 +1,6 @@
 package cyan.interpreter.evaluator
 
+import cyan.compiler.parser.ast.expression.CyanArrayExpression
 import cyan.compiler.parser.ast.expression.CyanBinaryExpression
 import cyan.compiler.parser.ast.expression.CyanExpression
 import cyan.compiler.parser.ast.expression.CyanIdentifierExpression
@@ -49,6 +50,7 @@ fun evaluate(expression: CyanExpression, stackFrame: StackFrame): CyanValue<out 
                 else -> error("unknown binary expression type ${expression::class.simpleName}")
             }
         }
+        is CyanArrayExpression -> CyanArrayValue(expression.exprs.map { evaluate(it, stackFrame) }.toTypedArray())
         else -> error("unknown expression type ${expression::class.simpleName}")
     }
 }

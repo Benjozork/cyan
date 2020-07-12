@@ -21,12 +21,15 @@ fun main() {
         source = CyanSourceParser().parseToEnd("""
             |let a = 1847899 + 301111
             |let b = "hello"
+            |let c = ["hi", "hello"]
             |print(5 + 5)
             |print(5 - 7)
             |print(a)
             |function hi(a) {
+            |   let array = [1, 3, 42, 127]
             |   print(a)
             |   print("Hello world !")
+            |   print(array)
             |}
             |hi(9)
             """.trimMargin())
