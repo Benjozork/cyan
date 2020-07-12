@@ -28,6 +28,7 @@ class CyanSourceParser : Grammar<CyanSource>() {
     val ws              by regexToken("\\s+")
 
     val let             by literalToken("let")
+    val function        by literalToken("function")
 
     val assign          by literalToken("=")
 
@@ -74,9 +75,13 @@ class CyanSourceParser : Grammar<CyanSource>() {
 
     // Functions
 
-    val functionSignature by (referenceParser * -optional(ws) * -leap * separatedTerms(referenceParser, comma, true) * -reap) use { CyanFunctionSignature(t1, t2) }
-    val functionBody  by (-lcur * -optional(newLine) * parser(this::rootParser) * -optional(newLine) * -rcur)
-    val functionDeclaration: Parser<CyanFunctionDeclaration> by (functionSignature * -ws * functionBody)                      use { CyanFunctionDeclaration(t1, t2) }
+    val functionSignature by (-function * -ws * referenceParser * -optional(ws) * -leap * separatedTerms(referenceParser, comma, true) * -reap)
+            .use { CyanFunctionSignature(t1, t2) }
+
+    val functionBody by (-lcur * -optional(newLine) * parser(this::rootParser) * -optional(newLine) * -rcur)
+
+    val functionDeclaration: Parser<CyanFunctionDeclaration> by (functionSignature * -ws * functionBody)
+            .use { CyanFunctionDeclaration(t1, t2) }
 
     // Statements
 
