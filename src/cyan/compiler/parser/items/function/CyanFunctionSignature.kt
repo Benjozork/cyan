@@ -6,6 +6,6 @@ import cyan.compiler.parser.items.expression.literal.CyanReferenceExpression
 class CyanFunctionSignature (
     val name: CyanReferenceExpression,
     val args: List<CyanReferenceExpression>
-) : CyanStatement {
+): CyanStatement {
     override fun toString() = "$name(${args.joinToString(", ")}"
 }

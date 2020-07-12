@@ -6,6 +6,6 @@ import cyan.compiler.parser.items.CyanStatement
 class CyanFunctionDeclaration (
     val signature: CyanFunctionSignature,
     val source: CyanSource
-) : CyanStatement {
+): CyanStatement {
     override fun toString() = "$signature { ... }"
 }
