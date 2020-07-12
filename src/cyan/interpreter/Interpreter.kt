@@ -10,6 +10,10 @@ import cyan.interpreter.stack.StackFrame
 var indent = -1
 
 fun iprintln(msg: Any?) = println("${"    ".repeat(indent)}| interpreter > $msg")
+fun ierror(msg: Any?): Nothing {
+    System.err.println("${"    ".repeat(indent)}| err: $msg")
+    error("interpreter stopped because of error")
+}
 fun ioutput(msg: CyanValue<out Any>) = println("${"    ".repeat(indent)}| >>> $msg")
 
 class Interpreter {
