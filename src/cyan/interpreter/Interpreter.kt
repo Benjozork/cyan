@@ -3,8 +3,11 @@ package cyan.interpreter
 import cyan.compiler.parser.ast.*
 import cyan.compiler.parser.ast.function.CyanFunctionCall
 import cyan.compiler.parser.ast.function.CyanFunctionDeclaration
+import cyan.interpreter.evaluator.CyanCallable
+import cyan.interpreter.evaluator.CyanFunction
 import cyan.interpreter.evaluator.CyanValue
 import cyan.interpreter.evaluator.evaluate
+import cyan.interpreter.resolver.Resolver
 import cyan.interpreter.stack.StackFrame
 
 var indent = -1
@@ -29,7 +32,7 @@ class Interpreter {
         }
 
         println("${"    ".repeat(indent)}--- execution finished ---")
-        println("${"    ".repeat(indent)}stk { lv: ${stackFrame.localVariables} }")
+        stackFrame.printDebug()
         indent--
     }
 
@@ -38,24 +41,28 @@ class Interpreter {
         when (statement) {
             is CyanVariableDeclaration -> stackFrame.localVariables[statement.name.value] = evaluate(statement.value, stackFrame)
             is CyanFunctionCall -> {
-                val (function, args) = statement
-                when (function.value) {
+                val (identifier, args) = statement
+                when (identifier.value) {
                     "print" -> {
                         val value = evaluate(args[0], stackFrame)
                         ioutput(value)
                     }
-                    in stackFrame.scopedFunctions -> {
-                        val functionToExecute = stackFrame.scopedFunctions[statement.functionName.value]!!
-                        val newStackFrame = StackFrame()
-                        functionToExecute.signature.args.forEachIndexed { i, a ->
-                            newStackFrame.localVariables[a.value] = evaluate(statement.args.getOrNull(i)!!, stackFrame)
-                        }
+                    "dbg" -> stackFrame.printDebug()
+                    else -> {
+                        val found = Resolver.findByIdentifier(identifier, stackFrame)
+                        val arguments = args.map { evaluate(it, stackFrame) }.toTypedArray()
 
-                        this.run(functionToExecute.source, newStackFrame)
+                        if (found is CyanCallable)
+                            found.call(this, stackFrame, arguments)
+                        else ierror("${identifier.value} is not a callable value")
                     }
                 }
             }
-            is CyanFunctionDeclaration -> stackFrame.scopedFunctions[statement.signature.name.value] = statement
+            is CyanFunctionDeclaration -> {
+                val function = CyanFunction(statement.signature.name.value, statement.signature.args.map { it.value }.toTypedArray(), statement.source)
+
+                stackFrame.scopedFunctions[function.name] = function
+            }
             else -> error("can't evaluate statement of type ${statement::class.simpleName}")
         }
     }
