@@ -30,6 +30,7 @@ fun main() {
             |   print(a)
             |   print("Hello world !")
             |   print(array)
+            |   print(array.length)
             |}
             |hi(9)
             """.trimMargin())

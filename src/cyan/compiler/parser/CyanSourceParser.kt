@@ -4,9 +4,7 @@ import cyan.compiler.parser.ast.*
 import cyan.compiler.parser.ast.function.CyanFunctionCall
 import cyan.compiler.parser.ast.function.CyanFunctionDeclaration
 import cyan.compiler.parser.ast.function.CyanFunctionSignature
-import cyan.compiler.parser.ast.expression.CyanIdentifierExpression
-import cyan.compiler.parser.ast.expression.CyanBinaryExpression
-import cyan.compiler.parser.ast.expression.CyanExpression
+import cyan.compiler.parser.ast.expression.*
 import cyan.compiler.parser.ast.expression.literal.CyanNumericLiteralExpression
 import cyan.compiler.parser.ast.expression.literal.CyanStringLiteralExpression
 import cyan.compiler.parser.ast.operator.CyanBinaryMinusOperator
@@ -18,7 +16,6 @@ import com.github.h0tk3y.betterParse.grammar.parser
 import com.github.h0tk3y.betterParse.lexer.literalToken
 import com.github.h0tk3y.betterParse.lexer.regexToken
 import com.github.h0tk3y.betterParse.parser.Parser
-import cyan.compiler.parser.ast.expression.CyanArrayExpression
 
 @Suppress("MemberVisibilityCanBePrivate")
 class CyanSourceParser : Grammar<CyanSource>() {
@@ -41,6 +38,8 @@ class CyanSourceParser : Grammar<CyanSource>() {
 
     val lsq             by literalToken("[")
     val rsq             by literalToken("]")
+
+    val dot             by literalToken(".")
 
     val comma           by literalToken(",")
 
@@ -73,6 +72,10 @@ class CyanSourceParser : Grammar<CyanSource>() {
 
     val operator by (plusParser or minusParser)
 
+    // Members
+
+    val memberAccessParser by (referenceParser * -dot * referenceParser) use { CyanMemberAccessExpression(t1, t2) }
+
     // Expressions
 
     val literalExpressionParser: Parser<CyanExpression>    by (numericalValueParser or stringLiteralParser)
@@ -82,7 +85,8 @@ class CyanSourceParser : Grammar<CyanSource>() {
 
     val binaryExpressionParser by (literalExpressionParser * -ws * operator * -ws * literalExpressionParser) use { CyanBinaryExpression(t1, t2, t3) }
 
-    val expressionParser: Parser<CyanExpression> by (arrayExpressionParser or binaryExpressionParser or literalExpressionParser or referenceParser)
+    val expressionParser: Parser<CyanExpression> by
+    arrayExpressionParser or binaryExpressionParser or literalExpressionParser or memberAccessParser or referenceParser
 
     // Functions
 
