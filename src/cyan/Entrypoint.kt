@@ -24,6 +24,7 @@ fun main() {
             |print(a)
             |hi(a) {
             |   print(a)
+            |   print("Hello world !")
             |}
             |hi(9)
             """.trimMargin())

@@ -39,22 +39,23 @@ class CyanSourceParser : Grammar<CyanSource>() {
 
     val comma           by literalToken(",") and ws
 
-    val squot           by literalToken("'")
-    val dquot           by literalToken("\"")
-
     // Arithmetic
 
     val plus            by literalToken("+")
     val minus           by literalToken("-")
 
+    // Values
+
     val ident           by regexToken("[a-zA-Z]+")
     val numericalValue  by regexToken("\\d+")
 
+    val stringLiteral   by regexToken("\".*?\"")
+
     // Value parsers
 
-    val referenceParser      by ident                                                                      use { CyanIdentifierExpression(text) }
-    val stringLiteralParser  by (-squot * referenceParser * -squot) or (-dquot * referenceParser * -dquot) use { CyanStringLiteralExpression(value) }
-    val numericalValueParser by numericalValue                                                             use { CyanNumericLiteralExpression(text.toInt()) }
+    val referenceParser      by ident          use { CyanIdentifierExpression(text) }
+    val stringLiteralParser  by stringLiteral  use { CyanStringLiteralExpression(text.removeSurrounding("\"")) }
+    val numericalValueParser by numericalValue use { CyanNumericLiteralExpression(text.toInt()) }
 
     // Operators
 
