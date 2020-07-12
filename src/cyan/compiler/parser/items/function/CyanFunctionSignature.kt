@@ -7,5 +7,5 @@ class CyanFunctionSignature (
     val name: CyanReferenceExpression,
     val args: List<CyanReferenceExpression>
 ): CyanStatement {
-    override fun toString() = "$name(${args.joinToString(", ")}"
+    override fun toString() = "$name(${args.joinToString(", ")})"
 }

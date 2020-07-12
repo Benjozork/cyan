@@ -85,13 +85,7 @@ class CyanSourceParser : Grammar<CyanSource>() {
         .use { CyanVariableDeclaration(t1, t2) }
 
     val functionCall by (referenceParser * -leap * separatedTerms(expressionParser, comma, true) * -reap)
-        .map { (name, args) ->
-            CyanFunctionCall(
-                name,
-                args.toTypedArray()
-            )
-        }
-
+        .map { (name, args) -> CyanFunctionCall(name, args.toTypedArray()) }
 
     val statement = -optional(ws) * (variableDeclaration or functionDeclaration or functionCall) * -optional(ws)
 

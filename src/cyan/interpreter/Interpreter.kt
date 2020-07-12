@@ -14,8 +14,8 @@ fun ioutput(msg: Any?) = println("${"    ".repeat(indent)}| >>> $msg")
 
 class Interpreter {
 
-    fun run(source: CyanSource) {
-        val stackFrame = StackFrame()
+    fun run(source: CyanSource, initialStackFrame: StackFrame? = null) {
+        val stackFrame = initialStackFrame ?: StackFrame()
 
         indent++
         println("${"    ".repeat(indent)}--- stack frame initialized, executing source ---")
@@ -42,8 +42,12 @@ class Interpreter {
                     }
                     in stackFrame.scopedFunctions -> {
                         val functionToExecute = stackFrame.scopedFunctions[statement.functionName.value]!!
+                        val newStackFrame = StackFrame()
+                        functionToExecute.signature.args.forEachIndexed { i, a ->
+                            newStackFrame.localVariables[a.value] = statement.args.getOrNull(i)
+                        }
 
-                        this.run(functionToExecute.source)
+                        this.run(functionToExecute.source, newStackFrame)
                     }
                 }
             }
