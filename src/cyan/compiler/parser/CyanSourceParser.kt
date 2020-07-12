@@ -1,8 +1,6 @@
 package cyan.compiler.parser
 
-import cyan.compiler.parser.items.CyanSource
-import cyan.compiler.parser.items.CyanVariableDeclaration
-import cyan.compiler.parser.items.CyanFunctionCall
+import cyan.compiler.parser.items.*
 import cyan.compiler.parser.items.expression.CyanBinaryExpression
 import cyan.compiler.parser.items.expression.CyanExpression
 import cyan.compiler.parser.items.expression.literal.CyanNumericLiteralExpression
@@ -12,6 +10,7 @@ import cyan.compiler.parser.items.operator.CyanBinaryPlusOperator
 
 import com.github.h0tk3y.betterParse.combinators.*
 import com.github.h0tk3y.betterParse.grammar.Grammar
+import com.github.h0tk3y.betterParse.grammar.parser
 import com.github.h0tk3y.betterParse.lexer.literalToken
 import com.github.h0tk3y.betterParse.lexer.regexToken
 import com.github.h0tk3y.betterParse.parser.Parser
@@ -28,6 +27,14 @@ class CyanSourceParser : Grammar<CyanSource>() {
 
     val assign          by literalToken("=")
 
+    val leap            by literalToken("(")
+    val reap            by literalToken(")")
+
+    val lcur            by literalToken("{")
+    val rcur            by literalToken("}")
+
+    val comma           by literalToken(",") and ws
+
     // Arithmetic
 
     val plus            by literalToken("+")
@@ -35,10 +42,6 @@ class CyanSourceParser : Grammar<CyanSource>() {
 
     val ident           by regexToken("[a-zA-Z]+")
     val numericalValue  by regexToken("\\d+")
-
-    val leap            by literalToken("(")
-    val reap            by literalToken(")")
-    val comma           by literalToken(",") and ws
 
     // Value parsers
 
@@ -60,6 +63,16 @@ class CyanSourceParser : Grammar<CyanSource>() {
 
     val expressionParser: Parser<CyanExpression> by (binaryExpressionParser or literalExpressionParser or referenceParser)
 
+    // Functions
+
+    val functionSignature by (referenceParser * -optional(ws) * -leap * separatedTerms(referenceParser, comma, true) * -reap)
+        .use { CyanFunctionSignature(t1, t2) }
+
+    val functionBody      by (-lcur * -optional(newLine) * parser(this::rootParser) * -optional(newLine) * -rcur)
+
+    val functionDeclaration: Parser<CyanFunctionDeclaration> by (functionSignature * -ws * functionBody)
+        .use { CyanFunctionDeclaration(t1, t2) }
+
     // Statements
 
     val variableIdentification by (-let * -ws * referenceParser)
@@ -71,7 +84,8 @@ class CyanSourceParser : Grammar<CyanSource>() {
     val functionCall by (referenceParser * -leap * separatedTerms(expressionParser, comma, true) * -reap)
         .map { (name, args) -> CyanFunctionCall(name, args.toTypedArray()) }
 
-    val statement = -optional(ws) * (variableDeclaration or functionCall) * -optional(ws)
+
+    val statement = -optional(ws) * (variableDeclaration or functionDeclaration or functionCall) * -optional(ws)
 
     // Root parser
 

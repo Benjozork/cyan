@@ -21,6 +21,10 @@ fun main() {
             |print(5 + 5)
             |print(5 - 7)
             |print(a)
+            |hi(a) {
+            |   print(5)
+            |}
+            |hi()
             """.trimMargin())
     }
 
