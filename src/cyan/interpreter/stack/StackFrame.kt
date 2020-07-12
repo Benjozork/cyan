@@ -1,11 +1,11 @@
 package cyan.interpreter.stack
 
 import cyan.compiler.parser.ast.function.CyanFunctionDeclaration
-import cyan.compiler.parser.ast.expression.CyanExpression
+import cyan.interpreter.evaluator.CyanValue
 
 class StackFrame {
 
-    val localVariables = mutableMapOf<String, CyanExpression?>()
+    val localVariables = mutableMapOf<String, CyanValue<out Any>>()
 
     val scopedFunctions = mutableMapOf<String, CyanFunctionDeclaration>()
 

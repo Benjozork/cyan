@@ -1,16 +1,16 @@
 package cyan.interpreter
 
 import cyan.compiler.parser.ast.*
-import cyan.compiler.parser.ast.expression.CyanIdentifierExpression
 import cyan.compiler.parser.ast.function.CyanFunctionCall
 import cyan.compiler.parser.ast.function.CyanFunctionDeclaration
+import cyan.interpreter.evaluator.CyanValue
 import cyan.interpreter.evaluator.evaluate
 import cyan.interpreter.stack.StackFrame
 
-var indent = 0
+var indent = -1
 
 fun iprintln(msg: Any?) = println("${"    ".repeat(indent)}| interpreter > $msg")
-fun ioutput(msg: Any?) = println("${"    ".repeat(indent)}| >>> $msg")
+fun ioutput(msg: CyanValue<out Any>) = println("${"    ".repeat(indent)}| >>> $msg")
 
 class Interpreter {
 
@@ -32,19 +32,19 @@ class Interpreter {
     private fun executeStatement(statement: CyanStatement, stackFrame: StackFrame) {
         iprintln("executing ${statement::class.simpleName} - $statement")
         when (statement) {
-            is CyanVariableDeclaration -> stackFrame.localVariables[statement.name.value] = statement.value
+            is CyanVariableDeclaration -> stackFrame.localVariables[statement.name.value] = evaluate(statement.value!!, stackFrame)
             is CyanFunctionCall -> {
                 val (function, args) = statement
                 when (function.value) {
                     "print" -> {
-                        val arg = args[0]
-                        ioutput(evaluate(if (arg is CyanIdentifierExpression) stackFrame.localVariables[arg.value]!! else arg, stackFrame))
+                        val value = evaluate(args[0], stackFrame)
+                        ioutput(value)
                     }
                     in stackFrame.scopedFunctions -> {
                         val functionToExecute = stackFrame.scopedFunctions[statement.functionName.value]!!
                         val newStackFrame = StackFrame()
                         functionToExecute.signature.args.forEachIndexed { i, a ->
-                            newStackFrame.localVariables[a.value] = statement.args.getOrNull(i)
+                            newStackFrame.localVariables[a.value] = evaluate(statement.args.getOrNull(i)!!, stackFrame)
                         }
 
                         this.run(functionToExecute.source, newStackFrame)
