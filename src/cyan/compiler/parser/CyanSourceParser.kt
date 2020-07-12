@@ -1,6 +1,9 @@
 package cyan.compiler.parser
 
 import cyan.compiler.parser.items.*
+import cyan.compiler.parser.items.function.CyanFunctionCall
+import cyan.compiler.parser.items.function.CyanFunctionDeclaration
+import cyan.compiler.parser.items.function.CyanFunctionSignature
 import cyan.compiler.parser.items.expression.CyanBinaryExpression
 import cyan.compiler.parser.items.expression.CyanExpression
 import cyan.compiler.parser.items.expression.literal.CyanNumericLiteralExpression
@@ -82,7 +85,12 @@ class CyanSourceParser : Grammar<CyanSource>() {
         .use { CyanVariableDeclaration(t1, t2) }
 
     val functionCall by (referenceParser * -leap * separatedTerms(expressionParser, comma, true) * -reap)
-        .map { (name, args) -> CyanFunctionCall(name, args.toTypedArray()) }
+        .map { (name, args) ->
+            CyanFunctionCall(
+                name,
+                args.toTypedArray()
+            )
+        }
 
 
     val statement = -optional(ws) * (variableDeclaration or functionDeclaration or functionCall) * -optional(ws)

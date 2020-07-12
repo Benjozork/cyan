@@ -2,6 +2,8 @@ package cyan.interpreter
 
 import cyan.compiler.parser.items.*
 import cyan.compiler.parser.items.expression.literal.CyanReferenceExpression
+import cyan.compiler.parser.items.function.CyanFunctionCall
+import cyan.compiler.parser.items.function.CyanFunctionDeclaration
 import cyan.interpreter.evaluator.evaluate
 import cyan.interpreter.stack.StackFrame
 
@@ -31,7 +33,7 @@ class Interpreter {
         iprintln("executing ${statement::class.simpleName} - $statement")
         when (statement) {
             is CyanVariableDeclaration -> stackFrame.localVariables[statement.name.value] = statement.value
-            is CyanFunctionCall        -> {
+            is CyanFunctionCall -> {
                 val (function, args) = statement
                 when (function.value) {
                     "print" -> {

@@ -1,6 +1,6 @@
 package cyan.interpreter.stack
 
-import cyan.compiler.parser.items.CyanFunctionDeclaration
+import cyan.compiler.parser.items.function.CyanFunctionDeclaration
 import cyan.compiler.parser.items.expression.CyanExpression
 
 class StackFrame {

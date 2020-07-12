@@ -1,5 +1,6 @@
-package cyan.compiler.parser.items
+package cyan.compiler.parser.items.function
 
+import cyan.compiler.parser.items.CyanStatement
 import cyan.compiler.parser.items.expression.literal.CyanReferenceExpression
 
 class CyanFunctionSignature (
