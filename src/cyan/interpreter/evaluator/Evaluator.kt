@@ -7,15 +7,15 @@ import cyan.compiler.parser.ast.expression.literal.CyanNumericLiteralExpression
 import cyan.compiler.parser.ast.expression.literal.CyanStringLiteralExpression
 import cyan.compiler.parser.ast.operator.CyanBinaryMinusOperator
 import cyan.compiler.parser.ast.operator.CyanBinaryPlusOperator
-import cyan.interpreter.ierror
 import cyan.interpreter.stack.StackFrame
+import cyan.interpreter.resolver.Resolver
 import cyan.interpreter.iprintln
 
 fun evaluate(expression: CyanExpression, stackFrame: StackFrame): CyanValue<out Any> {
     iprintln("evaluating ${expression::class.simpleName} { $expression }")
 
     return when (expression) {
-        is CyanIdentifierExpression     -> stackFrame.localVariables[expression.value] ?: ierror("variable not found on stack")
+        is CyanIdentifierExpression     -> Resolver.findByIdentifier(expression, stackFrame)
         is CyanNumericLiteralExpression -> CyanNumberValue(expression.value)
         is CyanStringLiteralExpression  -> CyanStringValue(expression.value)
         is CyanBinaryExpression -> {

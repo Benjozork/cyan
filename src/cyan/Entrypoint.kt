@@ -23,7 +23,6 @@ fun main() {
             |print(5 + 5)
             |print(5 - 7)
             |print(a)
-            |print(c)
             |hi(a) {
             |   print(a)
             |   print("Hello world !")
