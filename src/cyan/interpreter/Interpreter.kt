@@ -32,7 +32,7 @@ class Interpreter {
     private fun executeStatement(statement: CyanStatement, stackFrame: StackFrame) {
         iprintln("executing ${statement::class.simpleName} - $statement")
         when (statement) {
-            is CyanVariableDeclaration -> stackFrame.localVariables[statement.name.value] = evaluate(statement.value!!, stackFrame)
+            is CyanVariableDeclaration -> stackFrame.localVariables[statement.name.value] = evaluate(statement.value, stackFrame)
             is CyanFunctionCall -> {
                 val (function, args) = statement
                 when (function.value) {

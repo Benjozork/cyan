@@ -83,7 +83,7 @@ class CyanSourceParser : Grammar<CyanSource>() {
     val variableIdentification by (-let * -ws * referenceParser)
     val variableInitialization by (-ws * -assign * -ws * expressionParser)
 
-    val variableDeclaration    by (variableIdentification and optional(variableInitialization))                     use { CyanVariableDeclaration(t1, t2) }
+    val variableDeclaration    by (variableIdentification and variableInitialization)                               use { CyanVariableDeclaration(t1, t2) }
     val functionCall           by (referenceParser * -leap * separatedTerms(expressionParser, comma, true) * -reap) use { CyanFunctionCall(t1, t2.toTypedArray()) }
     val statement              by -optional(ws) * (variableDeclaration or functionDeclaration or functionCall) * -optional(ws)
 
