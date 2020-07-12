@@ -74,26 +74,18 @@ class CyanSourceParser : Grammar<CyanSource>() {
 
     // Functions
 
-    val functionSignature by (referenceParser * -optional(ws) * -leap * separatedTerms(referenceParser, comma, true) * -reap)
-        .use { CyanFunctionSignature(t1, t2) }
-
-    val functionBody      by (-lcur * -optional(newLine) * parser(this::rootParser) * -optional(newLine) * -rcur)
-
-    val functionDeclaration: Parser<CyanFunctionDeclaration> by (functionSignature * -ws * functionBody)
-        .use { CyanFunctionDeclaration(t1, t2) }
+    val functionSignature by (referenceParser * -optional(ws) * -leap * separatedTerms(referenceParser, comma, true) * -reap) use { CyanFunctionSignature(t1, t2) }
+    val functionBody  by (-lcur * -optional(newLine) * parser(this::rootParser) * -optional(newLine) * -rcur)
+    val functionDeclaration: Parser<CyanFunctionDeclaration> by (functionSignature * -ws * functionBody)                      use { CyanFunctionDeclaration(t1, t2) }
 
     // Statements
 
     val variableIdentification by (-let * -ws * referenceParser)
     val variableInitialization by (-ws * -assign * -ws * expressionParser)
 
-    val variableDeclaration by (variableIdentification and optional(variableInitialization))
-        .use { CyanVariableDeclaration(t1, t2) }
-
-    val functionCall by (referenceParser * -leap * separatedTerms(expressionParser, comma, true) * -reap)
-        .map { (name, args) -> CyanFunctionCall(name, args.toTypedArray()) }
-
-    val statement = -optional(ws) * (variableDeclaration or functionDeclaration or functionCall) * -optional(ws)
+    val variableDeclaration    by (variableIdentification and optional(variableInitialization))                     use { CyanVariableDeclaration(t1, t2) }
+    val functionCall           by (referenceParser * -leap * separatedTerms(expressionParser, comma, true) * -reap) use { CyanFunctionCall(t1, t2.toTypedArray()) }
+    val statement              by -optional(ws) * (variableDeclaration or functionDeclaration or functionCall) * -optional(ws)
 
     // Root parser
 
