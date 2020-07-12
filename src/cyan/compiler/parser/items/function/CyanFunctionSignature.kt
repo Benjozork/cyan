@@ -1,11 +1,11 @@
 package cyan.compiler.parser.items.function
 
+import cyan.compiler.parser.items.expression.CyanIdentifierExpression
 import cyan.compiler.parser.items.CyanStatement
-import cyan.compiler.parser.items.expression.literal.CyanReferenceExpression
 
 class CyanFunctionSignature (
-    val name: CyanReferenceExpression,
-    val args: List<CyanReferenceExpression>
+    val name: CyanIdentifierExpression,
+    val args: List<CyanIdentifierExpression>
 ): CyanStatement {
     override fun toString() = "$name(${args.joinToString(", ")})"
 }

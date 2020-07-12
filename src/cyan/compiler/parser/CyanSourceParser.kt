@@ -4,10 +4,11 @@ import cyan.compiler.parser.items.*
 import cyan.compiler.parser.items.function.CyanFunctionCall
 import cyan.compiler.parser.items.function.CyanFunctionDeclaration
 import cyan.compiler.parser.items.function.CyanFunctionSignature
+import cyan.compiler.parser.items.expression.CyanIdentifierExpression
 import cyan.compiler.parser.items.expression.CyanBinaryExpression
 import cyan.compiler.parser.items.expression.CyanExpression
 import cyan.compiler.parser.items.expression.literal.CyanNumericLiteralExpression
-import cyan.compiler.parser.items.expression.literal.CyanReferenceExpression
+import cyan.compiler.parser.items.expression.literal.CyanStringLiteralExpression
 import cyan.compiler.parser.items.operator.CyanBinaryMinusOperator
 import cyan.compiler.parser.items.operator.CyanBinaryPlusOperator
 
@@ -38,6 +39,9 @@ class CyanSourceParser : Grammar<CyanSource>() {
 
     val comma           by literalToken(",") and ws
 
+    val squot           by literalToken("'")
+    val dquot           by literalToken("\"")
+
     // Arithmetic
 
     val plus            by literalToken("+")
@@ -48,8 +52,9 @@ class CyanSourceParser : Grammar<CyanSource>() {
 
     // Value parsers
 
-    val referenceParser      by ident          use { CyanReferenceExpression(text) }
-    val numericalValueParser by numericalValue use { CyanNumericLiteralExpression(text.toInt()) }
+    val referenceParser      by ident                                                                      use { CyanIdentifierExpression(text) }
+    val stringLiteralParser  by (-squot * referenceParser * -squot) or (-dquot * referenceParser * -dquot) use { CyanStringLiteralExpression(value) }
+    val numericalValueParser by numericalValue                                                             use { CyanNumericLiteralExpression(text.toInt()) }
 
     // Operators
 
@@ -60,7 +65,7 @@ class CyanSourceParser : Grammar<CyanSource>() {
 
     // Expressions
 
-    val literalExpressionParser: Parser<CyanExpression> by (numericalValueParser)
+    val literalExpressionParser: Parser<CyanExpression> by (numericalValueParser or stringLiteralParser)
 
     val binaryExpressionParser by (literalExpressionParser * -ws * operator * -ws * literalExpressionParser) use { CyanBinaryExpression(t1, t2, t3) }
 

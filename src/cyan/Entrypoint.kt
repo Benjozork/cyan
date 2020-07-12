@@ -18,6 +18,7 @@ fun main() {
     val timeTakenToParse = measureTime {
         source = CyanSourceParser().parseToEnd("""
             |let a = 1847899 + 301111
+            |let b = "hello"
             |print(5 + 5)
             |print(5 - 7)
             |print(a)

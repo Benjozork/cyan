@@ -2,19 +2,21 @@ package cyan.interpreter.evaluator
 
 import cyan.compiler.parser.items.expression.CyanBinaryExpression
 import cyan.compiler.parser.items.expression.CyanExpression
+import cyan.compiler.parser.items.expression.CyanIdentifierExpression
 import cyan.compiler.parser.items.expression.literal.CyanNumericLiteralExpression
-import cyan.compiler.parser.items.expression.literal.CyanReferenceExpression
+import cyan.compiler.parser.items.expression.literal.CyanStringLiteralExpression
 import cyan.compiler.parser.items.operator.CyanBinaryMinusOperator
 import cyan.compiler.parser.items.operator.CyanBinaryPlusOperator
 import cyan.interpreter.stack.StackFrame
 import cyan.interpreter.iprintln
 
-fun evaluate(expression: CyanExpression, stackFrame: StackFrame): Any {
+fun evaluate(expression: CyanExpression, stackFrame: StackFrame): Any? {
     iprintln("evaluating ${expression::class.simpleName} { $expression }")
 
     return when (expression) {
+        is CyanIdentifierExpression     -> stackFrame.localVariables[expression.value]
         is CyanNumericLiteralExpression -> expression.value
-        is CyanReferenceExpression      -> expression.value
+        is CyanStringLiteralExpression  -> expression.value
         is CyanBinaryExpression -> {
             val (lhs, op, rhs) = expression
 

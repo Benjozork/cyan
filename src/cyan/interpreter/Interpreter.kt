@@ -1,7 +1,7 @@
 package cyan.interpreter
 
 import cyan.compiler.parser.items.*
-import cyan.compiler.parser.items.expression.literal.CyanReferenceExpression
+import cyan.compiler.parser.items.expression.CyanIdentifierExpression
 import cyan.compiler.parser.items.function.CyanFunctionCall
 import cyan.compiler.parser.items.function.CyanFunctionDeclaration
 import cyan.interpreter.evaluator.evaluate
@@ -38,7 +38,7 @@ class Interpreter {
                 when (function.value) {
                     "print" -> {
                         val arg = args[0]
-                        ioutput(evaluate(if (arg is CyanReferenceExpression) stackFrame.localVariables[arg.value]!! else arg, stackFrame))
+                        ioutput(evaluate(if (arg is CyanIdentifierExpression) stackFrame.localVariables[arg.value]!! else arg, stackFrame))
                     }
                     in stackFrame.scopedFunctions -> {
                         val functionToExecute = stackFrame.scopedFunctions[statement.functionName.value]!!
