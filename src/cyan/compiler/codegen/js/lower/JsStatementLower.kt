@@ -12,7 +12,7 @@ object JsStatementLower : ItemLower<CyanStatement> {
     override fun lower(backend: CompilerBackend, item: CyanStatement): String {
         return when (item) {
             is CyanVariableDeclaration -> "const ${item.name} = ${backend.expressionLower.lower(backend, item.value)};"
-            is CyanFunctionCall -> "${item.functionIdentifier.value}(${item.args.joinToString(", ") { JsExpressionLower.lower(backend, it) }});"
+            is CyanFunctionCall -> "${item.functionIdentifier.value}(${item.args.joinToString(", ") { backend.expressionLower.lower(backend, it) }});"
             is CyanFunctionDeclaration -> {
                 """
                 |function ${item.signature.name}(${item.signature.args.joinToString { it.value }}) {
