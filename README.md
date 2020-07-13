@@ -3,8 +3,10 @@ An experiment in programming languages
 
 ## Current features
 
-* variables (immutable)
-* simple expressions (literal, binary)
+* variables and arrays (immutable)
+* complex expressions (parantheses, precedenced, PEMDAS)
+* arithmetic (+, -, \*, /, %)
+* basic if statements
 * functions (local only)
 * stack-based interpreter
 * JS codegen
