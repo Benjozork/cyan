@@ -45,11 +45,12 @@ class Interpreter {
 
                 stackFrame.scopedFunctions[function.name] = function
             }
-            is CyanIfStatement -> {
-                val conditionExpr = statement.conditionExpr
-                if (evaluate(conditionExpr, stackFrame).value == true) {
-                    run(statement.block, stackFrame)
-                }
+            is CyanIfChain -> {
+                val blocks = statement.ifStatements
+                val goodBranch = blocks.firstOrNull { branch -> evaluate(branch.conditionExpr, stackFrame).value == true }
+
+                goodBranch?.let { run(it.block, stackFrame) }
+                    ?: statement.elseBlock?.let { run(it, stackFrame) }
             }
             is CyanFunctionCall -> {
                 val (identifier, args) = statement

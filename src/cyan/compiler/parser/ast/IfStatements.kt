@@ -8,3 +8,10 @@ class CyanIfStatement (
 ) : CyanStatement {
     override fun toString() = "if ($conditionExpr) { ... }"
 }
+
+class CyanIfChain (
+    val ifStatements:  Array<CyanIfStatement>,
+    val elseBlock: CyanSource?
+) : CyanStatement {
+    override fun toString() = "${ifStatements.joinToString(", ")}, else: ${elseBlock != null}"
+}

@@ -25,6 +25,10 @@ fun main() {
             |let d = false
             |if (d) {
             |   print(c)
+            |} else if (false) {
+            |   print("hi !")
+            |} else {
+            |   print("ho !")
             |}
             |function hi(a) {
             |   let array = [1, 3, 42, 127, (10 % 3)]

@@ -155,10 +155,13 @@ class CyanSourceParser : Grammar<CyanSource>() {
     val variableDeclaration    by (variableIdentification and variableInitialization)                         use { CyanVariableDeclaration(t1, t2) }
     val functionCall           by (referenceParser * -leap * separatedTerms(expr, commaParser, true) * -reap) use { CyanFunctionCall(t1, t2.toTypedArray()) }
 
-    val ifStatementSignature                 by (-ifToken * -optional(ws) * -leap * expr * -reap)
-    val ifStatement: Parser<CyanIfStatement> by (ifStatementSignature * -optional(ws) * block) use { CyanIfStatement(t1, t2) }
+    val ifStatementSignature                    by (-ifToken * -optional(ws) * -leap * expr * -reap)
+    val ifStatement: Parser<CyanIfStatement>    by (ifStatementSignature * -optional(ws) * block).use { CyanIfStatement(t1, t2) }
+    val elseStatement: Parser<CyanSource>       by (-elseToken * -optional(ws) * block)
+    val ifStatementChain: Parser<CyanStatement> by (separatedTerms(ifStatement, -optional(ws) * elseToken * -ws) * optional(-optional(ws) * elseStatement))
+            .use { CyanIfChain(t1.toTypedArray(), elseBlock = t2) }
 
-    val statement by -optional(ws) * (variableDeclaration or functionDeclaration or functionCall or ifStatement) * -optional(ws)
+    val statement by -optional(ws) * (variableDeclaration or functionDeclaration or functionCall or ifStatementChain) * -optional(ws)
 
     // Root parser
 

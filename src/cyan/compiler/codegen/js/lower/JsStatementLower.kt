@@ -2,7 +2,7 @@ package cyan.compiler.codegen.js.lower
 
 import cyan.compiler.codegen.CompilerBackend
 import cyan.compiler.codegen.ItemLower
-import cyan.compiler.parser.ast.CyanIfStatement
+import cyan.compiler.parser.ast.CyanIfChain
 import cyan.compiler.parser.ast.CyanStatement
 import cyan.compiler.parser.ast.CyanVariableDeclaration
 import cyan.compiler.parser.ast.function.CyanFunctionCall
@@ -20,12 +20,22 @@ object JsStatementLower : ItemLower<CyanStatement> {
                 |}
                 """.trimMargin()
             }
-            is CyanIfStatement -> {
-                """
-                |if (${backend.expressionLower.lower(backend, item.conditionExpr)}) {
-                |${backend.translateSource(item.block).prependIndent("    ")}
-                |}
-                """.trimMargin()
+            is CyanIfChain -> {
+                val blockLowerings = item.ifStatements.mapIndexed { i, branch ->
+                    """
+                    |${if (i > 0) " else " else ""}if (${backend.expressionLower.lower(backend, branch.conditionExpr)}) {
+                    |${backend.translateSource(branch.block).prependIndent("    ")}
+                    |}
+                    """.trimMargin()
+                } + if (item.elseBlock != null) {
+                    """
+                    | else {
+                    | ${backend.translateSource(item.elseBlock).prependIndent("    ")}
+                    |}
+                    """.trimMargin()
+                } else ""
+
+                blockLowerings.joinToString(separator = "")
             }
             is CyanFunctionCall -> "${item.functionIdentifier.value}(${item.args.joinToString(", ") { backend.expressionLower.lower(backend, it) }});"
             else -> error("js: cannot lower statement of type ${item::class.simpleName}")
