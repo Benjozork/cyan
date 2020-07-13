@@ -27,6 +27,8 @@ class CyanSourceParser : Grammar<CyanSource>() {
 
     val let             by literalToken("let")
     val function        by literalToken("function")
+    val ifToken         by literalToken("if")
+    val elseToken       by literalToken("else")
 
     val assign          by literalToken("=")
 
@@ -133,14 +135,16 @@ class CyanSourceParser : Grammar<CyanSource>() {
 
     val expr by orChain
 
+    // Scope
+
+    val block by (-lcur * -optional(newLine) * parser(this::rootParser) * -optional(newLine) * -rcur)
+
     // Functions
 
     val functionSignature by (-function * -ws * referenceParser * -optional(ws) * -leap * separatedTerms(referenceParser, commaParser, true) * -reap)
             .use { CyanFunctionSignature(t1, t2) }
 
-    val functionBody by (-lcur * -optional(newLine) * parser(this::rootParser) * -optional(newLine) * -rcur)
-
-    val functionDeclaration: Parser<CyanFunctionDeclaration> by (functionSignature * -ws * functionBody)
+    val functionDeclaration: Parser<CyanFunctionDeclaration> by (functionSignature * -ws * block)
             .use { CyanFunctionDeclaration(t1, t2) }
 
     // Statements
@@ -148,9 +152,13 @@ class CyanSourceParser : Grammar<CyanSource>() {
     val variableIdentification by (-let * -ws * referenceParser)
     val variableInitialization by (-ws * -assign * -ws * expr)
 
-    val variableDeclaration    by (variableIdentification and variableInitialization)                                     use { CyanVariableDeclaration(t1, t2) }
+    val variableDeclaration    by (variableIdentification and variableInitialization)                         use { CyanVariableDeclaration(t1, t2) }
     val functionCall           by (referenceParser * -leap * separatedTerms(expr, commaParser, true) * -reap) use { CyanFunctionCall(t1, t2.toTypedArray()) }
-    val statement              by -optional(ws) * (variableDeclaration or functionDeclaration or functionCall) * -optional(ws)
+
+    val ifStatementSignature                 by (-ifToken * -optional(ws) * -leap * expr * -reap)
+    val ifStatement: Parser<CyanIfStatement> by (ifStatementSignature * -optional(ws) * block) use { CyanIfStatement(t1, t2) }
+
+    val statement by -optional(ws) * (variableDeclaration or functionDeclaration or functionCall or ifStatement) * -optional(ws)
 
     // Root parser
 

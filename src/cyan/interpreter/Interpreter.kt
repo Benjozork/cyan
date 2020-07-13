@@ -40,6 +40,17 @@ class Interpreter {
         iprintln("executing ${statement::class.simpleName} - $statement")
         when (statement) {
             is CyanVariableDeclaration -> stackFrame.localVariables[statement.name.value] = evaluate(statement.value, stackFrame)
+            is CyanFunctionDeclaration -> {
+                val function = CyanFunction(statement.signature.name.value, statement.signature.args.map { it.value }.toTypedArray(), statement.source)
+
+                stackFrame.scopedFunctions[function.name] = function
+            }
+            is CyanIfStatement -> {
+                val conditionExpr = statement.conditionExpr
+                if (evaluate(conditionExpr, stackFrame).value == true) {
+                    run(statement.block, stackFrame)
+                }
+            }
             is CyanFunctionCall -> {
                 val (identifier, args) = statement
                 when (identifier.value) {
@@ -57,11 +68,6 @@ class Interpreter {
                         else ierror("${identifier.value} is not a callable value")
                     }
                 }
-            }
-            is CyanFunctionDeclaration -> {
-                val function = CyanFunction(statement.signature.name.value, statement.signature.args.map { it.value }.toTypedArray(), statement.source)
-
-                stackFrame.scopedFunctions[function.name] = function
             }
             else -> error("can't evaluate statement of type ${statement::class.simpleName}")
         }

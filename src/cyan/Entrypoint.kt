@@ -22,11 +22,10 @@ fun main() {
             |let a = 1847899 + (301111 * 5)
             |let b = "hello"
             |let c = ["hi", "hello", b]
-            |let d = true
-            |print(5 + 5)
-            |print(5 - 7)
-            |print(a)
-            |print(c)
+            |let d = false
+            |if (d) {
+            |   print(c)
+            |}
             |function hi(a) {
             |   let array = [1, 3, 42, 127, (10 % 3)]
             |   print(a)
