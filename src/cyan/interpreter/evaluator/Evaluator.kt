@@ -1,10 +1,10 @@
 package cyan.interpreter.evaluator
 
 import cyan.compiler.parser.ast.expression.*
+import cyan.compiler.parser.ast.expression.literal.CyanBooleanLiteralExpression
 import cyan.compiler.parser.ast.expression.literal.CyanNumericLiteralExpression
 import cyan.compiler.parser.ast.expression.literal.CyanStringLiteralExpression
-import cyan.compiler.parser.ast.operator.CyanBinaryMinusOperator
-import cyan.compiler.parser.ast.operator.CyanBinaryPlusOperator
+import cyan.compiler.parser.ast.operator.*
 import cyan.interpreter.ierror
 import cyan.interpreter.stack.StackFrame
 import cyan.interpreter.resolver.Resolver
@@ -17,6 +17,7 @@ fun evaluate(expression: CyanExpression, stackFrame: StackFrame): CyanValue<out 
     return when (expression) {
         is CyanNumericLiteralExpression -> CyanNumberValue(expression.value)
         is CyanStringLiteralExpression  -> CyanStringValue(expression.value)
+        is CyanBooleanLiteralExpression -> CyanBooleanValue(expression.value)
         is CyanIdentifierExpression     -> Resolver.findByIdentifier(expression, stackFrame)
         is CyanBinaryExpression -> {
             val (lhs, op, rhs) = expression
@@ -25,6 +26,9 @@ fun evaluate(expression: CyanExpression, stackFrame: StackFrame): CyanValue<out 
                 return CyanNumberValue(when (op) {
                     is CyanBinaryPlusOperator -> lhs.value + rhs.value
                     is CyanBinaryMinusOperator -> lhs.value - rhs.value
+                    is CyanBinaryTimesOperator -> lhs.value * rhs.value
+                    is CyanBinaryDivOperator -> lhs.value / rhs.value
+                    is CyanBinaryModOperator -> lhs.value % rhs.value
                     else -> error("unknown operator ${op::class.simpleName}")
                 })
             }

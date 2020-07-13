@@ -1,11 +1,11 @@
 package cyan
 
+import cyan.compiler.codegen.js.JsCompilerBackend
 import cyan.compiler.parser.CyanSourceParser
 import cyan.compiler.parser.ast.CyanSource
 import cyan.interpreter.Interpreter
 
 import com.github.h0tk3y.betterParse.grammar.parseToEnd
-import cyan.compiler.codegen.js.JsCompilerBackend
 
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
@@ -19,14 +19,16 @@ fun main() {
     var source: CyanSource
     val timeTakenToParse = measureTime {
         source = CyanSourceParser().parseToEnd("""
-            |let a = 1847899 + 301111
+            |let a = 1847899 + (301111 * 5)
             |let b = "hello"
-            |let c = ["hi", "hello"]
+            |let c = ["hi", "hello", b]
+            |let d = true
             |print(5 + 5)
             |print(5 - 7)
             |print(a)
+            |print(c)
             |function hi(a) {
-            |   let array = [1, 3, 42, 127]
+            |   let array = [1, 3, 42, 127, (10 % 3)]
             |   print(a)
             |   print("Hello world !")
             |   print(array)

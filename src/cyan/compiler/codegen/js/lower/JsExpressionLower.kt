@@ -3,6 +3,7 @@ package cyan.compiler.codegen.js.lower
 import cyan.compiler.codegen.CompilerBackend
 import cyan.compiler.codegen.ItemLower
 import cyan.compiler.parser.ast.expression.*
+import cyan.compiler.parser.ast.expression.literal.CyanBooleanLiteralExpression
 import cyan.compiler.parser.ast.expression.literal.CyanNumericLiteralExpression
 import cyan.compiler.parser.ast.expression.literal.CyanStringLiteralExpression
 
@@ -13,6 +14,8 @@ object JsExpressionLower : ItemLower<CyanExpression> {
             is CyanStringLiteralExpression ->
                 "\'${item.value}\'"
             is CyanNumericLiteralExpression ->
+                item.value.toString()
+            is CyanBooleanLiteralExpression ->
                 item.value.toString()
             is CyanIdentifierExpression ->
                 item.value
