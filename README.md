@@ -6,7 +6,7 @@ An experiment in programming languages
 * variables and arrays (immutable)
 * complex expressions (parantheses, precedence, PEMDAS)
 * arithmetic (+, -, \*, /, %)
-* basic if statements
+* if, else if, else
 * functions (local only)
 * stack-based interpreter
 * JS codegen
