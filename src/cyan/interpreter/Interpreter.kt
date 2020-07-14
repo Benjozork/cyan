@@ -12,7 +12,7 @@ import cyan.interpreter.stack.StackFrame
 
 var indent = -1
 
-fun iprintln(msg: Any?) = println("${"    ".repeat(indent)}| interpreter > $msg")
+fun iprintln(msg: Any?) = println("${"    ".repeat(indent)}| > $msg")
 fun ierror(msg: Any?): Nothing {
     System.err.println("${"    ".repeat(indent)}| err: $msg")
     error("interpreter stopped because of error")
