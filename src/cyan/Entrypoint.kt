@@ -3,10 +3,11 @@ package cyan
 import cyan.compiler.codegen.js.JsCompilerBackend
 import cyan.compiler.parser.CyanSourceParser
 import cyan.compiler.parser.ast.CyanSource
+import cyan.compiler.fir.FirDocument
+import cyan.compiler.lower.ast2fir.SourceLower
 import cyan.interpreter.Interpreter
 
 import com.github.h0tk3y.betterParse.grammar.parseToEnd
-import cyan.compiler.lower.ast2fir.SourceLower
 
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
@@ -42,7 +43,7 @@ fun main() {
             """.trimMargin())
     }
 
-    val fir = SourceLower.lower(source)
+    val fir = SourceLower.lower(source, FirDocument())
     println(fir)
 
     println("parsing source took ${timeTakenToParse.inMilliseconds} ms\n")

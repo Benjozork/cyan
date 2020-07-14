@@ -1,23 +1,23 @@
 package cyan.compiler.lower.ast2fir
 
+import cyan.compiler.fir.FirNode
 import cyan.compiler.fir.FirSource
 import cyan.compiler.fir.FirStatement
 import cyan.compiler.parser.ast.CyanSource
-import cyan.compiler.parser.ast.CyanStatement
 
 object SourceLower : Ast2FirLower<CyanSource, FirSource> {
 
-    override fun lower(astNode: CyanSource): FirSource {
-        val loweredNodes = mutableListOf<FirStatement>()
+    override fun lower(astNode: CyanSource, parentFirNode: FirNode): FirSource {
+        val source = FirSource()
 
         for (node in astNode.statements) {
-            loweredNodes += when (node) {
-                is CyanStatement -> StatementLower.lower(node)
-                else -> error("cannot lower AST node of type ${node::class.simpleName}")
-            }
+            val loweredNode = StatementLower.lower(node, source)
+
+            if (loweredNode is FirStatement)
+                source.statements += loweredNode
         }
 
-        return FirSource(loweredNodes.toTypedArray())
+        return source
     }
 
 

@@ -6,6 +6,6 @@ import cyan.compiler.parser.ast.CyanItem
 
 interface Ast2FirLower<TAstNode : CyanItem, TFirNode : FirNode> : Lower {
 
-    fun lower(astNode: TAstNode): TFirNode
+    fun lower(astNode: TAstNode, parentFirNode: FirNode): TFirNode
 
 }
