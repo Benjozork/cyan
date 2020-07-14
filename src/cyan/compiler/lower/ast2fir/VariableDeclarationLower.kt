@@ -13,7 +13,7 @@ object VariableDeclarationLower : Ast2FirLower<CyanVariableDeclaration, FirVaria
 
         require(parentFirNode is FirScope) { "parentNode is not FirScope" }
 
-        parentFirNode.declaredSymbols += firVariableDeclaration.name
+        parentFirNode.declaredSymbols += firVariableDeclaration
 
         return firVariableDeclaration
     }

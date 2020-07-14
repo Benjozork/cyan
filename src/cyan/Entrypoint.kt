@@ -34,7 +34,6 @@ fun main() {
             |}
             |function hi(a) {
             |   let array = [1, 3, 42, 127, (10 % 3)]
-            |   print(b)
             |   print("Hello world !")
             |   print(array)
             |   print(array.length)
@@ -45,6 +44,7 @@ fun main() {
     }
 
     val fir = SourceLower.lower(source, FirDocument())
+    println("symbols: ${fir.declaredSymbols}")
 
     println("parsing source took ${timeTakenToParse.inMilliseconds} ms\n")
 

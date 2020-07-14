@@ -1,6 +1,6 @@
 package cyan.compiler.fir
 
-class FirFunctionDeclaration(val name: String, val args: Array<String>): FirStatement {
+class FirFunctionDeclaration(override val name: String, val args: Array<String>): FirSymbol {
 
     lateinit var block: FirSource
 

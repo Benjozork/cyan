@@ -16,6 +16,7 @@ object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirNullN
         require (parentFirNode is FirScope) { "ast2fir: parentFirNode must be FirSource but was ${parentFirNode::class.simpleName}" }
         require (!NoNamedFunctionClosures.check(firFunctionDeclaration, parentFirNode)) { "err: named local functions cannot be closures (refer to elements in it's containing scope)" }
 
+        parentFirNode.declaredSymbols += firFunctionDeclaration
         parentFirNode.localFunctions.add(firFunctionDeclaration)
 
         return FirNullNode
