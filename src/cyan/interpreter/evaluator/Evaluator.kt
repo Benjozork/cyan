@@ -35,22 +35,34 @@ fun evaluate(expression: CyanExpression, stackFrame: StackFrame): CyanValue<out 
 
             when (op) { // When lhs or rhs are not literals
                 is CyanBinaryPlusOperator -> {
-                    val evaluated = evaluate(lhs, stackFrame) to evaluate(rhs, stackFrame)
-                    val (lhsV, rhsV) = evaluated.first.value to evaluated.second.value
+                    val (lhsV, rhsV)  = evaluate(lhs, stackFrame) to evaluate(rhs, stackFrame)
 
-                    if (lhsV is Int && rhsV is Int)
-                        CyanNumberValue(lhsV + rhsV)
+                    if (lhsV is CyanNumberValue && rhsV is CyanNumberValue)
+                        CyanNumberValue(lhsV.value + rhsV.value)
                     else error("can't run plus operation on ${lhs::class.simpleName} and ${rhs::class.simpleName}")
                 }
                 is CyanBinaryMinusOperator -> {
-                    val evaluated = evaluate(lhs, stackFrame) to evaluate(rhs, stackFrame)
-                    val (lhsV, rhsV) = evaluated.first.value to evaluated.second.value
+                    val (lhsV, rhsV)  = evaluate(lhs, stackFrame) to evaluate(rhs, stackFrame)
 
-                    if (lhsV is Int && rhsV is Int)
-                        CyanNumberValue(lhsV - rhsV)
+                    if (lhsV is CyanNumberValue && rhsV is CyanNumberValue)
+                        CyanNumberValue(lhsV.value - rhsV.value)
                     else error("can't run plus operation on ${lhs::class.simpleName} and ${rhs::class.simpleName}")
                 }
-                else -> error("unknown binary expression type ${expression::class.simpleName}")
+                is CyanBinaryAndOperator -> {
+                    val (lhsV, rhsV) = evaluate(lhs, stackFrame) to evaluate(rhs, stackFrame)
+
+                    if (lhsV is CyanBooleanValue && rhsV is CyanBooleanValue) {
+                       CyanBooleanValue(lhsV.value && rhsV.value)
+                    } else ierror("logical and only possible on two boolean values")
+                }
+                is CyanBinaryOrOperator -> {
+                    val (lhsV, rhsV) = evaluate(lhs, stackFrame) to evaluate(rhs, stackFrame)
+
+                    if (lhsV is CyanBooleanValue && rhsV is CyanBooleanValue) {
+                        CyanBooleanValue(lhsV.value || rhsV.value)
+                    } else ierror("logical or only possible on two boolean values")
+                }
+                else -> error("unknown binary operator type ${op::class.simpleName}")
             }
         }
         is CyanArrayExpression -> CyanArrayValue(expression.exprs.map { evaluate(it, stackFrame) }.toTypedArray())
