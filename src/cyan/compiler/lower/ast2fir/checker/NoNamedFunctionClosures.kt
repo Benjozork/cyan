@@ -1,13 +1,14 @@
 package cyan.compiler.lower.ast2fir.checker
 
 import cyan.compiler.fir.FirFunctionDeclaration
+import cyan.compiler.fir.FirNode
 import cyan.compiler.fir.FirScope
 
-object NoNamedFunctionClosures {
+object NoNamedFunctionClosures : Check<FirFunctionDeclaration> {
 
-    fun check(firFunctionDeclaration: FirFunctionDeclaration, containingScope: FirScope): Boolean {
+    override fun check(firFunctionDeclaration: FirFunctionDeclaration, containingNode: FirNode): Boolean {
         val functionReferences = firFunctionDeclaration.allReferences()
-        val symbolsDeclaredInScope = containingScope.declaredSymbols
+        val symbolsDeclaredInScope = (containingNode as FirScope).declaredSymbols
         val functionArguments = firFunctionDeclaration.args
 
         return functionReferences.any { it in symbolsDeclaredInScope && it !in functionArguments }

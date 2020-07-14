@@ -2,7 +2,6 @@ package cyan.compiler.lower.ast2fir
 
 import cyan.compiler.fir.FirNode
 import cyan.compiler.fir.FirScope
-import cyan.compiler.fir.FirSource
 import cyan.compiler.fir.FirVariableDeclaration
 import cyan.compiler.lower.ast2fir.expression.ExpressionLower
 import cyan.compiler.parser.ast.CyanVariableDeclaration
