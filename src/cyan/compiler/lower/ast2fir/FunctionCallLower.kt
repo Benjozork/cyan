@@ -10,5 +10,4 @@ object FunctionCallLower : Ast2FirLower<CyanFunctionCall, FirFunctionCall> {
         return FirFunctionCall(astNode.functionIdentifier.value, astNode.args.map { ExpressionLower.lower(it) }.toTypedArray())
     }
 
-
 }
