@@ -1,3 +1,7 @@
 package cyan.compiler.fir
 
-interface FirNode
+interface FirNode {
+
+    fun allReferences(): Set<String>
+
+}

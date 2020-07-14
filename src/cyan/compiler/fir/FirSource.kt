@@ -1,6 +1,11 @@
 package cyan.compiler.fir
 
 class FirSource (
-    val statements: MutableList<FirStatement> = mutableListOf(),
-    override val localFunctions: MutableSet<FirFunctionDeclaration> = mutableSetOf()
-) : FirScope
+    override val declaredSymbols: MutableSet<String> = mutableSetOf(),
+    override val localFunctions: MutableSet<FirFunctionDeclaration> = mutableSetOf(),
+    val statements: MutableList<FirStatement> = mutableListOf()
+) : FirScope {
+
+    override fun allReferences() = statements.flatMap { it.allReferences() }.toSet()
+
+}

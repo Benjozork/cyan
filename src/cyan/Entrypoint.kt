@@ -34,17 +34,17 @@ fun main() {
             |}
             |function hi(a) {
             |   let array = [1, 3, 42, 127, (10 % 3)]
-            |   print(a)
+            |   print(b)
             |   print("Hello world !")
             |   print(array)
             |   print(array.length)
             |}
             |hi(9)
+            |print(hi)
             """.trimMargin())
     }
 
     val fir = SourceLower.lower(source, FirDocument())
-    println(fir)
 
     println("parsing source took ${timeTakenToParse.inMilliseconds} ms\n")
 
