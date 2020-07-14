@@ -6,6 +6,7 @@ import cyan.compiler.parser.ast.CyanSource
 import cyan.interpreter.Interpreter
 
 import com.github.h0tk3y.betterParse.grammar.parseToEnd
+import cyan.compiler.lower.ast2fir.SourceLower
 
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
@@ -40,6 +41,9 @@ fun main() {
             |hi(9)
             """.trimMargin())
     }
+
+    val fir = SourceLower.lower(source)
+    println(fir)
 
     println("parsing source took ${timeTakenToParse.inMilliseconds} ms\n")
 
