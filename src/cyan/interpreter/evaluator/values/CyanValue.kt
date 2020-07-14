@@ -1,4 +1,4 @@
-package cyan.interpreter.evaluator
+package cyan.interpreter.evaluator.values
 
 interface CyanValue<TValue : Any> {
 

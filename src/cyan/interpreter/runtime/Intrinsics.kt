@@ -1,8 +1,8 @@
 package cyan.interpreter.runtime
 
-import cyan.interpreter.evaluator.CyanArrayValue
-import cyan.interpreter.evaluator.CyanNumberValue
-import cyan.interpreter.evaluator.CyanValue
+import cyan.interpreter.evaluator.values.CyanArrayValue
+import cyan.interpreter.evaluator.values.CyanNumberValue
+import cyan.interpreter.evaluator.values.CyanValue
 
 @Suppress("FunctionName")
 object Intrinsics {

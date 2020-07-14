@@ -1,4 +1,4 @@
-package cyan.interpreter.evaluator
+package cyan.interpreter.evaluator.values
 
 class CyanNumberValue(override val value: Int) : CyanValue<Int> {
 

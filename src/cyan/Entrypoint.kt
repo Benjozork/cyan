@@ -22,10 +22,10 @@ fun main() {
             |let a = 1847899 + (301111 * 5)
             |let b = "hello"
             |let c = ["hi", "hello", b]
-            |let d = false
+            |let d = true
             |if (d) {
             |   print(c)
-            |} else if (false) {
+            |} else if (false || d) {
             |   print("hi !")
             |} else {
             |   print("ho !")

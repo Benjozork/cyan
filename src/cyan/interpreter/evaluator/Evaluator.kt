@@ -5,6 +5,7 @@ import cyan.compiler.parser.ast.expression.literal.CyanBooleanLiteralExpression
 import cyan.compiler.parser.ast.expression.literal.CyanNumericLiteralExpression
 import cyan.compiler.parser.ast.expression.literal.CyanStringLiteralExpression
 import cyan.compiler.parser.ast.operator.*
+import cyan.interpreter.evaluator.values.*
 import cyan.interpreter.ierror
 import cyan.interpreter.stack.StackFrame
 import cyan.interpreter.resolver.Resolver
@@ -52,7 +53,7 @@ fun evaluate(expression: CyanExpression, stackFrame: StackFrame): CyanValue<out 
                     val (lhsV, rhsV) = evaluate(lhs, stackFrame) to evaluate(rhs, stackFrame)
 
                     if (lhsV is CyanBooleanValue && rhsV is CyanBooleanValue) {
-                       CyanBooleanValue(lhsV.value && rhsV.value)
+                        CyanBooleanValue(lhsV.value && rhsV.value)
                     } else ierror("logical and only possible on two boolean values")
                 }
                 is CyanBinaryOrOperator -> {

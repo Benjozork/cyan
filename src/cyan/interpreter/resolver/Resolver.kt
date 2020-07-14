@@ -1,7 +1,7 @@
 package cyan.interpreter.resolver
 
 import cyan.compiler.parser.ast.expression.CyanIdentifierExpression
-import cyan.interpreter.evaluator.CyanValue
+import cyan.interpreter.evaluator.values.CyanValue
 import cyan.interpreter.ierror
 import cyan.interpreter.iprintln
 import cyan.interpreter.stack.StackFrame

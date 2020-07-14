@@ -1,9 +1,9 @@
 package cyan.interpreter.stack
 
 import cyan.compiler.parser.ast.expression.CyanIdentifierExpression
-import cyan.interpreter.evaluator.CyanCallable
-import cyan.interpreter.evaluator.CyanStringValue
-import cyan.interpreter.evaluator.CyanValue
+import cyan.interpreter.evaluator.values.CyanCallable
+import cyan.interpreter.evaluator.values.CyanStringValue
+import cyan.interpreter.evaluator.values.CyanValue
 import cyan.interpreter.ioutput
 import cyan.interpreter.resolver.ResolveScope
 

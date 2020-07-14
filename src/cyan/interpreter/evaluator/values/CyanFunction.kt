@@ -1,4 +1,4 @@
-package cyan.interpreter.evaluator
+package cyan.interpreter.evaluator.values
 
 import cyan.compiler.parser.ast.CyanSource
 import cyan.interpreter.Interpreter

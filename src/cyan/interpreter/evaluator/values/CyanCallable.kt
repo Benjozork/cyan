@@ -1,4 +1,4 @@
-package cyan.interpreter.evaluator
+package cyan.interpreter.evaluator.values
 
 import cyan.interpreter.Interpreter
 import cyan.interpreter.stack.StackFrame

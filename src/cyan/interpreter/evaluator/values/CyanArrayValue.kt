@@ -1,4 +1,4 @@
-package cyan.interpreter.evaluator
+package cyan.interpreter.evaluator.values
 
 class CyanArrayValue<TElements : CyanValue<out Any>>(val elements: Array<TElements>) : CyanValue<Array<TElements>> {
 

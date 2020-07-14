@@ -3,9 +3,9 @@ package cyan.interpreter
 import cyan.compiler.parser.ast.*
 import cyan.compiler.parser.ast.function.CyanFunctionCall
 import cyan.compiler.parser.ast.function.CyanFunctionDeclaration
-import cyan.interpreter.evaluator.CyanCallable
-import cyan.interpreter.evaluator.CyanFunction
-import cyan.interpreter.evaluator.CyanValue
+import cyan.interpreter.evaluator.values.CyanCallable
+import cyan.interpreter.evaluator.values.CyanFunction
+import cyan.interpreter.evaluator.values.CyanValue
 import cyan.interpreter.evaluator.evaluate
 import cyan.interpreter.resolver.Resolver
 import cyan.interpreter.stack.StackFrame
