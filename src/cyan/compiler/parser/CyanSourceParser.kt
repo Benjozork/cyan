@@ -130,8 +130,8 @@ class CyanSourceParser : Grammar<CyanSource>() {
     val comparisonOrMath: Parser<CyanExpression> by (arithmetic * optional(comparisonOp * arithmetic))
             .map { (left, tail) -> tail?.let { (op, r) -> CyanBinaryExpression(left, tokenToOp[op.type]!!, r) } ?: left }
 
-    val andChain by leftAssociative(comparisonOrMath, and) { l, _, r -> CyanBinaryExpression(l, CyanBinaryAndOperator, r) }
-    val orChain  by leftAssociative(andChain, and) { l, _, r -> CyanBinaryExpression(l, CyanBinaryOrOperator, r) }
+    val andChain by leftAssociative(comparisonOrMath, -optional(ws) * and * -optional(ws)) { l, _, r -> CyanBinaryExpression(l, CyanBinaryAndOperator, r) }
+    val orChain  by leftAssociative(andChain, -optional(ws) * or * -optional(ws)) { l, _, r -> CyanBinaryExpression(l, CyanBinaryOrOperator, r) }
 
     val expr by orChain
 
