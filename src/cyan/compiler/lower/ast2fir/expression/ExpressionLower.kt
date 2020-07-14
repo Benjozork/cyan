@@ -8,7 +8,7 @@ import cyan.compiler.parser.ast.expression.CyanExpression
 object ExpressionLower : Ast2FirLower<CyanExpression, FirExpression> {
 
     override fun lower(astNode: CyanExpression, parentFirNode: FirNode): FirExpression {
-        return FirExpression(astNode)
+        return FirExpression(parentFirNode, astNode)
     }
 
 }

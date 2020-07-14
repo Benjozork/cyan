@@ -5,7 +5,9 @@ class FirDocument (
     override val localFunctions: MutableSet<FirFunctionDeclaration> = mutableSetOf()
 ) : FirScope {
 
-    override fun allReferences(): Set<String> {
+    override val parent: FirNode? get() = null
+
+    override fun allReferences(): Set<FirReference> {
         TODO("Not yet implemented")
     }
 

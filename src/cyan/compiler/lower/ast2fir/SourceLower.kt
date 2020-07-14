@@ -8,7 +8,7 @@ import cyan.compiler.parser.ast.CyanSource
 object SourceLower : Ast2FirLower<CyanSource, FirSource> {
 
     override fun lower(astNode: CyanSource, parentFirNode: FirNode): FirSource {
-        val source = FirSource()
+        val source = FirSource(parentFirNode)
 
         for (node in astNode.statements) {
             val loweredNode = StatementLower.lower(node, source)

@@ -10,7 +10,12 @@ import cyan.compiler.parser.ast.function.CyanFunctionDeclaration
 object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirNullNode> {
 
     override fun lower(astNode: CyanFunctionDeclaration, parentFirNode: FirNode): FirNullNode {
-        val firFunctionDeclaration = FirFunctionDeclaration(astNode.signature.name.value, astNode.signature.args.map { it.value }.toTypedArray())
+        val firFunctionDeclaration = FirFunctionDeclaration (
+            parent = parentFirNode,
+            name = astNode.signature.name.value,
+            args = astNode.signature.args.map { it.value }.toTypedArray()
+        )
+
         firFunctionDeclaration.block = SourceLower.lower(astNode.source, firFunctionDeclaration)
 
         require (parentFirNode is FirScope) { "ast2fir: parentFirNode must be FirSource but was ${parentFirNode::class.simpleName}" }

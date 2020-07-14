@@ -5,6 +5,8 @@ package cyan.compiler.fir
  */
 object FirNullNode : FirNode {
 
-    override fun allReferences() = emptySet<String>()
+    override val parent: FirNode? get() = null
+
+    override fun allReferences() = emptySet<FirReference>()
 
 }

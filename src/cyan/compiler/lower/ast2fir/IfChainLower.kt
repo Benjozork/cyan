@@ -17,7 +17,7 @@ object IfChainLower : Ast2FirLower<CyanIfChain, FirIfChain> {
 
         val firElseSource = astNode.elseBlock?.let { SourceLower.lower(it, parentFirNode) }
 
-        return FirIfChain(firBranches, firElseSource)
+        return FirIfChain(parentFirNode, firBranches, firElseSource)
     }
 
 }

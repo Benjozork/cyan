@@ -7,12 +7,14 @@ import cyan.compiler.fir.FirSymbol
 
 object NoNamedFunctionClosures : Check<FirFunctionDeclaration> {
 
-    override fun check(firFunctionDeclaration: FirFunctionDeclaration, containingNode: FirNode): Boolean {
-        val functionReferences = firFunctionDeclaration.allReferences()
-        val symbolsDeclaredInScope = (containingNode as FirScope).declaredSymbols.map(FirSymbol::name)
-        val functionArguments = firFunctionDeclaration.args
+    override fun check(firNode: FirFunctionDeclaration, containingNode: FirNode): Boolean {
+        require (containingNode is FirScope) { "should never happen" }
 
-        return functionReferences.any { it in symbolsDeclaredInScope && it !in functionArguments }
+        val functionReferences = firNode.allReferences()
+        val symbolsDeclaredInScope = containingNode.declaredSymbols.map(FirSymbol::name)
+        val functionArguments = firNode.args
+
+        return functionReferences.any { it.text in symbolsDeclaredInScope && it.text !in functionArguments }
     }
 
 }

@@ -9,7 +9,11 @@ import cyan.compiler.parser.ast.CyanVariableDeclaration
 object VariableDeclarationLower : Ast2FirLower<CyanVariableDeclaration, FirVariableDeclaration> {
 
     override fun lower(astNode: CyanVariableDeclaration, parentFirNode: FirNode): FirVariableDeclaration {
-        val firVariableDeclaration = FirVariableDeclaration(astNode.name.value, ExpressionLower.lower(astNode.value, parentFirNode))
+        val firVariableDeclaration = FirVariableDeclaration (
+            parent = parentFirNode,
+            name = astNode.name.value,
+            initializationExpr = ExpressionLower.lower(astNode.value, parentFirNode)
+        )
 
         require(parentFirNode is FirScope) { "parentNode is not FirScope" }
 

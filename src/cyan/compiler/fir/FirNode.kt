@@ -2,6 +2,8 @@ package cyan.compiler.fir
 
 interface FirNode {
 
-    fun allReferences(): Set<String>
+    val parent: FirNode?
+
+    fun allReferences(): Set<FirReference>
 
 }
