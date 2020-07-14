@@ -25,12 +25,12 @@ fun evaluate(expression: CyanExpression, stackFrame: StackFrame): CyanValue<out 
 
             if (lhs is CyanNumericLiteralExpression && rhs is CyanNumericLiteralExpression) { // Fast path for numeric values
                 return CyanNumberValue(when (op) {
-                    is CyanBinaryPlusOperator -> lhs.value + rhs.value
+                    is CyanBinaryPlusOperator  -> lhs.value + rhs.value
                     is CyanBinaryMinusOperator -> lhs.value - rhs.value
                     is CyanBinaryTimesOperator -> lhs.value * rhs.value
-                    is CyanBinaryDivOperator -> lhs.value / rhs.value
-                    is CyanBinaryModOperator -> lhs.value % rhs.value
-                    else -> error("unknown operator ${op::class.simpleName}")
+                    is CyanBinaryDivOperator   -> lhs.value / rhs.value
+                    is CyanBinaryModOperator   -> lhs.value % rhs.value
+                    else -> error("unknown binary operator type ${op::class.simpleName} for number values")
                 })
             }
 
