@@ -47,7 +47,8 @@ class CyanSourceParser : Grammar<CyanSource>() {
 
     // Misc.
 
-    val commaParser    by comma and ws
+    val znws               by zeroOrMore(newLine or ws) // Zero or more Newlines or WhiteSpaces
+    val commaParser        by comma and znws
 
     // Arithmetic
 
@@ -98,13 +99,6 @@ class CyanSourceParser : Grammar<CyanSource>() {
     val numericalValueParser by numericalValue            use { CyanNumericLiteralExpression(text.toInt()) }
     val booleanLiteralParser by (trueToken or falseToken) use { CyanBooleanLiteralExpression(type == trueToken) }
 
-    // Operators
-
-    val plusParser  by plus use { CyanBinaryModOperator }
-    val minusParser by minus use { CyanBinaryMinusOperator }
-
-    val operator by (plusParser or minusParser)
-
     // Members
 
     val memberAccessParser by (referenceParser * -dot * referenceParser) use { CyanMemberAccessExpression(t1, t2) }
@@ -137,35 +131,35 @@ class CyanSourceParser : Grammar<CyanSource>() {
 
     // Scope
 
-    val block by (-lcur * -optional(newLine) * parser(this::rootParser) * -optional(newLine) * -rcur)
+    val block by (-lcur * -znws * parser(this::rootParser) * -znws * -rcur)
 
     // Functions
 
-    val functionSignature by (-function * -ws * referenceParser * -optional(ws) * -leap * separatedTerms(referenceParser, commaParser, true) * -reap)
+    val functionSignature by (-function * -znws * referenceParser * -optional(ws) * -leap * separatedTerms(referenceParser, commaParser, true) * -reap)
             .use { CyanFunctionSignature(t1, t2) }
 
-    val functionDeclaration: Parser<CyanFunctionDeclaration> by (functionSignature * -ws * block)
+    val functionDeclaration: Parser<CyanFunctionDeclaration> by (functionSignature * -znws * block)
             .use { CyanFunctionDeclaration(t1, t2) }
 
     // Statements
 
-    val variableIdentification by (-let * -ws * referenceParser)
-    val variableInitialization by (-ws * -assign * -ws * expr)
+    val variableIdentification by (-let * -znws * referenceParser)
+    val variableInitialization by (-znws * -assign * -znws * expr)
 
-    val variableDeclaration    by (variableIdentification and variableInitialization)                         use { CyanVariableDeclaration(t1, t2) }
-    val functionCall           by (referenceParser * -leap * separatedTerms(expr, commaParser, true) * -reap) use { CyanFunctionCall(t1, t2.toTypedArray()) }
+    val variableDeclaration    by (variableIdentification and variableInitialization)                                         use { CyanVariableDeclaration(t1, t2) }
+    val functionCall           by (referenceParser * -leap * -znws * separatedTerms(expr, commaParser, true) * -znws * -reap) use { CyanFunctionCall(t1, t2.toTypedArray()) }
 
-    val ifStatementSignature                    by (-ifToken * -optional(ws) * -leap * expr * -reap)
-    val ifStatement: Parser<CyanIfStatement>    by (ifStatementSignature * -optional(ws) * block).use { CyanIfStatement(t1, t2) }
-    val elseStatement: Parser<CyanSource>       by (-elseToken * -optional(ws) * block)
-    val ifStatementChain: Parser<CyanStatement> by (separatedTerms(ifStatement, -optional(ws) * elseToken * -ws) * optional(-optional(ws) * elseStatement))
+    val ifStatementSignature                    by (-ifToken * -znws * -leap * expr * -reap)
+    val ifStatement: Parser<CyanIfStatement>    by (ifStatementSignature * -znws * block).use { CyanIfStatement(t1, t2) }
+    val elseStatement: Parser<CyanSource>       by (-elseToken * -znws * block)
+    val ifStatementChain: Parser<CyanStatement> by (separatedTerms(ifStatement, -optional(ws) * elseToken * -znws) * optional(-znws * elseStatement))
             .use { CyanIfChain(t1.toTypedArray(), elseBlock = t2) }
 
     val statement by -optional(ws) * (variableDeclaration or functionDeclaration or functionCall or ifStatementChain) * -optional(ws)
 
     // Root parser
 
-    val sourceParser = separatedTerms(statement, newLine) use { CyanSource(this) }
+    val sourceParser = separatedTerms(statement, znws) use { CyanSource(this) }
 
     override val rootParser = sourceParser
 
