@@ -43,7 +43,7 @@ function hi(a) {                  // Functions
     print(array)
     print(array.length)
     function hello(b) {           // Local functions
-       print("fuck")
+       print("heck")
        print(b)
     }
 }
