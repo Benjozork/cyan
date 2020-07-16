@@ -30,6 +30,18 @@ class CyanSourceParser : Grammar<CyanSource>() {
     val ifToken         by literalToken("if")
     val elseToken       by literalToken("else")
 
+    // Types
+
+    val int8Prim        by literalToken("i8")
+    val int32Prim       by literalToken("i32")
+    val float32Prim     by literalToken("f32")
+    val float64Prim     by literalToken("f64")
+    val boolPrim        by literalToken("bool")
+    val strPrim         by literalToken("str")
+    val charPrim        by literalToken("char")
+
+    val arraySuffix     by literalToken("[]")
+
     val assign          by literalToken("=")
 
     val leap            by literalToken("(")
@@ -41,14 +53,21 @@ class CyanSourceParser : Grammar<CyanSource>() {
     val lsq             by literalToken("[")
     val rsq             by literalToken("]")
 
+    val colon           by literalToken(":")
+
     val dot             by literalToken(".")
 
     val comma           by literalToken(",")
 
-    // Misc.
+    // Misc. base parsers
 
     val znws               by zeroOrMore(newLine or ws) // Zero or more Newlines or WhiteSpaces
     val commaParser        by comma and znws
+
+    // Type base parsers
+
+    val primTypeName by (int8Prim or int32Prim or float32Prim or float64Prim or boolPrim or strPrim or charPrim)
+    val primType     by (primTypeName * optional(arraySuffix))
 
     // Arithmetic
 
@@ -143,10 +162,10 @@ class CyanSourceParser : Grammar<CyanSource>() {
 
     // Statements
 
-    val variableIdentification by (-let * -znws * referenceParser)
+    val variableSignature      by (-let * -znws * referenceParser * -znws * optional(colon * -znws * primType))
     val variableInitialization by (-znws * -assign * -znws * expr)
 
-    val variableDeclaration    by (variableIdentification and variableInitialization)                                         use { CyanVariableDeclaration(t1, t2) }
+    val variableDeclaration    by (variableSignature and variableInitialization)                                         use { CyanVariableDeclaration(t1.t1, t2) }
     val functionCall           by (referenceParser * -leap * -znws * separatedTerms(expr, commaParser, true) * -znws * -reap) use { CyanFunctionCall(t1, t2.toTypedArray()) }
 
     val ifStatementSignature                    by (-ifToken * -znws * -leap * expr * -reap)
