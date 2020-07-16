@@ -7,6 +7,6 @@ object FirNullNode : FirNode {
 
     override val parent: FirNode? get() = null
 
-    override fun allReferences() = emptySet<FirReference>()
+    override fun allReferredSymbols() = emptySet<FirSymbol>()
 
 }

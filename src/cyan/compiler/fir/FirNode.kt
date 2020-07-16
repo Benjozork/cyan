@@ -4,6 +4,6 @@ interface FirNode {
 
     val parent: FirNode?
 
-    fun allReferences(): Set<FirReference>
+    fun allReferredSymbols(): Set<FirSymbol>
 
 }

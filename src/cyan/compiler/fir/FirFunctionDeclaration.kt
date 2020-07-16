@@ -4,6 +4,6 @@ class FirFunctionDeclaration(override val parent: FirNode, override val name: St
 
     lateinit var block: FirSource
 
-    override fun allReferences() = block.allReferences()
+    override fun allReferredSymbols() = block.allReferredSymbols()
 
 }

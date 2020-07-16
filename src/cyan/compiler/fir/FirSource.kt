@@ -7,6 +7,6 @@ class FirSource (
     val statements: MutableList<FirStatement> = mutableListOf()
 ) : FirScope {
 
-    override fun allReferences() = statements.flatMap { it.allReferences() }.toSet()
+    override fun allReferredSymbols() = statements.flatMap { it.allReferredSymbols() }.toSet()
 
 }
