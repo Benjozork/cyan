@@ -18,6 +18,7 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib"))
+    implementation(kotlin("reflect"))
 
     implementation("com.github.h0tk3y.betterParse", "better-parse", "0.4.0")
 }

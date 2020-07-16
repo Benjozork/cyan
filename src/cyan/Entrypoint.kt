@@ -24,19 +24,23 @@ fun main() {
             |let a = 1847899 + (301111 * 5)
             |let b = "hello"
             |let c = ["hi", "hello", b]
-            |let d = true
+            |let d: bool = true
             |if (d) {
-            |   print(c)
+            |    print(c)
             |} else if (false || d) {
-            |   print("hi !")
+            |    print("hi !")
             |} else {
-            |   print("ho !")
+            |    print("ho !")
             |}
             |function hi(a) {
-            |   let array = [1, 3, 42, 127, (10 % 3)]
-            |   print("Hello world !")
-            |   print(array)
-            |   print(array.length)
+            |    let array: i32[] = [1, 3, 42, 127, (10 % 3)]
+            |    print("Hello world !")
+            |    print(array)
+            |    print(array.length)
+            |    function hello(b) {
+            |       print("fuck")
+            |       print(b)
+            |    }
             |}
             |hi(9)
             |print(hi)
