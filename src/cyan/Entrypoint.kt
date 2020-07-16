@@ -25,6 +25,7 @@ fun main() {
             |let b = "hello"
             |let c = ["hi", "hello", b]
             |let d: bool = true
+            |let e = b
             |if (d) {
             |    print(c)
             |} else if (false || d) {
