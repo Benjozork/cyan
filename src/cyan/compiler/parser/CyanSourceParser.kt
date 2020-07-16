@@ -34,11 +34,23 @@ class CyanSourceParser : Grammar<CyanSource>() {
 
     val int8Prim        by literalToken("i8")
     val int32Prim       by literalToken("i32")
+    val int64Prim       by literalToken("i64")
     val float32Prim     by literalToken("f32")
     val float64Prim     by literalToken("f64")
     val boolPrim        by literalToken("bool")
     val strPrim         by literalToken("str")
     val charPrim        by literalToken("char")
+
+    val tokenToType = mapOf (
+        int8Prim    to CyanType.Int8,
+        int32Prim   to CyanType.Int32,
+        int64Prim   to CyanType.Int64,
+        float32Prim to CyanType.Float32,
+        float64Prim to CyanType.Float64,
+        boolPrim    to CyanType.Bool,
+        strPrim     to CyanType.Str,
+        charPrim    to CyanType.Char
+    )
 
     val arraySuffix     by literalToken("[]")
 
@@ -66,8 +78,8 @@ class CyanSourceParser : Grammar<CyanSource>() {
 
     // Type base parsers
 
-    val primTypeName by (int8Prim or int32Prim or float32Prim or float64Prim or boolPrim or strPrim or charPrim)
-    val primType     by (primTypeName * optional(arraySuffix))
+    val primTypeName by (int8Prim or int32Prim or int64Prim or float32Prim or float64Prim or boolPrim or strPrim or charPrim)
+    val primType     by (primTypeName * optional(arraySuffix)) use { CyanTypeAnnotation(tokenToType[t1.type]!!, t2 != null) }
 
     // Arithmetic
 
@@ -162,10 +174,10 @@ class CyanSourceParser : Grammar<CyanSource>() {
 
     // Statements
 
-    val variableSignature      by (-let * -znws * referenceParser * -znws * optional(colon * -znws * primType))
+    val variableSignature      by (-let * -znws * referenceParser * -znws * optional(-colon * -znws * primType))
     val variableInitialization by (-znws * -assign * -znws * expr)
 
-    val variableDeclaration    by (variableSignature and variableInitialization)                                         use { CyanVariableDeclaration(t1.t1, t2) }
+    val variableDeclaration    by (variableSignature and variableInitialization)                                              use { CyanVariableDeclaration(t1.t1, t1.t2, t2) }
     val functionCall           by (referenceParser * -leap * -znws * separatedTerms(expr, commaParser, true) * -znws * -reap) use { CyanFunctionCall(t1, t2.toTypedArray()) }
 
     val ifStatementSignature                    by (-ifToken * -znws * -leap * expr * -reap)
