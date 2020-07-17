@@ -11,12 +11,7 @@ object TypeMatches : Check<FirVariableDeclaration> {
 
         return when {
             typeAnnotationType == null -> false
-            typeAnnotationType != valueEffectiveType -> {
-                println("e: $typeAnnotationType")
-                println("f: $valueEffectiveType")
-
-                true
-            }
+            typeAnnotationType != valueEffectiveType -> true
             else -> false
         }
     }

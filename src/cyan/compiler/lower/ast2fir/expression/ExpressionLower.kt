@@ -1,5 +1,7 @@
 package cyan.compiler.lower.ast2fir.expression
 
+import cyan.compiler.common.diagnostic.CompilerDiagnostic
+import cyan.compiler.common.diagnostic.DiagnosticPipe
 import cyan.compiler.fir.FirNode
 import cyan.compiler.fir.expression.FirExpression
 import cyan.compiler.lower.ast2fir.Ast2FirLower
@@ -13,7 +15,11 @@ object ExpressionLower : Ast2FirLower<CyanExpression, FirExpression> {
         val firExpression = FirExpression(parentFirNode, astNode)
 
         if (firExpression.astExpr is CyanArrayExpression) {
-            require (!ArrayElementsTypeConsistent.check(firExpression, parentFirNode)) { "heterogeneous arrays are not allowed" }
+            if (ArrayElementsTypeConsistent.check(firExpression, parentFirNode)) {
+                DiagnosticPipe.report (
+                    CompilerDiagnostic(CompilerDiagnostic.Level.Error, astNode, "array elements must all be of the same type")
+                )
+            }
         }
 
         return firExpression

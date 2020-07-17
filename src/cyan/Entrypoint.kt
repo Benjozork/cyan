@@ -16,15 +16,13 @@ import kotlin.time.measureTime
 fun main() {
     println("welcome to cyanide v0.1.0, running cyan v0.1.0\n")
 
-    println("parsing source ...")
-
     var source: CyanSource
     val timeTakenToParse = measureTime {
         source = CyanSourceParser().parseToEnd("""
             |let a = 1847899 + (301111 * 5)
             |let b = "hello"
-            |let c = ["hi", "hello", b]
-            |let d: bool = true
+            |let c = ["hi", "hello", b, 6]
+            |let d: bool = "a"
             |let e = b
             |if (d) {
             |    print(c)
