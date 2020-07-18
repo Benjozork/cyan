@@ -34,6 +34,7 @@ class CyanSourceParser : Grammar<CyanSource>() {
 
     // Types
 
+    val voidPrim        by literalToken("void")
     val int8Prim        by literalToken("i8")
     val int32Prim       by literalToken("i32")
     val int64Prim       by literalToken("i64")
@@ -44,6 +45,7 @@ class CyanSourceParser : Grammar<CyanSource>() {
     val charPrim        by literalToken("char")
 
     val tokenToType = mapOf (
+        voidPrim    to CyanType.Void,
         int8Prim    to CyanType.Int8,
         int32Prim   to CyanType.Int32,
         int64Prim   to CyanType.Int64,
@@ -80,7 +82,7 @@ class CyanSourceParser : Grammar<CyanSource>() {
 
     // Type base parsers
 
-    val primTypeName  by (int8Prim or int32Prim or int64Prim or float32Prim or float64Prim or boolPrim or strPrim or charPrim)
+    val primTypeName  by (voidPrim or int8Prim or int32Prim or int64Prim or float32Prim or float64Prim or boolPrim or strPrim or charPrim)
     val primType      by (primTypeName * optional(arraySuffix)) use { Type(tokenToType[t1.type]!!, t2 != null) }
     val typeSignature by (-optional(colon) * -znws * primType)
 
@@ -170,8 +172,8 @@ class CyanSourceParser : Grammar<CyanSource>() {
     // Functions
 
     val functionArgument  by (referenceParser * -znws * typeSignature) use { CyanFunctionArgument(t1.value, t2) }
-    val functionSignature by (-function * -znws * referenceParser * -znws * -leap * separatedTerms(functionArgument, commaParser, true) * -reap)
-            .use { CyanFunctionSignature(t1, t2) }
+    val functionSignature by (-function * -znws * referenceParser * -znws * -leap * separatedTerms(functionArgument, commaParser, true) * -reap * -znws * optional(typeSignature))
+            .use { t3?.let { CyanFunctionSignature(t1, t2, it) } ?: CyanFunctionSignature(t1, t2) }
 
     val functionDeclaration: Parser<CyanFunctionDeclaration> by (functionSignature * -znws * block)
             .use { CyanFunctionDeclaration(t1, t2) }

@@ -31,10 +31,11 @@ fun main() {
             |} else {
             |    print("ho !")
             |}
-            |function printSomeInt(arg: i32) {
-            |   print(arg)
+            |function hello(a: str) {
+            |   print("Hello, stranger ! here's the value")
+            |   print(a)
             |}
-            |printSomeInt("hello")
+            |hello("<dumb value>>")
             """.trimMargin())
     }
 
