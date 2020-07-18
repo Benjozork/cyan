@@ -41,7 +41,7 @@ class Interpreter {
         when (statement) {
             is CyanVariableDeclaration -> stackFrame.localVariables[statement.name.value] = evaluate(statement.value, stackFrame)
             is CyanFunctionDeclaration -> {
-                val function = CyanFunction(statement.signature.name.value, statement.signature.args.map { it.value }.toTypedArray(), statement.source)
+                val function = CyanFunction(statement.signature.name.value, statement.signature.args.map { it.name }.toTypedArray(), statement.source)
 
                 stackFrame.scopedFunctions[function.name] = function
             }

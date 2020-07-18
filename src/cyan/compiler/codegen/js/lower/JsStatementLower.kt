@@ -5,6 +5,7 @@ import cyan.compiler.codegen.ItemLower
 import cyan.compiler.parser.ast.CyanIfChain
 import cyan.compiler.parser.ast.CyanStatement
 import cyan.compiler.parser.ast.CyanVariableDeclaration
+import cyan.compiler.parser.ast.function.CyanFunctionArgument
 import cyan.compiler.parser.ast.function.CyanFunctionCall
 import cyan.compiler.parser.ast.function.CyanFunctionDeclaration
 
@@ -15,7 +16,7 @@ object JsStatementLower : ItemLower<CyanStatement> {
             is CyanVariableDeclaration -> "const ${item.name} = ${backend.expressionLower.lower(backend, item.value)};"
             is CyanFunctionDeclaration -> {
                 """
-                |function ${item.signature.name}(${item.signature.args.joinToString { it.value }}) {
+                |function ${item.signature.name}(${item.signature.args.joinToString { it.name }}) {
                 |${backend.translateSource(item.source).prependIndent("    ")}
                 |}
                 """.trimMargin()

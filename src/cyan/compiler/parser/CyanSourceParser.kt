@@ -16,6 +16,7 @@ import com.github.h0tk3y.betterParse.grammar.parser
 import com.github.h0tk3y.betterParse.lexer.literalToken
 import com.github.h0tk3y.betterParse.lexer.regexToken
 import com.github.h0tk3y.betterParse.parser.Parser
+import cyan.compiler.parser.ast.function.CyanFunctionArgument
 
 @Suppress("MemberVisibilityCanBePrivate")
 class CyanSourceParser : Grammar<CyanSource>() {
@@ -78,8 +79,9 @@ class CyanSourceParser : Grammar<CyanSource>() {
 
     // Type base parsers
 
-    val primTypeName by (int8Prim or int32Prim or int64Prim or float32Prim or float64Prim or boolPrim or strPrim or charPrim)
-    val primType     by (primTypeName * optional(arraySuffix)) use { CyanTypeAnnotation(tokenToType[t1.type]!!, t2 != null) }
+    val primTypeName  by (int8Prim or int32Prim or int64Prim or float32Prim or float64Prim or boolPrim or strPrim or charPrim)
+    val primType      by (primTypeName * optional(arraySuffix)) use { CyanTypeAnnotation(tokenToType[t1.type]!!, t2 != null) }
+    val typeSignature by (-optional(colon) * -znws * primType)
 
     // Arithmetic
 
@@ -166,7 +168,8 @@ class CyanSourceParser : Grammar<CyanSource>() {
 
     // Functions
 
-    val functionSignature by (-function * -znws * referenceParser * -optional(ws) * -leap * separatedTerms(referenceParser, commaParser, true) * -reap)
+    val functionArgument  by (referenceParser * -znws * typeSignature) use { CyanFunctionArgument(t1.value, t2) }
+    val functionSignature by (-function * -znws * referenceParser * -znws * -leap * separatedTerms(functionArgument, commaParser, true) * -reap)
             .use { CyanFunctionSignature(t1, t2) }
 
     val functionDeclaration: Parser<CyanFunctionDeclaration> by (functionSignature * -znws * block)
@@ -174,10 +177,10 @@ class CyanSourceParser : Grammar<CyanSource>() {
 
     // Statements
 
-    val variableSignature      by (-let * -znws * referenceParser * -znws * optional(-colon * -znws * primType))
+    val variableSignature      by (-let * -znws * referenceParser * -znws * optional(typeSignature))
     val variableInitialization by (-znws * -assign * -znws * expr)
-
     val variableDeclaration    by (variableSignature and variableInitialization)                                              use { CyanVariableDeclaration(t1.t1, t1.t2, t2) }
+
     val functionCall           by (referenceParser * -leap * -znws * separatedTerms(expr, commaParser, true) * -znws * -reap) use { CyanFunctionCall(t1, t2.toTypedArray()) }
 
     val ifStatementSignature                    by (-ifToken * -znws * -leap * expr * -reap)

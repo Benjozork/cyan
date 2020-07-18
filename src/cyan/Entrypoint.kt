@@ -21,8 +21,8 @@ fun main() {
         source = CyanSourceParser().parseToEnd("""
             |let a = 1847899 + (301111 * 5)
             |let b = "hello"
-            |let c = ["hi", "hello", b, 6]
-            |let d: bool = "a"
+            |let c = ["hi", "hello", b]
+            |let d: bool = true
             |let e = b
             |if (d) {
             |    print(c)
@@ -31,12 +31,12 @@ fun main() {
             |} else {
             |    print("ho !")
             |}
-            |function hi(a) {
+            |function hi(a: str) {
             |    let array: i32[] = [1, 3, 42, 127, (10 % 3)]
             |    print("Hello world !")
             |    print(array)
             |    print(array.length)
-            |    function hello(b) {
+            |    function hello(b: str) {
             |       print("fuck")
             |       print(b)
             |    }

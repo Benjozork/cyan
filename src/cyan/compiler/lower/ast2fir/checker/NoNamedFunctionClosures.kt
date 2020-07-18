@@ -1,8 +1,9 @@
 package cyan.compiler.lower.ast2fir.checker
 
-import cyan.compiler.fir.FirFunctionDeclaration
 import cyan.compiler.fir.FirNode
 import cyan.compiler.fir.FirScope
+import cyan.compiler.fir.functions.FirFunctionArgument
+import cyan.compiler.fir.functions.FirFunctionDeclaration
 
 object NoNamedFunctionClosures : Check<FirFunctionDeclaration> {
 
@@ -13,7 +14,10 @@ object NoNamedFunctionClosures : Check<FirFunctionDeclaration> {
         val symbolsDeclaredInScope = containingNode.declaredSymbols
         val functionArguments = firNode.args
 
-        return functionReferences.any { it in symbolsDeclaredInScope && it.name !in functionArguments }
+        return functionReferences.any {
+            it in symbolsDeclaredInScope &&
+                    it.name !in functionArguments.map(FirFunctionArgument::name)
+        }
     }
 
 }

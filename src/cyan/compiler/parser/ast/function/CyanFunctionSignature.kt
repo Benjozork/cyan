@@ -5,7 +5,7 @@ import cyan.compiler.parser.ast.CyanStatement
 
 class CyanFunctionSignature (
     val name: CyanIdentifierExpression,
-    val args: List<CyanIdentifierExpression>
+    val args: List<CyanFunctionArgument>
 ): CyanStatement {
     override fun toString() = "$name(${args.joinToString(", ")})"
 }

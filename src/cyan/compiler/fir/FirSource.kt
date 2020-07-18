@@ -1,5 +1,7 @@
 package cyan.compiler.fir
 
+import cyan.compiler.fir.functions.FirFunctionDeclaration
+
 class FirSource (
     override val parent: FirNode,
     override val declaredSymbols: MutableSet<FirSymbol> = mutableSetOf(),
