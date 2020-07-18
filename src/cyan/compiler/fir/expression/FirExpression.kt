@@ -4,8 +4,8 @@ import cyan.compiler.common.diagnostic.CompilerDiagnostic
 import cyan.compiler.common.diagnostic.DiagnosticPipe
 import cyan.compiler.common.types.Type
 import cyan.compiler.fir.*
+import cyan.compiler.fir.extensions.containingScope
 import cyan.compiler.fir.extensions.findSymbol
-import cyan.compiler.fir.extensions.firstAncestorOfType
 import cyan.compiler.fir.functions.FirFunctionArgument
 import cyan.compiler.fir.functions.FirFunctionDeclaration
 import cyan.compiler.parser.ast.CyanType
@@ -41,7 +41,7 @@ class FirExpression(override val parent: FirNode, val astExpr: CyanExpression) :
                  lhsType
              }
              is CyanIdentifierExpression -> {
-                 val containingScope = this.firstAncestorOfType<FirScope>()
+                 val containingScope = this.containingScope()
 
                  when (val referee = containingScope?.findSymbol(FirReference(this, this.astExpr.value))) {
                      is FirVariableDeclaration -> referee.initializationExpr.type()
