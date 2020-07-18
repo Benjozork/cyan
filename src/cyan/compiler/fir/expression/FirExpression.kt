@@ -1,5 +1,7 @@
 package cyan.compiler.fir.expression
 
+import cyan.compiler.common.diagnostic.CompilerDiagnostic
+import cyan.compiler.common.diagnostic.DiagnosticPipe
 import cyan.compiler.common.types.Type
 import cyan.compiler.fir.*
 import cyan.compiler.fir.extensions.findSymbol
@@ -26,7 +28,15 @@ class FirExpression(override val parent: FirNode, val astExpr: CyanExpression) :
              is CyanBinaryExpression -> {
                  val (lhsType, rhsType) = FirExpression(this, astExpr.lhs).type() to FirExpression(this, astExpr.rhs).type()
 
-                 require (lhsType == rhsType) { "binary expressions with different operand types are not yet supported" }
+                 if (lhsType != rhsType) {
+                     DiagnosticPipe.report (
+                         CompilerDiagnostic (
+                             level = CompilerDiagnostic.Level.Error,
+                             message = "binary expressions with different operand types are not yet supported",
+                             astNode = astExpr
+                         )
+                     )
+                 }
 
                  lhsType
              }
