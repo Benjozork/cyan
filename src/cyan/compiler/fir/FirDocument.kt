@@ -1,5 +1,6 @@
 package cyan.compiler.fir
 
+import cyan.compiler.common.types.Type
 import cyan.compiler.fir.functions.FirFunctionArgument
 import cyan.compiler.fir.functions.FirFunctionDeclaration
 import cyan.compiler.parser.ast.CyanType
@@ -13,7 +14,7 @@ class FirDocument (
         this += FirFunctionDeclaration (
             parent = this@FirDocument,
             name = "print",
-            args = arrayOf(FirFunctionArgument(this@FirDocument, "a", FirTypeAnnotation(CyanType.Str, false)))
+            args = arrayOf(FirFunctionArgument(this@FirDocument, "a", Type(CyanType.Any, false)))
         )
     }
 

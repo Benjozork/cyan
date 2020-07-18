@@ -25,7 +25,7 @@ object FunctionCallLower : Ast2FirLower<CyanFunctionCall, FirFunctionCall> {
         functionDeclarationArgsToPassedArgs.entries.forEachIndexed { i, (firArg, astArg) -> // Type check args
             val astArgType = astArg.type()
 
-            if (firArg.typeAnnotation != astArgType) {
+            if (!(firArg.typeAnnotation accepts astArgType)) {
                 DiagnosticPipe.report (
                     CompilerDiagnostic (
                         level = CompilerDiagnostic.Level.Error,

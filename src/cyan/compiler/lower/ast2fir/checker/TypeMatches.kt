@@ -11,7 +11,7 @@ object TypeMatches : Check<FirVariableDeclaration> {
 
         return when {
             typeAnnotationType == null -> false
-            typeAnnotationType != valueEffectiveType -> true
+            !(typeAnnotationType accepts valueEffectiveType) -> true
             else -> false
         }
     }

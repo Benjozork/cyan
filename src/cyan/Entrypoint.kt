@@ -41,7 +41,7 @@ fun main() {
             |       print(b)
             |    }
             |}
-            |hi(9)
+            |hi("9")
             |print(hi)
             """.trimMargin())
     }

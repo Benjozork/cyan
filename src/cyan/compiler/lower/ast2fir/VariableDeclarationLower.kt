@@ -2,9 +2,9 @@ package cyan.compiler.lower.ast2fir
 
 import cyan.compiler.common.diagnostic.CompilerDiagnostic
 import cyan.compiler.common.diagnostic.DiagnosticPipe
+import cyan.compiler.common.types.Type
 import cyan.compiler.fir.FirNode
 import cyan.compiler.fir.FirScope
-import cyan.compiler.fir.FirTypeAnnotation
 import cyan.compiler.fir.FirVariableDeclaration
 import cyan.compiler.lower.ast2fir.checker.TypeMatches
 import cyan.compiler.lower.ast2fir.expression.ExpressionLower
@@ -13,7 +13,7 @@ import cyan.compiler.parser.ast.CyanVariableDeclaration
 object VariableDeclarationLower : Ast2FirLower<CyanVariableDeclaration, FirVariableDeclaration> {
 
     override fun lower(astNode: CyanVariableDeclaration, parentFirNode: FirNode): FirVariableDeclaration {
-        val typeAnnotation = astNode.type?.let { FirTypeAnnotation(it.base, it.array) }
+        val typeAnnotation = astNode.type?.let { Type(it.base, it.array) }
 
         val firVariableDeclaration = FirVariableDeclaration (
             parent = parentFirNode,

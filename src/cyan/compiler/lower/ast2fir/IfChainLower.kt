@@ -1,8 +1,8 @@
 package cyan.compiler.lower.ast2fir
 
+import cyan.compiler.common.types.Type
 import cyan.compiler.fir.FirIfChain
 import cyan.compiler.fir.FirNode
-import cyan.compiler.fir.FirTypeAnnotation
 import cyan.compiler.lower.ast2fir.expression.ExpressionLower
 import cyan.compiler.parser.ast.CyanIfChain
 import cyan.compiler.parser.ast.CyanType
@@ -14,7 +14,7 @@ object IfChainLower : Ast2FirLower<CyanIfChain, FirIfChain> {
             val firBranchExpr = ExpressionLower.lower(branch.conditionExpr, parentFirNode)
             val firBranchSource = SourceLower.lower(branch.block, parentFirNode)
 
-            require(firBranchExpr.type() == FirTypeAnnotation(CyanType.Bool, false)) { "if statement condition must be a boolean expression" }
+            require(firBranchExpr.type() == Type(CyanType.Bool, false)) { "if statement condition must be a boolean expression" }
 
             firBranchExpr to firBranchSource
         }

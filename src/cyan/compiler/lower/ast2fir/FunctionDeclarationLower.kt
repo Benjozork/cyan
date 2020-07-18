@@ -1,10 +1,10 @@
 package cyan.compiler.lower.ast2fir
 
+import cyan.compiler.common.types.Type
 import cyan.compiler.fir.functions.FirFunctionDeclaration
 import cyan.compiler.fir.FirNode
 import cyan.compiler.fir.FirNullNode
 import cyan.compiler.fir.FirScope
-import cyan.compiler.fir.FirTypeAnnotation
 import cyan.compiler.fir.functions.FirFunctionArgument
 import cyan.compiler.lower.ast2fir.checker.NoNamedFunctionClosures
 import cyan.compiler.parser.ast.function.CyanFunctionDeclaration
@@ -19,7 +19,7 @@ object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirNullN
         )
 
         firFunctionDeclaration.args = astNode.signature.args
-                .map { FirFunctionArgument(firFunctionDeclaration, it.name, it.typeAnnotation.let { a -> FirTypeAnnotation(a.base, a.array) }) }
+                .map { FirFunctionArgument(firFunctionDeclaration, it.name, it.typeAnnotation.let { a -> Type(a.base, a.array) }) }
                 .toTypedArray()
 
         firFunctionDeclaration.block = SourceLower.lower(astNode.source, firFunctionDeclaration)

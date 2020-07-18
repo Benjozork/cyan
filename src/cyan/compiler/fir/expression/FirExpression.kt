@@ -1,13 +1,12 @@
 package cyan.compiler.fir.expression
 
+import cyan.compiler.common.types.Type
 import cyan.compiler.fir.*
 import cyan.compiler.fir.extensions.findSymbol
 import cyan.compiler.fir.extensions.firstAncestorOfType
+import cyan.compiler.fir.functions.FirFunctionDeclaration
 import cyan.compiler.parser.ast.CyanType
-import cyan.compiler.parser.ast.expression.CyanArrayExpression
-import cyan.compiler.parser.ast.expression.CyanBinaryExpression
-import cyan.compiler.parser.ast.expression.CyanExpression
-import cyan.compiler.parser.ast.expression.CyanIdentifierExpression
+import cyan.compiler.parser.ast.expression.*
 import cyan.compiler.parser.ast.expression.literal.CyanBooleanLiteralExpression
 import cyan.compiler.parser.ast.expression.literal.CyanNumericLiteralExpression
 import cyan.compiler.parser.ast.expression.literal.CyanStringLiteralExpression
@@ -17,11 +16,11 @@ class FirExpression(override val parent: FirNode, val astExpr: CyanExpression) :
     /**
      * Infers the type of this FirExpression node.
      */
-    fun type(): FirTypeAnnotation {
+    fun type(): Type {
          return when (astExpr) {
-             is CyanNumericLiteralExpression -> FirTypeAnnotation(CyanType.Int32, false)
-             is CyanStringLiteralExpression  -> FirTypeAnnotation(CyanType.Str, false)
-             is CyanBooleanLiteralExpression -> FirTypeAnnotation(CyanType.Bool, false)
+             is CyanNumericLiteralExpression -> Type(CyanType.Int32, false)
+             is CyanStringLiteralExpression  -> Type(CyanType.Str, false)
+             is CyanBooleanLiteralExpression -> Type(CyanType.Bool, false)
              is CyanArrayExpression          -> FirExpression(this, astExpr.exprs.first()).type().copy(array = true)
              is CyanBinaryExpression -> {
                  val (lhsType, rhsType) = FirExpression(this, astExpr.lhs).type() to FirExpression(this, astExpr.rhs).type()
@@ -31,15 +30,17 @@ class FirExpression(override val parent: FirNode, val astExpr: CyanExpression) :
                  lhsType
              }
              is CyanIdentifierExpression -> {
-                val containingScope = this.firstAncestorOfType<FirScope>()
+                 val containingScope = this.firstAncestorOfType<FirScope>()
 
-                when (val referee = containingScope?.findSymbol(FirReference(this, this.astExpr.value))) {
-                    is FirVariableDeclaration -> referee.initializationExpr.type()
-                    null -> error("cannot find symbol '${astExpr.value}'")
-                    else -> error("can't infer type of ${referee::class.simpleName}")
-                }
-            }
-            else -> error("can't infer type of ${astExpr::class.simpleName}")
+                 when (val referee = containingScope?.findSymbol(FirReference(this, this.astExpr.value))) {
+                     is FirVariableDeclaration -> referee.initializationExpr.type()
+                     is FirFunctionDeclaration -> Type(CyanType.Any, false)
+                     null -> error("cannot find symbol '${astExpr.value}'")
+                     else -> error("can't infer type of ${referee::class.simpleName}")
+                 }
+             }
+             is CyanMemberAccessExpression -> Type(CyanType.Any, false)
+             else -> error("can't infer type of ${astExpr::class.simpleName}")
         }
     }
 

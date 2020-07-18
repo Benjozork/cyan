@@ -1,6 +1,7 @@
 package cyan.compiler.parser.ast
 
 enum class CyanType {
+    Any,
     Int8,
     Int32,
     Int64,
