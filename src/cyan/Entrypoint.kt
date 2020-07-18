@@ -14,7 +14,7 @@ import kotlin.time.measureTime
 
 @ExperimentalTime
 fun main() {
-    println("welcome to cyanide v0.1.0, running cyan v0.1.0\n")
+//    println("welcome to cyanide v0.1.0, running cyan v0.1.0\n")
 
     var source: CyanSource
     val timeTakenToParse = measureTime {
@@ -31,18 +31,10 @@ fun main() {
             |} else {
             |    print("ho !")
             |}
-            |function hi(a: str) {
-            |    let array: i32[] = [1, 3, 42, 127, (10 % 3)]
-            |    print("Hello world !")
-            |    print(array)
-            |    print(array.length)
-            |    function hello(b: str) {
-            |       print("fuck")
-            |       print(b)
-            |    }
+            |function printSomeInt(arg: i32) {
+            |   print(arg)
             |}
-            |hi("9")
-            |print(hi)
+            |printSomeInt("hello")
             """.trimMargin())
     }
 

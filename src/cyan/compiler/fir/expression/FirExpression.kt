@@ -4,6 +4,7 @@ import cyan.compiler.common.types.Type
 import cyan.compiler.fir.*
 import cyan.compiler.fir.extensions.findSymbol
 import cyan.compiler.fir.extensions.firstAncestorOfType
+import cyan.compiler.fir.functions.FirFunctionArgument
 import cyan.compiler.fir.functions.FirFunctionDeclaration
 import cyan.compiler.parser.ast.CyanType
 import cyan.compiler.parser.ast.expression.*
@@ -35,6 +36,7 @@ class FirExpression(override val parent: FirNode, val astExpr: CyanExpression) :
                  when (val referee = containingScope?.findSymbol(FirReference(this, this.astExpr.value))) {
                      is FirVariableDeclaration -> referee.initializationExpr.type()
                      is FirFunctionDeclaration -> Type(CyanType.Any, false)
+                     is FirFunctionArgument -> referee.typeAnnotation
                      null -> error("cannot find symbol '${astExpr.value}'")
                      else -> error("can't infer type of ${referee::class.simpleName}")
                  }
