@@ -6,8 +6,8 @@ import cyan.compiler.common.types.Type
 import cyan.compiler.fir.FirNode
 import cyan.compiler.fir.FirScope
 import cyan.compiler.fir.FirVariableDeclaration
-import cyan.compiler.lower.ast2fir.checker.TypeMatches
 import cyan.compiler.lower.ast2fir.expression.ExpressionLower
+import cyan.compiler.parser.ast.CyanType
 import cyan.compiler.parser.ast.CyanVariableDeclaration
 
 object VariableDeclarationLower : Ast2FirLower<CyanVariableDeclaration, FirVariableDeclaration> {
@@ -32,7 +32,17 @@ object VariableDeclarationLower : Ast2FirLower<CyanVariableDeclaration, FirVaria
             )
         }
 
-        if (TypeMatches.check(firVariableDeclaration, parentFirNode)) {
+        if (typeAnnotation?.base == CyanType.Void) {
+            DiagnosticPipe.report (
+                CompilerDiagnostic (
+                    level = CompilerDiagnostic.Level.Error,
+                    astNode = astNode,
+                    message = "Variables cannot have 'void' type"
+                )
+            )
+        }
+
+        if (typeAnnotation != null && !(typeAnnotation accepts firVariableDeclaration.initializationExpr.type())) {
             DiagnosticPipe.report (
                 CompilerDiagnostic (
                     level = CompilerDiagnostic.Level.Error,
