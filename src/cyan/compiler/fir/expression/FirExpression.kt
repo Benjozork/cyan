@@ -52,6 +52,19 @@ class FirExpression(override val parent: FirNode, val astExpr: CyanExpression) :
                  }
              }
              is CyanMemberAccessExpression -> Type(CyanType.Any, false)
+             is CyanArrayIndexExpression -> {
+                 return FirExpression(this, astExpr.base).type().also {
+                     if (!it.array) {
+                         DiagnosticPipe.report (
+                             CompilerDiagnostic (
+                                 level = CompilerDiagnostic.Level.Error,
+                                 message = "left-hand side of array index expression must refer to an array",
+                                 astNode = astExpr
+                             )
+                         )
+                     }
+                 }
+             }
              else -> error("can't infer type of ${astExpr::class.simpleName}")
         }
     }
