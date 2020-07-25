@@ -1,9 +1,11 @@
 package cyan.compiler.parser
 
+import cyan.compiler.common.types.Type
 import cyan.compiler.parser.ast.*
 import cyan.compiler.parser.ast.function.CyanFunctionCall
 import cyan.compiler.parser.ast.function.CyanFunctionDeclaration
 import cyan.compiler.parser.ast.function.CyanFunctionSignature
+import cyan.compiler.parser.ast.function.CyanFunctionArgument
 import cyan.compiler.parser.ast.expression.*
 import cyan.compiler.parser.ast.expression.literal.CyanNumericLiteralExpression
 import cyan.compiler.parser.ast.expression.literal.CyanBooleanLiteralExpression
@@ -16,8 +18,6 @@ import com.github.h0tk3y.betterParse.grammar.parser
 import com.github.h0tk3y.betterParse.lexer.literalToken
 import com.github.h0tk3y.betterParse.lexer.regexToken
 import com.github.h0tk3y.betterParse.parser.Parser
-import cyan.compiler.common.types.Type
-import cyan.compiler.parser.ast.function.CyanFunctionArgument
 
 @Suppress("MemberVisibilityCanBePrivate")
 class CyanSourceParser : Grammar<CyanSource>() {
@@ -137,7 +137,8 @@ class CyanSourceParser : Grammar<CyanSource>() {
 
     // Members
 
-    val memberAccessParser by (referenceParser * -dot * referenceParser) use { CyanMemberAccessExpression(t1, t2) }
+    val memberAccessParser by (referenceParser * -dot * referenceParser)                                   use { CyanMemberAccessExpression(t1, t2) }
+    val arrayIndexParser   by (parser(this::unambiguousTerm) * -znws * -lsq * numericalValueParser * -rsq) use { CyanArrayIndexExpression(t1, t2) }
 
     // Expressions
 
@@ -148,7 +149,8 @@ class CyanSourceParser : Grammar<CyanSource>() {
 
     val parenTerm = (-leap * parser(this::expr) * -reap)
 
-    val term by (parenTerm or arrayExpressionParser or literalExpressionParser or memberAccessParser or referenceParser)
+    val unambiguousTerm: Parser<CyanExpression> by (parenTerm or memberAccessParser or referenceParser)
+    val term: Parser<CyanExpression>            by (parenTerm or arrayExpressionParser or literalExpressionParser or memberAccessParser or arrayIndexParser or referenceParser)
 
     val mulDivModOp by (times or div or mod) use { tokenToOp[this.type]!! }
     val mulDivModOrTerm: Parser<CyanExpression> by leftAssociative(term, -optional(ws) * mulDivModOp * -optional(ws)) { l, o, r -> CyanBinaryExpression(l, o, r) }
