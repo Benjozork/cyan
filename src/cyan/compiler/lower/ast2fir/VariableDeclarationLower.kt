@@ -22,6 +22,8 @@ object VariableDeclarationLower : Ast2FirLower<CyanVariableDeclaration, FirVaria
             initializationExpr = ExpressionLower.lower(astNode.value, parentFirNode)
         )
 
+        firVariableDeclaration.initializationExpr.type()
+
         if (parentFirNode !is FirScope) {
             DiagnosticPipe.report (
                 CompilerDiagnostic (
