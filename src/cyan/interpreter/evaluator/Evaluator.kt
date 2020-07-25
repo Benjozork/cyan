@@ -72,8 +72,15 @@ fun evaluate(expression: CyanExpression, stackFrame: StackFrame): CyanValue<out 
             val builtin = Builtins.functions[value::class]?.get(expression.member.value)
 
             return if (builtin != null) {
-                builtin(value)
+                builtin(value, emptyArray())
             } else ierror("no builtin found for '$expression' on value of type ${value::class.simpleName}")
+        }
+        is CyanArrayIndexExpression -> {
+            val base = evaluate(expression.base, stackFrame)
+            val index = evaluate(expression.index, stackFrame)
+            val builtin = Builtins.functions[CyanArrayValue::class]?.get("index")
+
+            builtin?.invoke(base, arrayOf(index)) ?: ierror("fatal: no array index e")
         }
         else -> error("unknown expression type ${expression::class.simpleName}")
     }
