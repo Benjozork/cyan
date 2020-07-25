@@ -25,6 +25,8 @@ object JsExpressionLower : ItemLower<CyanExpression> {
                 "[${item.exprs.joinToString(", ") { backend.expressionLower.lower(backend, it) }}]"
             is CyanMemberAccessExpression ->
                 "${item.base}.${item.member}"
+            is CyanArrayIndexExpression ->
+                "${backend.expressionLower.lower(backend, item.base)}[${item.index}]"
             else -> error("js: cannot lower expression { $item } of type ${item::class.simpleName}")
         }
     }
