@@ -30,6 +30,7 @@ let a = 1847899 + (301111 * 5)    // Complex expressions
 let b = "hello"                   // Type inference
 let c = ["hi", "hello", b]        // Homogeneous arrays
 let d: bool = true                // Type annotations
+print(c[2])                       // Array indexing
 if (d) {                          // "if - else if - else" chains
     print(c)
 } else if (false || d) {
