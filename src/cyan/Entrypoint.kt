@@ -33,7 +33,7 @@ fun main() {
             |print(b)
             |let c = ["hi", "hello", b]
             |let d: bool = true
-            |let e = c[0]
+            |let e = c[0]   
             |let f = b
             |if (d) {
             |    print(c[2])

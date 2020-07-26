@@ -10,6 +10,7 @@ import java.lang.StringBuilder
 abstract class FirCompilerBackend {
 
     abstract val prelude: String
+    abstract val postlude: String
 
     abstract val statementLower:  FirItemLower<FirStatement>
     abstract val expressionLower: FirItemLower<FirExpression>
