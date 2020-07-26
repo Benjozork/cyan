@@ -11,8 +11,11 @@ object JsExpressionLower : ItemLower<CyanExpression> {
 
     override fun lower(backend: CompilerBackend, item: CyanExpression): String {
         return when (item) {
-            is CyanStringLiteralExpression ->
-                "\'${item.value}\'"
+            is CyanStringLiteralExpression -> {
+                val escapedString = item.value.replace("'", "\\'")
+
+                "\'$escapedString\'"
+            }
             is CyanNumericLiteralExpression ->
                 item.value.toString()
             is CyanBooleanLiteralExpression ->
@@ -22,11 +25,11 @@ object JsExpressionLower : ItemLower<CyanExpression> {
             is CyanBinaryExpression ->
                 item.toString()
             is CyanArrayExpression ->
-                "[${item.exprs.joinToString(", ") { backend.expressionLower.lower(backend, it) }}]"
+                "[${item.exprs.joinToString(", ", transform = backend::lowerExpression)}]"
             is CyanMemberAccessExpression ->
                 "${item.base}.${item.member}"
             is CyanArrayIndexExpression ->
-                "${backend.expressionLower.lower(backend, item.base)}[${item.index}]"
+                "${backend.lowerExpression(item.base)}[${item.index}]"
             else -> error("js: cannot lower expression { $item } of type ${item::class.simpleName}")
         }
     }
