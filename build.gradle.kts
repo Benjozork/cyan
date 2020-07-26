@@ -8,6 +8,7 @@ version = "1.0-SNAPSHOT"
 // Main module
 
 kotlin.sourceSets["main"].kotlin.srcDirs("src")
+sourceSets["main"].resources.srcDirs("resources")
 kotlin.sourceSets["test"].kotlin.srcDirs("test")
 
 repositories {
@@ -25,4 +26,3 @@ dependencies {
 
     implementation("com.andreapivetta.kolor", "kolor", "1.0.0")
 }
-
