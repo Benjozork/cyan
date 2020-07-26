@@ -28,6 +28,7 @@ class CyanSourceParser : Grammar<CyanSource>() {
     val ws              by regexToken("\\s+")
 
     val let             by literalToken("let")
+    val vark            by literalToken("var")
     val extern          by literalToken("extern")
     val function        by literalToken("function")
     val ifToken         by literalToken("if")
@@ -109,7 +110,7 @@ class CyanSourceParser : Grammar<CyanSource>() {
 
     // Comparison
 
-    val equ             by literalToken("==")
+    val deq             by literalToken("==")
     val neq             by literalToken("!=")
     val lt              by literalToken("<")
     val leq             by literalToken("<=")
@@ -161,7 +162,7 @@ class CyanSourceParser : Grammar<CyanSource>() {
     val plusMinusOp by (plus or minus) use { tokenToOp[this.type]!! }
     val arithmetic: Parser<CyanExpression> by leftAssociative(mulDivModOrTerm, -optional(ws) * plusMinusOp * -optional(ws)) { l, o, r -> CyanBinaryExpression(l, o, r) }
 
-    val comparisonOp by equ or neq or lt or leq or gt or geq
+    val comparisonOp by deq or neq or lt or leq or gt or geq
     val comparisonOrMath: Parser<CyanExpression> by (arithmetic * optional(comparisonOp * arithmetic))
             .map { (left, tail) -> tail?.let { (op, r) -> CyanBinaryExpression(left, tokenToOp[op.type]!!, r) } ?: left }
 
@@ -185,9 +186,10 @@ class CyanSourceParser : Grammar<CyanSource>() {
 
     // Statements
 
-    val variableSignature      by (-let * -znws * referenceParser * -znws * optional(typeSignature))
+    val variableSignature      by ((let or vark) * -znws * referenceParser * -znws * optional(typeSignature))
     val variableInitialization by (-znws * -assign * -znws * expr)
-    val variableDeclaration    by (variableSignature and variableInitialization)                                              use { CyanVariableDeclaration(t1.t1, t1.t2, t2) }
+    val variableDeclaration    by (variableSignature and variableInitialization)
+        .use { CyanVariableDeclaration(t1.t2, t1.t1.type == vark, t1.t3, t2) }
 
     val functionCall           by (referenceParser * -leap * -znws * separatedTerms(expr, commaParser, true) * -znws * -reap) use { CyanFunctionCall(t1, t2.toTypedArray()) }
 
@@ -197,7 +199,9 @@ class CyanSourceParser : Grammar<CyanSource>() {
     val ifStatementChain: Parser<CyanStatement> by (separatedTerms(ifStatement, -optional(ws) * elseToken * -znws) * optional(-znws * elseStatement))
             .use { CyanIfChain(t1.toTypedArray(), elseBlock = t2) }
 
-    val statement by -optional(ws) * (variableDeclaration or functionDeclaration or functionCall or ifStatementChain) * -optional(ws)
+    val assignStatement: Parser<CyanStatement>  by (referenceParser * -znws * -assign * -znws * expr) use { CyanAssignment(t1, t2) }
+
+    val statement by -optional(ws) * (variableDeclaration or functionDeclaration or functionCall or ifStatementChain or assignStatement) * -optional(ws)
 
     // Root parser
 

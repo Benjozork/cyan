@@ -21,6 +21,7 @@ object VariableDeclarationLower : Ast2FirLower<CyanVariableDeclaration, FirVaria
             parent = parentFirNode,
             name = astNode.name.value,
             typeAnnotation = typeAnnotation,
+            mutable = astNode.mutable,
             initializationExpr = ExpressionLower.lower(astNode.value, parentFirNode)
         )
 

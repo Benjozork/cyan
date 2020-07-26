@@ -27,7 +27,10 @@ fun main() {
     val timeTakenToParse = measureTime {
         source = parser.parseToEnd("""
             |let a = 1847899 + (301111 * 5)
-            |let b = "hello"
+            |var b = "hello"
+            |print(b)
+            |b = "hi !"
+            |print(b)
             |let c = ["hi", "hello", b]
             |let d: bool = true
             |let e = c[0]

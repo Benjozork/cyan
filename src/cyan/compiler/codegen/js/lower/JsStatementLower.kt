@@ -2,10 +2,7 @@ package cyan.compiler.codegen.js.lower
 
 import cyan.compiler.codegen.FirCompilerBackend
 import cyan.compiler.codegen.FirItemLower
-import cyan.compiler.fir.FirDocument
-import cyan.compiler.fir.FirIfChain
-import cyan.compiler.fir.FirStatement
-import cyan.compiler.fir.FirVariableDeclaration
+import cyan.compiler.fir.*
 import cyan.compiler.fir.extensions.firstAncestorOfType
 import cyan.compiler.fir.functions.FirFunctionCall
 
@@ -23,8 +20,11 @@ object JsStatementLower : FirItemLower<FirStatement> {
 
                 "$jsName(${item.args.joinToString(", ", transform = backend::lowerExpression)});"
             }
+            is FirAssignment -> {
+                "${item.targetVariable!!.name} = ${backend.lowerExpression(item.newExpr!!)};"
+            }
             is FirVariableDeclaration -> {
-                "const ${item.name} = ${backend.lowerExpression(item.initializationExpr)};"
+                "${if (!item.mutable) "const" else "let"} ${item.name} = ${backend.lowerExpression(item.initializationExpr)};"
             }
             is FirIfChain -> {
                 val builder = StringBuilder()

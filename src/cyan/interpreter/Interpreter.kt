@@ -70,6 +70,13 @@ class Interpreter {
                     }
                 }
             }
+            is CyanAssignment -> {
+                stackFrame.findByIdentifier(statement.reference)?.let {
+                    val newValue = evaluate(statement.newExpr, stackFrame)
+
+                    stackFrame.localVariables[statement.reference.value] = newValue
+                }
+            }
             else -> error("can't evaluate statement of type ${statement::class.simpleName}")
         }
     }
