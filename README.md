@@ -3,7 +3,7 @@ An experiment in programming languages
 
 ## Current features
 
-* variables and arrays (immutable)
+* variables and arrays (immutable by default)
 * complex expressions (parantheses, precedence, PEMDAS)
 * basic type inference for variable declarations
 * type checking for if statements and variables with type annotations
@@ -30,6 +30,8 @@ let a = 1847899 + (301111 * 5)    // Complex expressions
 let b = "hello"                   // Type inference
 let c = ["hi", "hello", b]        // Homogeneous arrays
 let d: bool = true                // Type annotations
+var e = "what"                    // Mutable variables
+e = "so ..."
 print(c[2])                       // Array indexing
 if (d) {                          // "if - else if - else" chains
     print(c)
