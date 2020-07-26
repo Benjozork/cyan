@@ -1,10 +1,14 @@
 package cyan.compiler.lower.ast2fir
 
+import cyan.compiler.common.diagnostic.CompilerDiagnostic
+import cyan.compiler.common.diagnostic.DiagnosticPipe
 import cyan.compiler.common.types.Type
 import cyan.compiler.fir.functions.FirFunctionDeclaration
 import cyan.compiler.fir.FirNode
 import cyan.compiler.fir.FirNullNode
+import cyan.compiler.fir.FirReference
 import cyan.compiler.fir.FirScope
+import cyan.compiler.fir.extensions.findSymbol
 import cyan.compiler.fir.functions.FirFunctionArgument
 import cyan.compiler.lower.ast2fir.checker.NoNamedFunctionClosures
 import cyan.compiler.parser.ast.function.CyanFunctionDeclaration
@@ -26,8 +30,37 @@ object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirNullN
 
         firFunctionDeclaration.block = SourceLower.lower(astNode.source, firFunctionDeclaration)
 
-        require (parentFirNode is FirScope) { "ast2fir: parentFirNode must be FirSource but was ${parentFirNode::class.simpleName}" }
-        require (!NoNamedFunctionClosures.check(firFunctionDeclaration, parentFirNode)) { "err: named local functions cannot be closures (refer to elements in it's containing scope)" }
+        // Check parent is scope
+        if (parentFirNode !is FirScope) {
+            DiagnosticPipe.report (
+                CompilerDiagnostic (
+                    level = CompilerDiagnostic.Level.Internal,
+                    message = "FirVariableDeclaration found in ${parentFirNode::class.simpleName}",
+                    astNode = astNode
+                )
+            )
+        }
+
+//        if (NoNamedFunctionClosures.check(firFunctionDeclaration, parentFirNode)) {
+//            DiagnosticPipe.report (
+//                CompilerDiagnostic (
+//                    level = CompilerDiagnostic.Level.Error,
+//                    message = "Function cannot be a closure (refer to symbols in it's outer scope)",
+//                    astNode = astNode
+//                )
+//            )
+//        }
+
+        // Check variable not already declared
+        if (parentFirNode.findSymbol(FirReference(parentFirNode, firFunctionDeclaration.name)) != null) {
+            DiagnosticPipe.report (
+                CompilerDiagnostic (
+                    level = CompilerDiagnostic.Level.Error,
+                    message = "Symbol '${firFunctionDeclaration.name}' already declared in scope",
+                    astNode = astNode
+                )
+            )
+        }
 
         parentFirNode.declaredSymbols += firFunctionDeclaration
         parentFirNode.localFunctions.add(firFunctionDeclaration)
