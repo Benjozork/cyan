@@ -9,6 +9,8 @@ import cyan.interpreter.Interpreter
 
 import com.github.h0tk3y.betterParse.grammar.parseToEnd
 
+import java.io.File
+
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
@@ -16,16 +18,22 @@ import kotlin.time.measureTime
 fun main() {
 //    println("welcome to cyanide v0.1.0, running cyan v0.1.0\n")
 
+    val parser = CyanSourceParser()
+
+    val runtimeSource = parser.parseToEnd(File("runtime/runtime.cy").readText())
+    val runtimeFirDocument = SourceLower.lower(runtimeSource, FirDocument())
+
     var source: CyanSource
     val timeTakenToParse = measureTime {
-        source = CyanSourceParser().parseToEnd("""
+        source = parser.parseToEnd("""
             |let a = 1847899 + (301111 * 5)
             |let b = "hello"
             |let c = ["hi", "hello", b]
             |let d: bool = true
-            |let e = b
+            |let e = c[0]
+            |let f = b
             |if (d) {
-            |    print(c)
+            |    print(c[2])
             |} else if (false || d) {
             |    print("hi !")
             |} else {
@@ -39,7 +47,7 @@ fun main() {
             """.trimMargin())
     }
 
-    val fir = SourceLower.lower(source, FirDocument())
+    val fir = SourceLower.lower(source, FirDocument(runtimeFirDocument.declaredSymbols))
     println("symbols: ${fir.declaredSymbols}")
 
     println("parsing source took ${timeTakenToParse.inMilliseconds} ms\n")

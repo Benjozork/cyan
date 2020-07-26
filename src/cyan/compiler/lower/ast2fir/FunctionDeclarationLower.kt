@@ -3,14 +3,10 @@ package cyan.compiler.lower.ast2fir
 import cyan.compiler.common.diagnostic.CompilerDiagnostic
 import cyan.compiler.common.diagnostic.DiagnosticPipe
 import cyan.compiler.common.types.Type
+import cyan.compiler.fir.*
 import cyan.compiler.fir.functions.FirFunctionDeclaration
-import cyan.compiler.fir.FirNode
-import cyan.compiler.fir.FirNullNode
-import cyan.compiler.fir.FirReference
-import cyan.compiler.fir.FirScope
 import cyan.compiler.fir.extensions.findSymbol
 import cyan.compiler.fir.functions.FirFunctionArgument
-import cyan.compiler.lower.ast2fir.checker.NoNamedFunctionClosures
 import cyan.compiler.parser.ast.function.CyanFunctionDeclaration
 
 object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirNullNode> {
@@ -28,7 +24,17 @@ object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirNullN
 
         firFunctionDeclaration.declaredSymbols += firFunctionDeclaration.args
 
-        firFunctionDeclaration.block = SourceLower.lower(astNode.source, firFunctionDeclaration)
+        if (!astNode.signature.isExtern && astNode.source == null) {
+            DiagnosticPipe.report (
+                CompilerDiagnostic (
+                    level = CompilerDiagnostic.Level.Error,
+                    message = "Only extern functions can have no body",
+                    astNode = astNode
+                )
+            )
+        }
+
+        firFunctionDeclaration.block = astNode.source?.let { SourceLower.lower(it, firFunctionDeclaration) } ?: FirSource(firFunctionDeclaration)
 
         // Check parent is scope
         if (parentFirNode !is FirScope) {
@@ -51,7 +57,7 @@ object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirNullN
 //            )
 //        }
 
-        // Check variable not already declared
+        // Check function not already declared
         if (parentFirNode.findSymbol(FirReference(parentFirNode, firFunctionDeclaration.name)) != null) {
             DiagnosticPipe.report (
                 CompilerDiagnostic (

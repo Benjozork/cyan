@@ -28,12 +28,14 @@ class CyanSourceParser : Grammar<CyanSource>() {
     val ws              by regexToken("\\s+")
 
     val let             by literalToken("let")
+    val extern          by literalToken("extern")
     val function        by literalToken("function")
     val ifToken         by literalToken("if")
     val elseToken       by literalToken("else")
 
     // Types
 
+    val anyPrim         by literalToken("any")
     val voidPrim        by literalToken("void")
     val int8Prim        by literalToken("i8")
     val int32Prim       by literalToken("i32")
@@ -45,6 +47,7 @@ class CyanSourceParser : Grammar<CyanSource>() {
     val charPrim        by literalToken("char")
 
     val tokenToType = mapOf (
+        anyPrim     to CyanType.Any,
         voidPrim    to CyanType.Void,
         int8Prim    to CyanType.Int8,
         int32Prim   to CyanType.Int32,
@@ -82,7 +85,7 @@ class CyanSourceParser : Grammar<CyanSource>() {
 
     // Type base parsers
 
-    val primTypeName  by (voidPrim or int8Prim or int32Prim or int64Prim or float32Prim or float64Prim or boolPrim or strPrim or charPrim)
+    val primTypeName  by (anyPrim or voidPrim or int8Prim or int32Prim or int64Prim or float32Prim or float64Prim or boolPrim or strPrim or charPrim)
     val primType      by (primTypeName * optional(arraySuffix)) use { Type(tokenToType[t1.type]!!, t2 != null) }
     val typeSignature by (-optional(colon) * -znws * primType)
 
@@ -174,10 +177,10 @@ class CyanSourceParser : Grammar<CyanSource>() {
     // Functions
 
     val functionArgument  by (referenceParser * -znws * typeSignature) use { CyanFunctionArgument(t1.value, t2) }
-    val functionSignature by (-function * -znws * referenceParser * -znws * -leap * separatedTerms(functionArgument, commaParser, true) * -reap * -znws * optional(typeSignature))
-            .use { t3?.let { CyanFunctionSignature(t1, t2, it) } ?: CyanFunctionSignature(t1, t2) }
+    val functionSignature by (optional(extern) * -znws * -function * -znws * referenceParser * -znws * -leap * separatedTerms(functionArgument, commaParser, true) * -reap * -znws * optional(typeSignature))
+            .use { t4?.let { CyanFunctionSignature(t2, t3, it, isExtern = t1 != null) } ?: CyanFunctionSignature(t2, t3, isExtern = t1 != null) }
 
-    val functionDeclaration: Parser<CyanFunctionDeclaration> by (functionSignature * -znws * block)
+    val functionDeclaration: Parser<CyanFunctionDeclaration> by (functionSignature * -znws * optional(block))
             .use { CyanFunctionDeclaration(t1, t2) }
 
     // Statements

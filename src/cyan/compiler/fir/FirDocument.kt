@@ -1,22 +1,11 @@
 package cyan.compiler.fir
 
-import cyan.compiler.common.types.Type
-import cyan.compiler.fir.functions.FirFunctionArgument
 import cyan.compiler.fir.functions.FirFunctionDeclaration
-import cyan.compiler.parser.ast.CyanType
 
 class FirDocument (
-    declaredSymbols: MutableSet<FirSymbol> = mutableSetOf(),
+    override val declaredSymbols: MutableSet<FirSymbol> = mutableSetOf(),
     override val localFunctions: MutableSet<FirFunctionDeclaration> = mutableSetOf()
 ) : FirScope {
-
-    override val declaredSymbols = declaredSymbols.apply { // Intrinsics
-        this += FirFunctionDeclaration (
-            parent = this@FirDocument,
-            name = "print",
-            args = arrayOf(FirFunctionArgument(this@FirDocument, "a", Type(CyanType.Any, false)))
-        )
-    }
 
     override val parent: FirNode? get() = null
 

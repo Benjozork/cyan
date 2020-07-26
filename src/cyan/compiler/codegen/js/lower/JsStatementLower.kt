@@ -16,7 +16,7 @@ object JsStatementLower : ItemLower<CyanStatement> {
             is CyanFunctionDeclaration -> {
                 """
                 |function ${item.signature.name}(${item.signature.args.joinToString { it.name }}) {
-                |${backend.translateSource(item.source).prependIndent("    ")}
+                |${backend.translateSource(item.source!!).prependIndent("    ")}
                 |}
                 """.trimMargin()
             }

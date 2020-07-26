@@ -5,7 +5,7 @@ import cyan.compiler.parser.ast.CyanStatement
 
 class CyanFunctionDeclaration (
     val signature: CyanFunctionSignature,
-    val source: CyanSource
+    val source: CyanSource?
 ): CyanStatement {
-    override fun toString() = "function $signature { ... }"
+    override fun toString() = (if (signature.isExtern) "extern " else "") + "function $signature" + (if (signature.isExtern) "" else "{ ... }")
 }
