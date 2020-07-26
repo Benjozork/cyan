@@ -5,7 +5,7 @@ import cyan.compiler.parser.ast.CyanSource
 import cyan.compiler.fir.FirDocument
 import cyan.compiler.lower.ast2fir.SourceLower
 import cyan.interpreter.Interpreter
-import cyan.compiler.codegen.firJs.JsFirCompilerBackend
+import cyan.compiler.codegen.js.JsCompilerBackend
 
 import com.github.h0tk3y.betterParse.grammar.parseToEnd
 
@@ -62,7 +62,7 @@ fun main() {
 
     var jsSource: String
     val timeTakenToTranslate =  measureTime {
-        jsSource = JsFirCompilerBackend().translateSource(fir, isRoot = true)
+        jsSource = JsCompilerBackend().translateSource(fir, isRoot = true)
     }
 
     println(jsSource)

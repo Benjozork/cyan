@@ -1,11 +1,11 @@
-package cyan.compiler.codegen.firJs.lower
+package cyan.compiler.codegen.js.lower
 
 import cyan.compiler.codegen.FirCompilerBackend
 import cyan.compiler.codegen.FirItemLower
 import cyan.compiler.fir.functions.FirFunctionArgument
 import cyan.compiler.fir.functions.FirFunctionDeclaration
 
-object JsFirFunctionDeclarationLower : FirItemLower<FirFunctionDeclaration> {
+object JsFunctionDeclarationLower : FirItemLower<FirFunctionDeclaration> {
 
     override fun lower(backend: FirCompilerBackend, item: FirFunctionDeclaration): String {
         return """

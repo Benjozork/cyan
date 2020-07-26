@@ -1,52 +1,50 @@
 package cyan.compiler.codegen.js.lower
 
-import cyan.compiler.codegen.CompilerBackend
-import cyan.compiler.codegen.ItemLower
-import cyan.compiler.parser.ast.CyanIfChain
-import cyan.compiler.parser.ast.CyanStatement
-import cyan.compiler.parser.ast.CyanVariableDeclaration
-import cyan.compiler.parser.ast.function.CyanFunctionCall
-import cyan.compiler.parser.ast.function.CyanFunctionDeclaration
+import cyan.compiler.codegen.FirCompilerBackend
+import cyan.compiler.codegen.FirItemLower
+import cyan.compiler.fir.FirDocument
+import cyan.compiler.fir.FirIfChain
+import cyan.compiler.fir.FirStatement
+import cyan.compiler.fir.FirVariableDeclaration
+import cyan.compiler.fir.extensions.firstAncestorOfType
+import cyan.compiler.fir.functions.FirFunctionCall
 
-object JsStatementLower : ItemLower<CyanStatement> {
+import java.lang.StringBuilder
 
-    override fun lower(backend: CompilerBackend, item: CyanStatement): String {
+object JsStatementLower : FirItemLower<FirStatement> {
+
+    override fun lower(backend: FirCompilerBackend, item: FirStatement): String {
         return when (item) {
-            is CyanVariableDeclaration -> "const ${item.name} = ${backend.lowerExpression(item.value)};"
-            is CyanFunctionDeclaration -> {
-                """
-                |function ${item.signature.name}(${item.signature.args.joinToString { it.name }}) {
-                |${backend.translateSource(item.source!!).prependIndent("    ")}
-                |}
-                """.trimMargin()
-            }
-            is CyanIfChain -> {
-                val blockLowerings = item.ifStatements.mapIndexed { i, branch ->
-                    """
-                    |${if (i > 0) " else " else ""}if (${backend.lowerExpression(branch.conditionExpr)}) {
-                    |${backend.translateSource(branch.block).prependIndent("    ")}
-                    |}
-                    """.trimMargin()
-                } + if (item.elseBlock != null) {
-                    """
-                    | else {
-                    | ${backend.translateSource(item.elseBlock).prependIndent("    ")}
-                    |}
-                    """.trimMargin()
-                } else ""
+            is FirFunctionCall -> {
+                val isBuiltin = item.firstAncestorOfType<FirDocument>()?.declaredSymbols?.contains(item.callee)
+                    ?: error("fir2js: no FirDocument as ancestor of node")
 
-                blockLowerings.joinToString(separator = "")
+                val jsName = if (isBuiltin) "builtins.${item.callee.name}" else item.callee.name
+
+                "$jsName(${item.args.joinToString(", ", transform = backend::lowerExpression)});"
             }
-            is CyanFunctionCall -> {
-                val functionName = item.functionIdentifier.value.let {
-                    if (it == "print" || it == "err")
-                        backend.nameForBuiltin(it)
-                    else it
+            is FirVariableDeclaration -> {
+                "const ${item.name} = ${backend.lowerExpression(item.initializationExpr)};"
+            }
+            is FirIfChain -> {
+                val builder = StringBuilder()
+
+                for ((index, branch) in item.branches.withIndex()) {
+                    if (index > 0) builder.append(" ")
+                    builder.append("if (${backend.lowerExpression(branch.first)}) {\n")
+                    builder.append(backend.translateSource(branch.second).prependIndent("    "))
+                    builder.append("\n}")
                 }
 
-                "$functionName(${item.args.joinToString(", ", transform = backend::lowerExpression)});"
+                if (item.elseBranch != null) {
+                    builder.append(" else {\n")
+                    builder.append(backend.translateSource(item.elseBranch).prependIndent("    "))
+                    builder.append("\n}")
+                }
+
+                builder.toString()
             }
-            else -> error("js: cannot lower statement of type ${item::class.simpleName}")
+            else -> error("fir2js: cannot lower statement of type '${item::class.simpleName}'")
         }
     }
 
