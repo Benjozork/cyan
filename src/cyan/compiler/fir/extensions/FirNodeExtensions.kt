@@ -33,7 +33,7 @@ fun FirNode.resolveType(typeAnnotation: CyanTypeAnnotation, inAstNode: CyanItem?
                 DiagnosticPipe.report (
                     CompilerDiagnostic (
                         level = CompilerDiagnostic.Level.Error,
-                        message = "Symbol '${typeSymbol.name} is not a type'",
+                        message = "Symbol '${typeSymbol.name}' is not a type",
                         astNode = inAstNode ?: typeAnnotation
                     )
                 )

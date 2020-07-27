@@ -8,7 +8,6 @@ import cyan.compiler.fir.extensions.findSymbol
 import cyan.compiler.fir.extensions.resolveType
 import cyan.compiler.fir.functions.FirFunctionArgument
 import cyan.compiler.parser.ast.function.CyanFunctionDeclaration
-import cyan.compiler.parser.ast.types.CyanTypeAnnotation
 
 object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirNullNode> {
 
@@ -19,13 +18,17 @@ object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirNullN
             args = emptyArray()
         )
 
-        firFunctionDeclaration.args = astNode.signature.args
+        firFunctionDeclaration.args = astNode.signature.args // Resolve types for AST arguments and assign them to FIR func declaration
                 .map { FirFunctionArgument(firFunctionDeclaration, it.name, firFunctionDeclaration.resolveType(it.typeAnnotation, astNode)) }
                 .toTypedArray()
 
+        // Register its args as its declared symbols
         firFunctionDeclaration.declaredSymbols += firFunctionDeclaration.args
 
-        if (!astNode.signature.isExtern && astNode.source == null) {
+        // Lower AST function body
+        firFunctionDeclaration.block = astNode.source?.let { SourceLower.lower(it, firFunctionDeclaration) } ?: FirSource(firFunctionDeclaration)
+
+        if (!astNode.signature.isExtern && astNode.source == null) { // Check function has body if not extern
             DiagnosticPipe.report (
                 CompilerDiagnostic (
                     level = CompilerDiagnostic.Level.Error,
@@ -35,10 +38,7 @@ object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirNullN
             )
         }
 
-        firFunctionDeclaration.block = astNode.source?.let { SourceLower.lower(it, firFunctionDeclaration) } ?: FirSource(firFunctionDeclaration)
-
-        // Check parent is scope
-        if (parentFirNode !is FirScope) {
+        if (parentFirNode !is FirScope) { // Check parent is scope
             DiagnosticPipe.report (
                 CompilerDiagnostic (
                     level = CompilerDiagnostic.Level.Internal,
@@ -58,8 +58,7 @@ object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirNullN
 //            )
 //        }
 
-        // Check function not already declared
-        if (parentFirNode.findSymbol(FirReference(parentFirNode, firFunctionDeclaration.name)) != null) {
+        if (parentFirNode.findSymbol(FirReference(parentFirNode, firFunctionDeclaration.name)) != null) { // Check function not already declared
             DiagnosticPipe.report (
                 CompilerDiagnostic (
                     level = CompilerDiagnostic.Level.Error,
@@ -68,6 +67,8 @@ object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirNullN
                 )
             )
         }
+
+        // Register function in parent FIR node
 
         parentFirNode.declaredSymbols += firFunctionDeclaration
         parentFirNode.localFunctions.add(firFunctionDeclaration)
