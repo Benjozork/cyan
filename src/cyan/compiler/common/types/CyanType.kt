@@ -1,4 +1,4 @@
-package cyan.compiler.parser.ast
+package cyan.compiler.common.types
 
 enum class CyanType {
     Any,

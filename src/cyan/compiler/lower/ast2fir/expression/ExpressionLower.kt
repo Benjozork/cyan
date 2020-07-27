@@ -17,7 +17,11 @@ object ExpressionLower : Ast2FirLower<CyanExpression, FirExpression> {
         if (firExpression.astExpr is CyanArrayExpression) {
             if (ArrayElementsTypeConsistent.check(firExpression, parentFirNode)) {
                 DiagnosticPipe.report (
-                    CompilerDiagnostic(CompilerDiagnostic.Level.Error, astNode, "array elements must all be of the same type")
+                    CompilerDiagnostic (
+                        level = CompilerDiagnostic.Level.Error,
+                        message = "array elements must all be of the same type",
+                        astNode = astNode
+                    )
                 )
             }
         }

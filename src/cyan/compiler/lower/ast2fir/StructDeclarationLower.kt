@@ -3,13 +3,16 @@ package cyan.compiler.lower.ast2fir
 import cyan.compiler.common.diagnostic.CompilerDiagnostic
 import cyan.compiler.common.diagnostic.DiagnosticPipe
 import cyan.compiler.fir.FirNode
-import cyan.compiler.fir.FirStructDeclaration
-import cyan.compiler.parser.ast.CyanType
+import cyan.compiler.fir.FirTypeDeclaration
+import cyan.compiler.common.types.CyanType
+import cyan.compiler.common.types.Type
+import cyan.compiler.fir.FirScope
 import cyan.compiler.parser.ast.types.CyanStructDeclaration
+import cyan.compiler.parser.ast.types.CyanTypeAnnotation
 
-object StructDeclarationLower : Ast2FirLower<CyanStructDeclaration, FirStructDeclaration> {
+object StructDeclarationLower : Ast2FirLower<CyanStructDeclaration, FirTypeDeclaration> {
 
-    override fun lower(astNode: CyanStructDeclaration, parentFirNode: FirNode): FirStructDeclaration {
+    override fun lower(astNode: CyanStructDeclaration, parentFirNode: FirNode): FirTypeDeclaration {
         if (astNode.properties.map { it.ident.value }.toSet().size != astNode.properties.size) { // Check for duplicate properties
             DiagnosticPipe.report (
                 CompilerDiagnostic (
@@ -21,7 +24,7 @@ object StructDeclarationLower : Ast2FirLower<CyanStructDeclaration, FirStructDec
         }
 
         astNode.properties
-            .firstOrNull { it.type.base == CyanType.Void }?.let { property -> // Check for void properties
+            .firstOrNull { it.type is CyanTypeAnnotation.Literal && it.type.literalType == Type.Primitive(CyanType.Void, false) }?.let { property -> // Check for void properties
                 DiagnosticPipe.report (
                     CompilerDiagnostic (
                         level = CompilerDiagnostic.Level.Error,
@@ -31,11 +34,33 @@ object StructDeclarationLower : Ast2FirLower<CyanStructDeclaration, FirStructDec
                 )
             }
 
-        val firStructDeclaration = FirStructDeclaration(parentFirNode, astNode.ident.value)
+        if (parentFirNode !is FirScope) { // Check parent is scope
+            DiagnosticPipe.report (
+                CompilerDiagnostic (
+                    level = CompilerDiagnostic.Level.Internal,
+                    message = "FirVariableDeclaration found in ${parentFirNode::class.simpleName}",
+                    astNode = astNode
+                )
+            )
+        }
 
-        firStructDeclaration.properties = astNode.properties.map {
-            FirStructDeclaration.Property(firStructDeclaration, it.ident.value, it.type)
-        }.toTypedArray()
+        val structType = Type.Struct(astNode.ident.value, astNode.properties.map {
+            if (it.type !is CyanTypeAnnotation.Literal) {
+                DiagnosticPipe.report (
+                    CompilerDiagnostic (
+                        level = CompilerDiagnostic.Level.Error,
+                        message = "struct properties cannot only have primitive types",
+                        astNode = it
+                    )
+                )
+            }
+
+            Type.Struct.Property(it.ident.value, it.type.literalType)
+        }.toTypedArray())
+
+        val firStructDeclaration = FirTypeDeclaration(parentFirNode, astNode.ident.value, structType)
+
+        parentFirNode.declaredSymbols += firStructDeclaration
 
         return firStructDeclaration
     }

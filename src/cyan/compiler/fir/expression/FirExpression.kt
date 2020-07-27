@@ -8,7 +8,7 @@ import cyan.compiler.fir.extensions.containingScope
 import cyan.compiler.fir.extensions.findSymbol
 import cyan.compiler.fir.functions.FirFunctionArgument
 import cyan.compiler.fir.functions.FirFunctionDeclaration
-import cyan.compiler.parser.ast.CyanType
+import cyan.compiler.common.types.CyanType
 import cyan.compiler.parser.ast.expression.*
 import cyan.compiler.parser.ast.expression.literal.CyanBooleanLiteralExpression
 import cyan.compiler.parser.ast.expression.literal.CyanNumericLiteralExpression
@@ -21,10 +21,10 @@ class FirExpression(override val parent: FirNode, val astExpr: CyanExpression) :
      */
     fun type(): Type {
          return when (astExpr) {
-             is CyanNumericLiteralExpression -> Type(CyanType.Int32, false)
-             is CyanStringLiteralExpression  -> Type(CyanType.Str, false)
-             is CyanBooleanLiteralExpression -> Type(CyanType.Bool, false)
-             is CyanArrayExpression          -> FirExpression(this, astExpr.exprs.first()).type().copy(array = true)
+             is CyanNumericLiteralExpression -> Type.Primitive(CyanType.Int32, false)
+             is CyanStringLiteralExpression  -> Type.Primitive(CyanType.Str, false)
+             is CyanBooleanLiteralExpression -> Type.Primitive(CyanType.Bool, false)
+             is CyanArrayExpression          -> FirExpression(this, astExpr.exprs.first()).type().asArrayType()
              is CyanBinaryExpression -> {
                  val (lhsType, rhsType) = FirExpression(this, astExpr.lhs).type() to FirExpression(this, astExpr.rhs).type()
 
@@ -45,13 +45,13 @@ class FirExpression(override val parent: FirNode, val astExpr: CyanExpression) :
 
                  when (val referee = containingScope?.findSymbol(FirReference(this, this.astExpr.value))) {
                      is FirVariableDeclaration -> referee.initializationExpr.type()
-                     is FirFunctionDeclaration -> Type(CyanType.Any, false)
+                     is FirFunctionDeclaration -> Type.Primitive(CyanType.Any, false)
                      is FirFunctionArgument -> referee.typeAnnotation
                      null -> error("cannot find symbol '${astExpr.value}'")
                      else -> error("can't infer type of ${referee::class.simpleName}")
                  }
              }
-             is CyanMemberAccessExpression -> Type(CyanType.Any, false)
+             is CyanMemberAccessExpression -> Type.Primitive(CyanType.Any, false)
              is CyanArrayIndexExpression -> {
                  return FirExpression(this, astExpr.base).type().also {
                      if (!it.array) {

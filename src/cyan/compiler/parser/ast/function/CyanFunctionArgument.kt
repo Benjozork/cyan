@@ -1,11 +1,11 @@
 package cyan.compiler.parser.ast.function
 
-import cyan.compiler.common.types.Type
 import cyan.compiler.parser.ast.CyanItem
+import cyan.compiler.parser.ast.types.CyanTypeAnnotation
 
 class CyanFunctionArgument (
     val name: String,
-    val typeAnnotation: Type
+    val typeAnnotation: CyanTypeAnnotation
 ): CyanItem {
     override fun toString() = "$name: $typeAnnotation"
 }

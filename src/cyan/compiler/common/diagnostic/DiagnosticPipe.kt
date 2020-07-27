@@ -16,7 +16,14 @@ object DiagnosticPipe {
         )
 
         println(diagnostic.message.let { if (diagnostic.level == CompilerDiagnostic.Level.Warn) it.yellow() else it.red() })
-        println(diagnostic.astNode.toString().prependIndent("    | ".lightGray()) + "\n")
+        println(diagnostic.astNode.toString().prependIndent("    | ".lightGray()))
+
+        if (diagnostic.note != null) {
+            println("note: ".lightBlue() + diagnostic.note.message.blue())
+            if (diagnostic.note.astNode != null)
+                println(diagnostic.note.astNode.toString().prependIndent("    | ".lightGray()))
+            println()
+        } else println()
 
         throw AbortedCompilationException("compilation stopped because of diagnostic")
     }

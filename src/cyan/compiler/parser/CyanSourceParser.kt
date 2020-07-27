@@ -19,6 +19,8 @@ import com.github.h0tk3y.betterParse.grammar.parser
 import com.github.h0tk3y.betterParse.lexer.literalToken
 import com.github.h0tk3y.betterParse.lexer.regexToken
 import com.github.h0tk3y.betterParse.parser.Parser
+import cyan.compiler.common.types.CyanType
+import cyan.compiler.parser.ast.types.CyanTypeAnnotation
 
 @Suppress("MemberVisibilityCanBePrivate")
 class CyanSourceParser : Grammar<CyanSource>() {
@@ -93,8 +95,9 @@ class CyanSourceParser : Grammar<CyanSource>() {
     // Type base parsers
 
     val primTypeName  by (anyPrim or voidPrim or int8Prim or int32Prim or int64Prim or float32Prim or float64Prim or boolPrim or strPrim or charPrim)
-    val primType      by (primTypeName * optional(arraySuffix)) use { Type(tokenToType[t1.type]!!, t2 != null) }
-    val typeSignature by (-optional(colon) * -znws * primType)
+    val litType      by (primTypeName * optional(arraySuffix)) use { CyanTypeAnnotation.Literal(Type.Primitive(tokenToType[t1.type]!!, t2 != null)) }
+    val refType       by (parser(this::referenceParser))        use { CyanTypeAnnotation.Reference(this) }
+    val typeSignature by (-optional(colon) * -znws * (litType or refType))
 
     // Complex type parsers
 

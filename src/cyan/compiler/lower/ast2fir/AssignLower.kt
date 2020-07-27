@@ -39,8 +39,9 @@ object AssignLower : Ast2FirLower<CyanAssignment, FirAssignment> {
             DiagnosticPipe.report (
                 CompilerDiagnostic (
                     level = CompilerDiagnostic.Level.Error,
-                    message = "Cannot assign to '${resolvedSymbol.name}' because it is immutable (use 'var' instead of 'let' to make it mutable)",
-                    astNode = astNode
+                    message = "Cannot assign to '${resolvedSymbol.name}' because it is immutable",
+                    astNode = astNode,
+                    note = CompilerDiagnostic.Note("use 'var' instead of 'let' to declare '${resolvedSymbol.name}' mutable")
                 )
             )
         }

@@ -2,12 +2,13 @@ package cyan.compiler.lower.ast2fir
 
 import cyan.compiler.common.diagnostic.CompilerDiagnostic
 import cyan.compiler.common.diagnostic.DiagnosticPipe
-import cyan.compiler.common.types.Type
 import cyan.compiler.fir.*
 import cyan.compiler.fir.functions.FirFunctionDeclaration
 import cyan.compiler.fir.extensions.findSymbol
+import cyan.compiler.fir.extensions.resolveType
 import cyan.compiler.fir.functions.FirFunctionArgument
 import cyan.compiler.parser.ast.function.CyanFunctionDeclaration
+import cyan.compiler.parser.ast.types.CyanTypeAnnotation
 
 object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirNullNode> {
 
@@ -19,7 +20,7 @@ object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirNullN
         )
 
         firFunctionDeclaration.args = astNode.signature.args
-                .map { FirFunctionArgument(firFunctionDeclaration, it.name, it.typeAnnotation.let { a -> Type(a.base, a.array) }) }
+                .map { FirFunctionArgument(firFunctionDeclaration, it.name, firFunctionDeclaration.resolveType(it.typeAnnotation, astNode)) }
                 .toTypedArray()
 
         firFunctionDeclaration.declaredSymbols += firFunctionDeclaration.args
