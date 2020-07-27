@@ -2,14 +2,14 @@ package cyan.compiler.codegen.js.lower
 
 import cyan.compiler.codegen.FirItemLower
 import cyan.compiler.codegen.js.JsCompilerBackend
+import cyan.compiler.common.types.Type
 import cyan.compiler.fir.expression.FirExpression
-import cyan.compiler.parser.ast.expression.CyanArrayExpression
-import cyan.compiler.parser.ast.expression.CyanArrayIndexExpression
-import cyan.compiler.parser.ast.expression.CyanBinaryExpression
-import cyan.compiler.parser.ast.expression.CyanIdentifierExpression
+import cyan.compiler.parser.ast.expression.*
 import cyan.compiler.parser.ast.expression.literal.CyanBooleanLiteralExpression
 import cyan.compiler.parser.ast.expression.literal.CyanNumericLiteralExpression
 import cyan.compiler.parser.ast.expression.literal.CyanStringLiteralExpression
+
+import java.lang.StringBuilder
 
 object JsExpressionLower : FirItemLower<JsCompilerBackend, FirExpression> {
 
@@ -19,6 +19,20 @@ object JsExpressionLower : FirItemLower<JsCompilerBackend, FirExpression> {
             is CyanNumericLiteralExpression -> "${expr.value}"
             is CyanStringLiteralExpression  -> "'${expr.value.replace("'", "\\'")}'"
             is CyanBooleanLiteralExpression -> "${expr.value}"
+            is CyanStructLiteralExpression -> {
+                val structType = item.type() as Type.Struct
+
+                val builder = StringBuilder()
+
+                builder.append("{ ")
+                for ((index, fieldName) in structType.properties.withIndex()) {
+                    builder.append("${fieldName.name}: ${expr.exprs[index]}")
+                    if (index < structType.properties.size - 1) builder.append(", ")
+                }
+                builder.append(" }")
+
+                builder.toString()
+             }
             is CyanBinaryExpression -> {
                 val lhs = backend.lowerExpression(FirExpression(item, expr.lhs))
                 val rhs = backend.lowerExpression(FirExpression(item, expr.rhs))

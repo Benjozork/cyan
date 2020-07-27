@@ -22,12 +22,10 @@ object VariableDeclarationLower : Ast2FirLower<CyanVariableDeclaration, FirVaria
             parent = parentFirNode,
             name = astNode.name.value,
             typeAnnotation = typeAnnotation?.let { parentFirNode.resolveType(it, astNode) },
-            mutable = astNode.mutable,
-            initializationExpr = ExpressionLower.lower(astNode.value, parentFirNode)
+            mutable = astNode.mutable
         )
 
-        // Run type-checks in initialization expression
-        firVariableDeclaration.initializationExpr.type()
+        firVariableDeclaration.initializationExpr = ExpressionLower.lower(astNode.value, firVariableDeclaration)
 
         // Check parent is scope
         if (parentFirNode !is FirScope) {
@@ -51,14 +49,16 @@ object VariableDeclarationLower : Ast2FirLower<CyanVariableDeclaration, FirVaria
             )
         }
 
+        val initializationExpr = firVariableDeclaration.initializationExpr
+
         // Check type annotation, if present, accepts initialization expr type
-        if (firVariableDeclaration.typeAnnotation != null && !(firVariableDeclaration.typeAnnotation accepts firVariableDeclaration.initializationExpr.type())) {
+        if (firVariableDeclaration.typeAnnotation != null && !(firVariableDeclaration.typeAnnotation accepts initializationExpr.type())) {
             DiagnosticPipe.report (
                 CompilerDiagnostic (
                     level = CompilerDiagnostic.Level.Error,
-                    message = "Type mismatch: expected '${firVariableDeclaration.typeAnnotation}', found '${firVariableDeclaration.initializationExpr.type()}'",
+                    message = "Type mismatch: expected '${firVariableDeclaration.typeAnnotation}', found '${initializationExpr.type()}'",
                     astNode = astNode,
-                    note = CompilerDiagnostic.Note("inferred type '${firVariableDeclaration.initializationExpr.type()}' from initialization", astNode.value)
+                    note = CompilerDiagnostic.Note("inferred type '${initializationExpr.type()}' from initialization", astNode.value)
                 )
             )
         }

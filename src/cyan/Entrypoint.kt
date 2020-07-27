@@ -42,7 +42,8 @@ fun main() {
             |let d: bool = true
             |let e = c[0]
             |let f = b
-            |let g: Person = 2
+            |let g: Person = { "James", 18 }
+            |print(g)
             |if (d) {
             |    print(c[2])
             |} else if (false || d) {

@@ -7,9 +7,10 @@ class FirVariableDeclaration (
     override val parent: FirNode,
     override val name: String,
     val mutable: Boolean,
-    val typeAnnotation: Type?,
-    val initializationExpr: FirExpression
+    val typeAnnotation: Type?
 ) : FirStatement, FirSymbol {
+
+    lateinit var initializationExpr: FirExpression
 
     override fun allReferredSymbols() = initializationExpr.allReferredSymbols()
 
