@@ -1,7 +1,7 @@
 package cyan.compiler.codegen.js.lower
 
-import cyan.compiler.codegen.FirCompilerBackend
 import cyan.compiler.codegen.FirItemLower
+import cyan.compiler.codegen.js.JsCompilerBackend
 import cyan.compiler.fir.expression.FirExpression
 import cyan.compiler.parser.ast.expression.CyanArrayExpression
 import cyan.compiler.parser.ast.expression.CyanArrayIndexExpression
@@ -11,9 +11,9 @@ import cyan.compiler.parser.ast.expression.literal.CyanBooleanLiteralExpression
 import cyan.compiler.parser.ast.expression.literal.CyanNumericLiteralExpression
 import cyan.compiler.parser.ast.expression.literal.CyanStringLiteralExpression
 
-object JsExpressionLower : FirItemLower<FirExpression> {
+object JsExpressionLower : FirItemLower<JsCompilerBackend, FirExpression> {
 
-    override fun lower(backend: FirCompilerBackend, item: FirExpression): String {
+    override fun lower(backend: JsCompilerBackend, item: FirExpression): String {
         return when (val expr = item.astExpr) {
             is CyanIdentifierExpression -> expr.value
             is CyanNumericLiteralExpression -> "${expr.value}"

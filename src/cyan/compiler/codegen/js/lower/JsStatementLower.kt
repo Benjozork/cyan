@@ -1,16 +1,16 @@
 package cyan.compiler.codegen.js.lower
 
-import cyan.compiler.codegen.FirCompilerBackend
 import cyan.compiler.codegen.FirItemLower
+import cyan.compiler.codegen.js.JsCompilerBackend
 import cyan.compiler.fir.*
 import cyan.compiler.fir.extensions.firstAncestorOfType
 import cyan.compiler.fir.functions.FirFunctionCall
 
 import java.lang.StringBuilder
 
-object JsStatementLower : FirItemLower<FirStatement> {
+object JsStatementLower : FirItemLower<JsCompilerBackend, FirStatement> {
 
-    override fun lower(backend: FirCompilerBackend, item: FirStatement): String {
+    override fun lower(backend: JsCompilerBackend, item: FirStatement): String {
         return when (item) {
             is FirFunctionCall -> {
                 val isBuiltin = item.firstAncestorOfType<FirDocument>()?.declaredSymbols?.contains(item.callee)
