@@ -2,6 +2,7 @@ package cyan.compiler.parser
 
 import cyan.compiler.common.types.Type
 import cyan.compiler.parser.ast.*
+import cyan.compiler.parser.ast.types.CyanStructDeclaration
 import cyan.compiler.parser.ast.function.CyanFunctionCall
 import cyan.compiler.parser.ast.function.CyanFunctionDeclaration
 import cyan.compiler.parser.ast.function.CyanFunctionSignature
@@ -33,6 +34,11 @@ class CyanSourceParser : Grammar<CyanSource>() {
     val function        by literalToken("function")
     val ifToken         by literalToken("if")
     val elseToken       by literalToken("else")
+
+    // Complex types
+
+    val type            by literalToken("type")
+    val struct          by literalToken("struct")
 
     // Types
 
@@ -89,6 +95,17 @@ class CyanSourceParser : Grammar<CyanSource>() {
     val primTypeName  by (anyPrim or voidPrim or int8Prim or int32Prim or int64Prim or float32Prim or float64Prim or boolPrim or strPrim or charPrim)
     val primType      by (primTypeName * optional(arraySuffix)) use { Type(tokenToType[t1.type]!!, t2 != null) }
     val typeSignature by (-optional(colon) * -znws * primType)
+
+    // Complex type parsers
+
+    val structProperty    by (parser(this::referenceParser) * typeSignature) use { CyanStructDeclaration.Property(t1, t2) }
+    val structProperties  by separatedTerms(structProperty, commaParser)     use { this.toTypedArray() }
+    val structBody        by (-lcur * -znws * structProperties * -znws * -rcur)
+    val structDeclaration by (-struct * -znws * structBody)
+
+    val complexType by (structDeclaration)
+
+    val typeDeclaration by (-type * -znws * parser(this::referenceParser) * -znws * -assign * -znws * complexType) use { CyanStructDeclaration(t1, t2) }
 
     // Arithmetic
 
@@ -201,7 +218,7 @@ class CyanSourceParser : Grammar<CyanSource>() {
 
     val assignStatement: Parser<CyanStatement>  by (referenceParser * -znws * -assign * -znws * expr) use { CyanAssignment(t1, t2) }
 
-    val statement by -optional(ws) * (variableDeclaration or functionDeclaration or functionCall or ifStatementChain or assignStatement) * -optional(ws)
+    val statement by -optional(ws) * (variableDeclaration or functionDeclaration or typeDeclaration or functionCall or ifStatementChain or assignStatement) * -optional(ws)
 
     // Root parser
 

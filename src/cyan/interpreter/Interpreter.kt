@@ -3,6 +3,7 @@ package cyan.interpreter
 import cyan.compiler.parser.ast.*
 import cyan.compiler.parser.ast.function.CyanFunctionCall
 import cyan.compiler.parser.ast.function.CyanFunctionDeclaration
+import cyan.compiler.parser.ast.types.CyanStructDeclaration
 import cyan.interpreter.evaluator.values.CyanCallable
 import cyan.interpreter.evaluator.values.CyanFunction
 import cyan.interpreter.evaluator.values.CyanValue
@@ -45,6 +46,7 @@ class Interpreter {
 
                 stackFrame.scopedFunctions[function.name] = function
             }
+            is CyanStructDeclaration -> return
             is CyanIfChain -> {
                 val blocks = statement.ifStatements
                 val goodBranch = blocks.firstOrNull { branch -> evaluate(branch.conditionExpr, stackFrame).value == true }

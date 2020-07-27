@@ -26,6 +26,7 @@ object JsStatementLower : FirItemLower<JsCompilerBackend, FirStatement> {
             is FirVariableDeclaration -> {
                 "${if (!item.mutable) "const" else "let"} ${item.name} = ${backend.lowerExpression(item.initializationExpr)};"
             }
+            is FirStructDeclaration -> "// struct ${item.name}" // we do not do any kind of type emit in JS for now
             is FirIfChain -> {
                 val builder = StringBuilder()
 

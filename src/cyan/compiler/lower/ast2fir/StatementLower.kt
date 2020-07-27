@@ -7,6 +7,7 @@ import cyan.compiler.parser.ast.CyanStatement
 import cyan.compiler.parser.ast.CyanVariableDeclaration
 import cyan.compiler.parser.ast.function.CyanFunctionCall
 import cyan.compiler.parser.ast.function.CyanFunctionDeclaration
+import cyan.compiler.parser.ast.types.CyanStructDeclaration
 
 object StatementLower : Ast2FirLower<CyanStatement, FirNode> {
 
@@ -14,6 +15,7 @@ object StatementLower : Ast2FirLower<CyanStatement, FirNode> {
         return when (astNode) {
             is CyanVariableDeclaration -> VariableDeclarationLower.lower(astNode, parentFirNode)
             is CyanFunctionDeclaration -> FunctionDeclarationLower.lower(astNode, parentFirNode)
+            is CyanStructDeclaration   -> StructDeclarationLower.lower(astNode, parentFirNode)
             is CyanFunctionCall        -> FunctionCallLower.lower(astNode, parentFirNode)
             is CyanIfChain             -> IfChainLower.lower(astNode, parentFirNode)
             is CyanAssignment          -> AssignLower.lower(astNode, parentFirNode)

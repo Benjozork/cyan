@@ -2,10 +2,13 @@ package cyan
 
 import cyan.compiler.parser.CyanSourceParser
 import cyan.compiler.parser.ast.CyanSource
+import cyan.compiler.parser.ast.expression.literal.CyanStringLiteralExpression
 import cyan.compiler.fir.FirDocument
+import cyan.compiler.fir.expression.FirExpression
 import cyan.compiler.lower.ast2fir.SourceLower
-import cyan.interpreter.Interpreter
 import cyan.compiler.codegen.js.JsCompilerBackend
+import cyan.compiler.codegen.wasm.WasmCompilerBackend
+import cyan.interpreter.Interpreter
 
 import com.github.h0tk3y.betterParse.grammar.parseToEnd
 
@@ -26,6 +29,10 @@ fun main() {
     var source: CyanSource
     val timeTakenToParse = measureTime {
         source = parser.parseToEnd("""
+            |type Person = struct {
+            |   name: str,
+            |   age: i32
+            |}
             |let a = 1847899 + (301111 * 5)
             |var b = "hello"
             |print(b)
@@ -33,7 +40,7 @@ fun main() {
             |print(b)
             |let c = ["hi", "hello", b]
             |let d: bool = true
-            |let e = c[0]   
+            |let e = c[0]
             |let f = b
             |if (d) {
             |    print(c[2])
@@ -71,4 +78,11 @@ fun main() {
     println(jsSource)
 
     println("\ncompiling code to js took ${timeTakenToTranslate.inMilliseconds} ms\n")
+
+    val backend = WasmCompilerBackend()
+
+    val wasmStrExp = backend.lowerExpression(FirExpression(FirDocument(), CyanStringLiteralExpression("Hello, world ! I will allocate too much !")))
+    val oneOtherExp = backend.lowerExpression(FirExpression(FirDocument(), CyanStringLiteralExpression("Test of alloc() !")))
+    println("heap: ${backend.heap.joinToString { "0x${it.toString(16)}" }}")
+    println("exprs: $wasmStrExp, $oneOtherExp")
 }
