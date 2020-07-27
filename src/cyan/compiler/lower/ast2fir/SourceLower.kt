@@ -3,6 +3,7 @@ package cyan.compiler.lower.ast2fir
 import cyan.compiler.fir.FirNode
 import cyan.compiler.fir.FirSource
 import cyan.compiler.fir.FirStatement
+import cyan.compiler.fir.FirTypeDeclaration
 import cyan.compiler.parser.ast.CyanSource
 
 object SourceLower : Ast2FirLower<CyanSource, FirSource> {
@@ -13,7 +14,7 @@ object SourceLower : Ast2FirLower<CyanSource, FirSource> {
         for (node in astNode.statements) {
             val loweredNode = StatementLower.lower(node, source)
 
-            if (loweredNode is FirStatement)
+            if (loweredNode is FirStatement && loweredNode !is FirTypeDeclaration)
                 source.statements += loweredNode
         }
 
