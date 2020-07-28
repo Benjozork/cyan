@@ -30,7 +30,7 @@ object JsStatementLower : FirItemLower<JsCompilerBackend, FirStatement> {
                 val builder = StringBuilder()
 
                 for ((index, branch) in item.branches.withIndex()) {
-                    if (index > 0) builder.append(" ")
+                    if (index > 0) builder.append(" else ")
                     builder.append("if (${backend.lowerExpression(branch.first)}) {\n")
                     builder.append(backend.translateSource(branch.second).prependIndent("    "))
                     builder.append("\n}")
