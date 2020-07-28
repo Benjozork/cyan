@@ -16,6 +16,7 @@ object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirNullN
             parent = parentFirNode,
             name = astNode.signature.name.value,
             returnType = parentFirNode.resolveType(astNode.signature.typeAnnotation),
+            isExtern = astNode.signature.isExtern,
             args = emptyArray()
         )
 

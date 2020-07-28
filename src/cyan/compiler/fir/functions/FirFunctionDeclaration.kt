@@ -10,6 +10,7 @@ class FirFunctionDeclaration (
     override val parent: FirNode,
     override val name: String,
     val returnType: Type,
+    val isExtern: Boolean,
     var args: Array<FirFunctionArgument>
 ): FirScope, FirSymbol {
 

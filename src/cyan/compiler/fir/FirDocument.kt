@@ -3,9 +3,10 @@ package cyan.compiler.fir
 import cyan.compiler.fir.functions.FirFunctionDeclaration
 
 class FirDocument (
-    override val declaredSymbols: MutableSet<FirSymbol> = mutableSetOf(),
-    override val localFunctions: MutableSet<FirFunctionDeclaration> = mutableSetOf()
+    override val declaredSymbols: MutableSet<FirSymbol> = mutableSetOf()
 ) : FirScope {
+
+    override val localFunctions = declaredSymbols.filterIsInstance<FirFunctionDeclaration>().toMutableSet()
 
     override val parent: FirNode? get() = null
 

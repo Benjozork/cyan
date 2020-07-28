@@ -5,6 +5,7 @@ import cyan.compiler.parser.ast.CyanSource
 import cyan.compiler.parser.ast.expression.literal.CyanStringLiteralExpression
 import cyan.compiler.fir.FirDocument
 import cyan.compiler.fir.expression.FirExpression
+import cyan.compiler.fir.functions.FirFunctionDeclaration
 import cyan.compiler.lower.ast2fir.SourceLower
 import cyan.compiler.codegen.js.JsCompilerBackend
 import cyan.compiler.codegen.wasm.WasmCompilerBackend
@@ -43,8 +44,11 @@ fun main() {
             |let e = c[0]
             |let f = b
             |let g: Person = { "James", 18 }
+            |let h: i32 = strlen(c[1])
             |print(g.name)
             |print(g)
+            |let i: i32 = g.age
+            |print(h)
             |if (d) {
             |    print(c[2])
             |} else if (false || d) {
@@ -52,11 +56,14 @@ fun main() {
             |} else {
             |    print("ho !")
             |}
-            |function hello(a: str) {
+            |function hello(a: str): str {
             |   print("Hello, stranger ! here's the value")
             |   print(a)
+            |   return a
             |}
-            |hello("<dumb value>>")
+            |print(hello("<dumb value>>"))
+            |print(strlen("Hamza"))
+            |print(powerOfTwo(5))
             """.trimMargin())
     }
 
@@ -73,9 +80,14 @@ fun main() {
 //
 //    println("\ninterpreting code took ${timeTakenToInterpret.inMilliseconds} ms\n")
 
+
+    // Remove externs for inserting stdlib translation into js
+    runtimeFirDocument.declaredSymbols.removeIf { it is FirFunctionDeclaration && it.isExtern }
+    runtimeFirDocument.localFunctions.removeIf { it.isExtern }
+
     var jsSource: String
-    val timeTakenToTranslate =  measureTime {
-        jsSource = JsCompilerBackend().translateSource(fir, isRoot = true)
+    val timeTakenToTranslate = measureTime {
+        jsSource = JsCompilerBackend(runtimeFirDocument).translateSource(fir, isRoot = true)
     }
 
     println(jsSource)

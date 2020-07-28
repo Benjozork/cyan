@@ -11,3 +11,5 @@ const builtins = {
     err: console.error,
     strlen: (string) => string.length
 };
+
+// CYANC_INSERT_STDLIB_HERE
