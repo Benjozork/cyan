@@ -10,6 +10,7 @@ import cyan.compiler.parser.ast.expression.literal.CyanNumericLiteralExpression
 import cyan.compiler.parser.ast.expression.literal.CyanStringLiteralExpression
 
 import java.lang.StringBuilder
+import kotlin.math.exp
 
 object JsExpressionLower : FirItemLower<JsCompilerBackend, FirExpression> {
 
@@ -40,6 +41,12 @@ object JsExpressionLower : FirItemLower<JsCompilerBackend, FirExpression> {
                 "$lhs ${expr.operator} $rhs"
             }
             is CyanArrayExpression -> expr.exprs.joinToString(prefix = "[", postfix = "]", separator = ", ") { backend.lowerExpression(FirExpression(item, it)) }
+            is CyanMemberAccessExpression -> {
+                val loweredBase = backend.lowerExpression(FirExpression(item, expr.base))
+                val member = backend.lowerExpression(FirExpression(item, expr.member))
+
+                "$loweredBase.$member"
+            }
             is CyanArrayIndexExpression -> "${backend.lowerExpression(FirExpression(item, expr.base))}[${expr.index}]"
             else -> error("fir2js: cannot lower expression of type '${item.astExpr::class.simpleName}'")
         }
