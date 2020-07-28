@@ -4,6 +4,7 @@ An experiment in programming languages
 ## Current features
 
 * variables and arrays (immutable by default)
+* structs (immutable)
 * complex expressions (parantheses, precedence, PEMDAS)
 * basic type inference for variable declarations
 * type checking for if statements and variables with type annotations
@@ -52,4 +53,36 @@ function hi(a) {                  // Functions
 }
 hi(9)
 print(hi)
+
+type Person = struct {          // Structs
+    name: str,
+    age: i32
+}
+let p: Person = { "James", 18 }
+print(p.name)
 ```
+
+## Architecture
+
+The cyan compiler (`cyanc`) currently works using an internal representation called FIR (Frontend Intermediate Representation).
+
+FIR is a transformed code format on which type-checking and symbol resolution is performed. Therefore, any outputted FIR is valid code.
+
+Here are the compilation steps :
+
+1. The runtime source code (`resources/runtime/runtime.cy`) is compiled using the same steps as normal code;
+2. A `FirDocument` (root node of any FIR tree) is created for the program source code, and the symbols from the compiled runtime are inserted into it;
+3. The source code is lexed and parsed (`cỳan.compiler.parser`) into an AST (abstract syntax tree);
+4. The AST is lowered into FIR (`cyan.lower.ast2fir`), using the previously mentionned `FirDocument`. This is where type-checking and symbol resolutioon happens;
+5. (Temporary) The FIR is turned into generated JS.
+
+## Current limitations
+
+* The codegen component consumes cyan FIR, which includes some pretty high-level concepts like structs and for loops. That makes some targets very difficult or impossible to implement.
+* Member access expressions only work on structs
+
+## Contributions and issues
+
+Contributions and issues are welcomed and encouraged.
+
+If you encounter any problem with the compiler, or wish to ask about a feature you'd like, feel free to open an issue. 
