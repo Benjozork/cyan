@@ -30,30 +30,33 @@ class CyanSourceParser : Grammar<CyanSource>() {
     val newLine         by regexToken("\n|\r\n")
     val ws              by regexToken("\\s+")
 
-    val let             by literalToken("let")
-    val vark            by literalToken("var")
-    val extern          by literalToken("extern")
-    val function        by literalToken("function")
-    val ifToken         by literalToken("if")
-    val elseToken       by literalToken("else")
+    val let             by regexToken("let\\b")
+    val vark            by regexToken("var\\b")
+    val extern          by regexToken("extern\\b")
+    val function        by regexToken("function\\b")
+    val ifToken         by regexToken("if\\b")
+    val elseToken       by regexToken("else\\b")
+
+    val trueToken       by regexToken("true\\b")
+    val falseToken      by regexToken("false\\b")
 
     // Complex types
 
-    val type            by literalToken("type")
-    val struct          by literalToken("struct")
+    val type            by regexToken("type\\b")
+    val struct          by regexToken("struct\\b")
 
-    // Types
+    // Primitive types
 
-    val anyPrim         by literalToken("any")
-    val voidPrim        by literalToken("void")
-    val int8Prim        by literalToken("i8")
-    val int32Prim       by literalToken("i32")
-    val int64Prim       by literalToken("i64")
-    val float32Prim     by literalToken("f32")
-    val float64Prim     by literalToken("f64")
-    val boolPrim        by literalToken("bool")
-    val strPrim         by literalToken("str")
-    val charPrim        by literalToken("char")
+    val anyPrim         by regexToken("any\\b")
+    val voidPrim        by regexToken("void\\b")
+    val int8Prim        by regexToken("i8\\b")
+    val int32Prim       by regexToken("i32\\b")
+    val int64Prim       by regexToken("i64\\b")
+    val float32Prim     by regexToken("f32\\b")
+    val float64Prim     by regexToken("f64\\b")
+    val boolPrim        by regexToken("bool\\b")
+    val strPrim         by regexToken("str\\b")
+    val charPrim        by regexToken("char\\b")
 
     val tokenToType = mapOf (
         anyPrim     to CyanType.Any,
@@ -141,10 +144,6 @@ class CyanSourceParser : Grammar<CyanSource>() {
 
     val and             by literalToken("&&")
     val or              by literalToken("||")
-
-    val trueToken       by literalToken("true")
-    val falseToken      by literalToken("false")
-
     // Values
 
     val ident           by regexToken("[a-zA-Z]+")
@@ -177,8 +176,11 @@ class CyanSourceParser : Grammar<CyanSource>() {
 
     val parenTerm = (-leap * parser(this::expr) * -reap)
 
-    val unambiguousTerm: Parser<CyanExpression> by (parenTerm or memberAccessParser or referenceParser)
-    val term: Parser<CyanExpression>            by (parenTerm or arrayExpressionParser or literalExpressionParser or memberAccessParser or arrayIndexParser or referenceParser)
+    val unambiguousTerm: Parser<CyanExpression>
+            by (parenTerm or memberAccessParser or parser(this::functionCall) or referenceParser)
+
+    val term: Parser<CyanExpression>
+            by (parenTerm or arrayExpressionParser or literalExpressionParser or memberAccessParser or arrayIndexParser or parser(this::functionCall) or referenceParser)
 
     val mulDivModOp by (times or div or mod) use { tokenToOp[this.type]!! }
     val mulDivModOrTerm: Parser<CyanExpression> by leftAssociative(term, -optional(ws) * mulDivModOp * -optional(ws)) { l, o, r -> CyanBinaryExpression(l, o, r) }
