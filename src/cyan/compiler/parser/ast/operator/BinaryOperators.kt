@@ -24,10 +24,36 @@ object CyanBinaryExpOperator : CyanBinaryOperator {
     override fun toString() = "^"
 }
 
-object CyanBinaryAndOperator : CyanBinaryOperator {
+interface CyanBinaryComparisonOperator : CyanBinaryOperator
+
+object CyanBinaryEqualsOperator : CyanBinaryComparisonOperator {
+    override fun toString() = "=="
+}
+
+object CyanBinaryNotEqualsOperator : CyanBinaryComparisonOperator {
+    override fun toString() = "!="
+}
+
+object CyanBinaryLesserOperator : CyanBinaryComparisonOperator {
+    override fun toString() = "<"
+}
+
+object CyanBinaryLesserEqualsOperator : CyanBinaryComparisonOperator {
+    override fun toString() = "<="
+}
+
+object CyanBinaryGreaterOperator : CyanBinaryComparisonOperator {
+    override fun toString() = ">"
+}
+
+object CyanBinaryGreaterEqualsOperator : CyanBinaryComparisonOperator {
+    override fun toString() = ">="
+}
+
+object CyanBinaryAndOperator : CyanBinaryComparisonOperator {
     override fun toString() = "&&"
 }
 
-object CyanBinaryOrOperator : CyanBinaryOperator {
+object CyanBinaryOrOperator : CyanBinaryComparisonOperator {
     override fun toString() = "||"
 }

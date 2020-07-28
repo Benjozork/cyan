@@ -123,23 +123,29 @@ class CyanSourceParser : Grammar<CyanSource>() {
     val mod             by literalToken("%")
     val exp             by literalToken("^")
 
+    // Comparison
+
+    val deq             by literalToken("==")
+    val neq             by literalToken("!=")
+    val leq             by literalToken("<=")
+    val lt              by literalToken("<")
+    val geq             by literalToken(">=")
+    val gt              by literalToken(">")
+
     val tokenToOp = mapOf (
         plus  to CyanBinaryPlusOperator,
         minus to CyanBinaryMinusOperator,
         times to CyanBinaryTimesOperator,
         div   to CyanBinaryModOperator,
         mod   to CyanBinaryModOperator,
-        exp   to CyanBinaryExpOperator
+        exp   to CyanBinaryExpOperator,
+        deq   to CyanBinaryEqualsOperator,
+        neq   to CyanBinaryNotEqualsOperator,
+        leq   to CyanBinaryLesserEqualsOperator,
+        lt    to CyanBinaryLesserOperator,
+        geq   to CyanBinaryGreaterEqualsOperator,
+        gt    to CyanBinaryGreaterOperator
     )
-
-    // Comparison
-
-    val deq             by literalToken("==")
-    val neq             by literalToken("!=")
-    val lt              by literalToken("<")
-    val leq             by literalToken("<=")
-    val gt              by literalToken(">")
-    val geq             by literalToken(">=")
 
     // Boolean
 
@@ -190,7 +196,7 @@ class CyanSourceParser : Grammar<CyanSource>() {
     val arithmetic: Parser<CyanExpression> by leftAssociative(mulDivModOrTerm, -optional(ws) * plusMinusOp * -optional(ws)) { l, o, r -> CyanBinaryExpression(l, o, r) }
 
     val comparisonOp by deq or neq or lt or leq or gt or geq
-    val comparisonOrMath: Parser<CyanExpression> by (arithmetic * optional(comparisonOp * arithmetic))
+    val comparisonOrMath: Parser<CyanExpression> by (arithmetic * optional(-znws * comparisonOp * -znws * arithmetic))
             .map { (left, tail) -> tail?.let { (op, r) -> CyanBinaryExpression(left, tokenToOp[op.type]!!, r) } ?: left }
 
     val andChain by leftAssociative(comparisonOrMath, -optional(ws) * and * -optional(ws)) { l, _, r -> CyanBinaryExpression(l, CyanBinaryAndOperator, r) }
