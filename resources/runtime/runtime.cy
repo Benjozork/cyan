@@ -1,4 +1,4 @@
-module runtime
+module __runtime__
 
 extern function print(content: any): void
 

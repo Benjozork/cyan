@@ -1,8 +1,10 @@
 package cyan.compiler.codegen
 
+import cyan.compiler.fir.FirModule
 import cyan.compiler.fir.FirSource
 import cyan.compiler.fir.FirStatement
 import cyan.compiler.fir.expression.FirExpression
+import cyan.compiler.fir.extensions.firstAncestorOfType
 import cyan.compiler.fir.functions.FirFunctionDeclaration
 
 import java.lang.StringBuilder
@@ -21,7 +23,15 @@ abstract class FirCompilerBackend {
     fun translateSource(source: FirSource, isRoot: Boolean = false): String {
         val newSource = if (isRoot) StringBuilder(prelude + "\n") else StringBuilder()
 
-        for (function in source.localFunctions) {
+        // Here, for now we include all functions in the `declaredSymbols` of the parent module if the parent of this
+        // FirSource is a module. That way, we inline functions imported from other modules. However, we need to not
+        // do this if we are not the direct child of a FirModule, because then we would inline all imported functions into
+        // all FirSources.
+        if (source.parent is FirModule) source.parent.let { module ->
+            for (function in module.localFunctions.filter { !it.isExtern }) {
+                newSource.appendln(lowerFunctionDeclaration(function))
+            }
+        } else for (function in source.localFunctions) {
             newSource.appendln(lowerFunctionDeclaration(function))
         }
 

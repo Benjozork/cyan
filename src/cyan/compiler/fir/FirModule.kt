@@ -9,10 +9,13 @@ import com.github.h0tk3y.betterParse.grammar.parseToEnd
 import java.io.File
 
 class FirModule (
-    override val declaredSymbols: MutableSet<FirSymbol> = mutableSetOf()
+    override val declaredSymbols: MutableSet<FirSymbol> = mutableSetOf(),
+    val name: String
 ) : FirScope {
 
-    override val localFunctions = declaredSymbols.filterIsInstance<FirFunctionDeclaration>().toMutableSet()
+    lateinit var source: FirSource
+
+    override val localFunctions get() = declaredSymbols.filterIsInstance<FirFunctionDeclaration>().toMutableSet()
 
     override val parent: FirNode? get() = null
 
@@ -21,19 +24,47 @@ class FirModule (
     }
 
     fun findModuleByReference(reference: FirReference): FirModule? {
-        val moduleFileInCompilerResources = File("runtime/${reference.text}.cy").takeIf { it.exists() }
+        val moduleInCache = cachedModules[reference.text]
 
-        val loadedModule = moduleFileInCompilerResources?.let {
+        return if (moduleInCache != null) moduleInCache else {
+            val moduleFileInCompilerResources = File("runtime/${reference.text}.cy").takeIf { it.exists() }
+
+            val loadedModule = moduleFileInCompilerResources?.let { compileModuleFromFile(it) }
+
+            loadedModule?.let { cachedModules[reference.text] = loadedModule }
+
+            loadedModule
+        }
+    }
+
+    companion object Loader {
+        private val moduleParser = CyanModuleParser()
+
+        private val cachedModules = mutableMapOf<String, FirModule>()
+
+        private val runtimeModule get() = cachedModules["__runtime__"] ?: error("fatal: runtime module not in module cache")
+
+        fun compileModuleFromFile(it: File): FirModule {
             val moduleText = it.readText()
-            val parsedModule = CyanModuleParser().parseToEnd(moduleText)
-            val compiledModule = FirModule()
+            val parsedModule = moduleParser.parseToEnd(moduleText)
 
-            SourceLower.lower(parsedModule.source, compiledModule).also { fir -> compiledModule.declaredSymbols += fir.declaredSymbols }
+            val moduleName = parsedModule.declaration.name.value
 
-            compiledModule
+            val compiledModule = FirModule(name = moduleName)
+
+            if (moduleName != "__runtime__")
+                compiledModule.declaredSymbols += runtimeModule.declaredSymbols
+
+            compiledModule.source = SourceLower.lower(parsedModule.source, compiledModule)
+
+            return compiledModule.also { it.declaredSymbols += compiledModule.source.declaredSymbols }
         }
 
-        return loadedModule
+        init {
+            val runtimeModuleFile = File("runtime/runtime.cy").takeIf { it.exists() } ?: error("fatal: could not find runtime.cy module")
+
+            cachedModules["__runtime__"] = compileModuleFromFile(runtimeModuleFile)
+        }
     }
 
 }

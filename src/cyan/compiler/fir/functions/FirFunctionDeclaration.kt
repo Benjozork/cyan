@@ -18,7 +18,7 @@ class FirFunctionDeclaration (
 
     override fun allReferredSymbols() = block.allReferredSymbols()
 
-    override val declaredSymbols by lazy { (args.map { it as FirSymbol } + this).toMutableSet() }
+    override val declaredSymbols get() = (args.map { it as FirSymbol } + this).toMutableSet()
 
     override val localFunctions = mutableSetOf<FirFunctionDeclaration>()
 

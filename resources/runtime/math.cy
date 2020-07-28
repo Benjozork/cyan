@@ -1,5 +1,14 @@
 module math
 
+type Fraction = struct {
+    num: i32,
+    den: i32
+}
+
+function displayFraction(f: Fraction): void {
+    print(f.num / f.den)
+}
+
 function powerOfTwo(n: i32): i32 {
     return n * n
 }

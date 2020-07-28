@@ -70,7 +70,6 @@ object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirNullN
         // Register function in parent FIR node
 
         parentFirNode.declaredSymbols += firFunctionDeclaration
-        parentFirNode.localFunctions.add(firFunctionDeclaration)
 
         return FirNullNode
     }

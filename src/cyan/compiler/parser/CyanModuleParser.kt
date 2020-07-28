@@ -153,9 +153,10 @@ class CyanModuleParser : Grammar<CyanModule>() {
 
     val and             by literalToken("&&")
     val or              by literalToken("||")
+
     // Values
 
-    val ident           by regexToken("[a-zA-Z]+")
+    val ident           by regexToken("[a-zA-Z_]+")
     val numericalValue  by regexToken("\\d+")
 
     val stringLiteral   by regexToken("\".*?\"")
