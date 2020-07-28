@@ -15,6 +15,7 @@ object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirNullN
         val firFunctionDeclaration = FirFunctionDeclaration (
             parent = parentFirNode,
             name = astNode.signature.name.value,
+            returnType = parentFirNode.resolveType(astNode.signature.typeAnnotation),
             args = emptyArray()
         )
 
