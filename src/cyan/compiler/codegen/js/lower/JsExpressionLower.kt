@@ -3,14 +3,16 @@ package cyan.compiler.codegen.js.lower
 import cyan.compiler.codegen.FirItemLower
 import cyan.compiler.codegen.js.JsCompilerBackend
 import cyan.compiler.common.types.Type
+import cyan.compiler.fir.FirDocument
 import cyan.compiler.fir.expression.FirExpression
+import cyan.compiler.fir.extensions.firstAncestorOfType
 import cyan.compiler.parser.ast.expression.*
 import cyan.compiler.parser.ast.expression.literal.CyanBooleanLiteralExpression
 import cyan.compiler.parser.ast.expression.literal.CyanNumericLiteralExpression
 import cyan.compiler.parser.ast.expression.literal.CyanStringLiteralExpression
+import cyan.compiler.parser.ast.function.CyanFunctionCall
 
 import java.lang.StringBuilder
-import kotlin.math.exp
 
 object JsExpressionLower : FirItemLower<JsCompilerBackend, FirExpression> {
 
@@ -20,6 +22,14 @@ object JsExpressionLower : FirItemLower<JsCompilerBackend, FirExpression> {
             is CyanNumericLiteralExpression -> "${expr.value}"
             is CyanStringLiteralExpression  -> "'${expr.value.replace("'", "\\'")}'"
             is CyanBooleanLiteralExpression -> "${expr.value}"
+            is CyanFunctionCall -> {
+                val isBuiltin = item.firstAncestorOfType<FirDocument>()?.declaredSymbols?.any { it.name == expr.functionIdentifier.value }
+                    ?: error("fir2js: no FirDocument as ancestor of node")
+
+                val jsName = if (isBuiltin) "builtins.${expr.functionIdentifier.value}" else expr.functionIdentifier.value
+
+                "$jsName(${expr.args.joinToString(", ") { backend.lowerExpression(FirExpression(item, it)) }})"
+            }
             is CyanStructLiteralExpression -> {
                 val structType = item.type() as Type.Struct
 
