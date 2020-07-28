@@ -43,6 +43,7 @@ fun main() {
             |let e = c[0]
             |let f = b
             |let g: Person = { "James", 18 }
+            |print(g.name)
             |print(g)
             |if (d) {
             |    print(c[2])
@@ -64,13 +65,13 @@ fun main() {
 
     println("parsing source took ${timeTakenToParse.inMilliseconds} ms\n")
 
-    val interpreter = Interpreter()
-
-    val timeTakenToInterpret = measureTime {
-        interpreter.run(source)
-    }
-
-    println("\ninterpreting code took ${timeTakenToInterpret.inMilliseconds} ms\n")
+//    val interpreter = Interpreter()
+//
+//    val timeTakenToInterpret = measureTime {
+//        interpreter.run(source)
+//    }
+//
+//    println("\ninterpreting code took ${timeTakenToInterpret.inMilliseconds} ms\n")
 
     var jsSource: String
     val timeTakenToTranslate =  measureTime {
