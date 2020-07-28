@@ -138,7 +138,7 @@ class CyanModuleParser : Grammar<CyanModule>() {
         plus  to CyanBinaryPlusOperator,
         minus to CyanBinaryMinusOperator,
         times to CyanBinaryTimesOperator,
-        div   to CyanBinaryModOperator,
+        div   to CyanBinaryDivOperator,
         mod   to CyanBinaryModOperator,
         exp   to CyanBinaryExpOperator,
         deq   to CyanBinaryEqualsOperator,
