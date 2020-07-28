@@ -24,9 +24,6 @@ object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirNullN
                 .map { FirFunctionArgument(firFunctionDeclaration, it.name, firFunctionDeclaration.resolveType(it.typeAnnotation, astNode)) }
                 .toTypedArray()
 
-        // Register its args as its declared symbols
-        firFunctionDeclaration.declaredSymbols += firFunctionDeclaration.args
-
         // Lower AST function body
         firFunctionDeclaration.block = astNode.source?.let { SourceLower.lower(it, firFunctionDeclaration) } ?: FirSource(firFunctionDeclaration)
 
