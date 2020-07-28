@@ -118,7 +118,33 @@ class FirExpression(override val parent: FirNode, val astExpr: CyanExpression) :
                      else -> error("can't infer type of ${referee::class.simpleName}")
                  }
              }
-             is CyanMemberAccessExpression -> Type.Primitive(CyanType.Any, false)
+             is CyanMemberAccessExpression -> {
+                 val baseType = FirExpression(this, astExpr.base).type()
+                 val memberName = astExpr.member.value
+
+                 when (baseType) {
+                     is Type.Primitive -> DiagnosticPipe.report (
+                         CompilerDiagnostic (
+                             level = CompilerDiagnostic.Level.Error,
+                             message = "Primitives do not have members",
+                             astNode = astExpr
+                         )
+                     )
+                     is Type.Struct -> {
+                         val matchingStructProperty = baseType.properties.firstOrNull { it.name == memberName }
+                             ?: DiagnosticPipe.report (
+                                 CompilerDiagnostic (
+                                     level = CompilerDiagnostic.Level.Error,
+                                     message = "Type '${baseType.name}' does not have a member called '$memberName'",
+                                     astNode = astExpr,
+                                     note = CompilerDiagnostic.Note("type '${baseType.name}' is defined as follows\n" + "    | ".lightGray() + "$baseType")
+                                 )
+                             )
+
+                         matchingStructProperty.type
+                     }
+                 }
+             }
              is CyanArrayIndexExpression -> {
                  return FirExpression(this, astExpr.base).type().also {
                      if (!it.array) {
