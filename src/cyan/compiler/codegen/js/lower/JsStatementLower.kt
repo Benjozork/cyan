@@ -12,19 +12,20 @@ object JsStatementLower : FirItemLower<JsCompilerBackend, FirStatement> {
 
     override fun lower(backend: JsCompilerBackend, item: FirStatement): String {
         return when (item) {
-            is FirFunctionCall -> {
-                val isBuiltin = item.firstAncestorOfType<FirDocument>()?.declaredSymbols?.contains(item.callee)
-                    ?: error("fir2js: no FirDocument as ancestor of node")
-
-                val jsName = if (isBuiltin) "builtins.${item.callee.name}" else item.callee.name
-
-                "$jsName(${item.args.joinToString(", ", transform = backend::lowerExpression)});"
-            }
-            is FirAssignment -> {
-                "${item.targetVariable!!.name} = ${backend.lowerExpression(item.newExpr!!)};"
-            }
             is FirVariableDeclaration -> {
                 "${if (!item.mutable) "const" else "let"} ${item.name} = ${backend.lowerExpression(item.initializationExpr)};"
+            }
+            is FirFunctionCall -> {
+                val containingDocument = item.firstAncestorOfType<FirDocument>()
+                    ?: error("fir2js: no FirDocument as ancestor of node")
+
+                val calleeName = item.callee.name
+
+                val isBuiltin = containingDocument.localFunctions.any { it.isExtern && it.name == calleeName }
+
+                val jsName = if (isBuiltin) "builtins.$calleeName" else calleeName
+
+                "$jsName(${item.args.joinToString(", ", transform = backend::lowerExpression)});"
             }
             is FirIfChain -> {
                 val builder = StringBuilder()
@@ -43,6 +44,12 @@ object JsStatementLower : FirItemLower<JsCompilerBackend, FirStatement> {
                 }
 
                 builder.toString()
+            }
+            is FirAssignment -> {
+                "${item.targetVariable!!.name} = ${backend.lowerExpression(item.newExpr!!)};"
+            }
+            is FirReturn -> {
+                "return ${backend.lowerExpression(item.expr)};"
             }
             else -> error("fir2js: cannot lower statement of type '${item::class.simpleName}'")
         }

@@ -34,6 +34,7 @@ class CyanSourceParser : Grammar<CyanSource>() {
     val vark            by regexToken("var\\b")
     val extern          by regexToken("extern\\b")
     val function        by regexToken("function\\b")
+    val returnToken     by regexToken("return\\b")
     val ifToken         by regexToken("if\\b")
     val elseToken       by regexToken("else\\b")
 
@@ -233,9 +234,14 @@ class CyanSourceParser : Grammar<CyanSource>() {
 
     val assignStatement: Parser<CyanStatement>  by (referenceParser * -znws * -assign * -znws * expr) use { CyanAssignment(t1, t2) }
 
+    // Return
+
+    val returnStatement: Parser<CyanReturn> by (-returnToken * -znws * expr) use { CyanReturn(this) }
+
     // Statements
 
-    val statement by -optional(ws) * (variableDeclaration or functionDeclaration or typeDeclaration or functionCall or ifStatementChain or assignStatement) * -optional(ws)
+    val statement
+            by -znws * (variableDeclaration or functionDeclaration or typeDeclaration or functionCall or ifStatementChain or assignStatement or returnStatement) * -znws
 
     // Root parser
 

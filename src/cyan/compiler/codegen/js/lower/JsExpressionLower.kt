@@ -23,10 +23,14 @@ object JsExpressionLower : FirItemLower<JsCompilerBackend, FirExpression> {
             is CyanStringLiteralExpression  -> "'${expr.value.replace("'", "\\'")}'"
             is CyanBooleanLiteralExpression -> "${expr.value}"
             is CyanFunctionCall -> {
-                val isBuiltin = item.firstAncestorOfType<FirDocument>()?.declaredSymbols?.any { it.name == expr.functionIdentifier.value }
+                val containingDocument = item.firstAncestorOfType<FirDocument>()
                     ?: error("fir2js: no FirDocument as ancestor of node")
 
-                val jsName = if (isBuiltin) "builtins.${expr.functionIdentifier.value}" else expr.functionIdentifier.value
+                val calleeName = expr.functionIdentifier.value
+
+                val isBuiltin = containingDocument.localFunctions.any { it.isExtern && it.name == calleeName }
+
+                val jsName = if (isBuiltin) "builtins.$calleeName" else calleeName
 
                 "$jsName(${expr.args.joinToString(", ") { backend.lowerExpression(FirExpression(item, it)) }})"
             }
