@@ -75,3 +75,14 @@ Here are the compilation steps :
 3. The source code is lexed and parsed (`cỳan.compiler.parser`) into an AST (abstract syntax tree);
 4. The AST is lowered into FIR (`cyan.lower.ast2fir`), using the previously mentionned `FirDocument`. This is where type-checking and symbol resolutioon happens;
 5. (Temporary) The FIR is turned into generated JS.
+
+## Current limitations
+
+* The codegen component consumes cyan FIR, which includes some pretty high-level concepts like structs and for loops. That makes some targets very difficult or impossible to implement.
+* Member access expressions only work on structs
+
+## Contributions and issues
+
+Contributions and issues are welcomed and encouraged.
+
+If you encounter any problem with the compiler, or wish to ask about a feature you'd like, feel free to open an issue. 
