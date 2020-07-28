@@ -4,6 +4,7 @@ An experiment in programming languages
 ## Current features
 
 * variables and arrays (immutable by default)
+* structs (immutable)
 * complex expressions (parantheses, precedence, PEMDAS)
 * basic type inference for variable declarations
 * type checking for if statements and variables with type annotations
@@ -52,4 +53,11 @@ function hi(a) {                  // Functions
 }
 hi(9)
 print(hi)
+
+type Person = struct {          // Structs
+    name: str,
+    age: i32
+}
+let p: Person = { "James", 18 }
+print(p.name)
 ```
