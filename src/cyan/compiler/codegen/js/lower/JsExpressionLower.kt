@@ -3,7 +3,7 @@ package cyan.compiler.codegen.js.lower
 import cyan.compiler.codegen.FirItemLower
 import cyan.compiler.codegen.js.JsCompilerBackend
 import cyan.compiler.common.types.Type
-import cyan.compiler.fir.FirDocument
+import cyan.compiler.fir.FirModule
 import cyan.compiler.fir.expression.FirExpression
 import cyan.compiler.fir.extensions.firstAncestorOfType
 import cyan.compiler.parser.ast.expression.*
@@ -23,7 +23,7 @@ object JsExpressionLower : FirItemLower<JsCompilerBackend, FirExpression> {
             is CyanStringLiteralExpression  -> "'${expr.value.replace("'", "\\'")}'"
             is CyanBooleanLiteralExpression -> "${expr.value}"
             is CyanFunctionCall -> {
-                val containingDocument = item.firstAncestorOfType<FirDocument>()
+                val containingDocument = item.firstAncestorOfType<FirModule>()
                     ?: error("fir2js: no FirDocument as ancestor of node")
 
                 val calleeName = expr.functionIdentifier.value

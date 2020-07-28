@@ -1,7 +1,6 @@
 package cyan.cli
 
-import cyan.compiler.parser.CyanSourceParser
-import cyan.interpreter.Interpreter
+import cyan.compiler.parser.CyanModuleParser
 
 import com.github.h0tk3y.betterParse.grammar.parseToEnd
 
@@ -15,7 +14,7 @@ fun main(args: Array<String>) {
     }
 
     val fileText = file.readText()
-    val parsedSource = CyanSourceParser().parseToEnd(fileText)
-
-    Interpreter().run(parsedSource)
+    val parsedSource = CyanModuleParser().parseToEnd(fileText)
+//
+//    Interpreter().run(parsedSource)
 }

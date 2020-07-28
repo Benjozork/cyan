@@ -16,7 +16,7 @@ object JsStatementLower : FirItemLower<JsCompilerBackend, FirStatement> {
                 "${if (!item.mutable) "const" else "let"} ${item.name} = ${backend.lowerExpression(item.initializationExpr)};"
             }
             is FirFunctionCall -> {
-                val containingDocument = item.firstAncestorOfType<FirDocument>()
+                val containingDocument = item.firstAncestorOfType<FirModule>()
                     ?: error("fir2js: no FirDocument as ancestor of node")
 
                 val calleeName = item.callee.name

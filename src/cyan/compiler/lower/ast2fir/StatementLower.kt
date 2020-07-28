@@ -10,6 +10,7 @@ object StatementLower : Ast2FirLower<CyanStatement, FirNode> {
 
     override fun lower(astNode: CyanStatement, parentFirNode: FirNode): FirNode {
         return when (astNode) {
+            is CyanImportStatement     -> ImportStatementLower.lower(astNode, parentFirNode)
             is CyanVariableDeclaration -> VariableDeclarationLower.lower(astNode, parentFirNode)
             is CyanFunctionDeclaration -> FunctionDeclarationLower.lower(astNode, parentFirNode)
             is CyanStructDeclaration   -> StructDeclarationLower.lower(astNode, parentFirNode)

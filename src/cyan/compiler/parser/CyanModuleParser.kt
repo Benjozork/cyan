@@ -1,7 +1,9 @@
 package cyan.compiler.parser
 
 import cyan.compiler.common.types.Type
+import cyan.compiler.common.types.CyanType
 import cyan.compiler.parser.ast.*
+import cyan.compiler.parser.ast.types.CyanTypeAnnotation
 import cyan.compiler.parser.ast.types.CyanStructDeclaration
 import cyan.compiler.parser.ast.function.CyanFunctionCall
 import cyan.compiler.parser.ast.function.CyanFunctionDeclaration
@@ -19,17 +21,17 @@ import com.github.h0tk3y.betterParse.grammar.parser
 import com.github.h0tk3y.betterParse.lexer.literalToken
 import com.github.h0tk3y.betterParse.lexer.regexToken
 import com.github.h0tk3y.betterParse.parser.Parser
-import cyan.compiler.common.types.CyanType
-import cyan.compiler.parser.ast.types.CyanTypeAnnotation
 
 @Suppress("MemberVisibilityCanBePrivate")
-class CyanSourceParser : Grammar<CyanSource>() {
+class CyanModuleParser : Grammar<CyanModule>() {
 
     // Tokens
 
     val newLine         by regexToken("\n|\r\n")
     val ws              by regexToken("\\s+")
 
+    val module          by regexToken("module\\b")
+    val import          by regexToken("import\\b")
     val let             by regexToken("let\\b")
     val vark            by regexToken("var\\b")
     val extern          by regexToken("extern\\b")
@@ -206,7 +208,7 @@ class CyanSourceParser : Grammar<CyanSource>() {
 
     // Scope
 
-    val block by (-lcur * -znws * parser(this::rootParser) * -znws * -rcur)
+    val block by (-lcur * -znws * parser(this::sourceParser) * -znws * -rcur)
 
     // Functions
 
@@ -244,15 +246,27 @@ class CyanSourceParser : Grammar<CyanSource>() {
 
     val returnStatement: Parser<CyanReturn> by (-returnToken * -znws * expr) use { CyanReturn(this) }
 
+    // Import
+
+    val importStatement by (-import * -znws * referenceParser) use { CyanImportStatement(this) }
+
+    // Module declaration
+
+    val moduleDeclaration by (-module * -znws * referenceParser) use { CyanModuleDeclaration(this) }
+
     // Statements
 
-    val statement
-            by -znws * (variableDeclaration or functionDeclaration or typeDeclaration or functionCall or ifStatementChain or assignStatement or returnStatement) * -znws
+    val anyStatement
+            by -znws * (importStatement or variableDeclaration or functionDeclaration or typeDeclaration or functionCall or ifStatementChain or assignStatement or returnStatement) * -znws
 
-    // Root parser
+    // Source parser
 
-    val sourceParser = separatedTerms(statement, znws) use { CyanSource(this) }
+    val sourceParser by separatedTerms(anyStatement, znws) use { CyanSource(this) }
 
-    override val rootParser = sourceParser
+    // Module parser
+
+    val moduleParser by (moduleDeclaration * -znws * sourceParser) use { CyanModule(t1, t2) }
+
+    override val rootParser = moduleParser
 
 }
