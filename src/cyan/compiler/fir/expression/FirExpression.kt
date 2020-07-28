@@ -56,36 +56,40 @@ class FirExpression(override val parent: FirNode, val astExpr: CyanExpression) :
                      )
                  }
 
-                 if (astExpr.exprs.size > type.properties.size) { // Check for too many arguments
-                     DiagnosticPipe.report (
-                         CompilerDiagnostic (
-                             level = CompilerDiagnostic.Level.Error,
-                             message = "Too many arguments for struct literal of type '${type.name}'",
-                             astNode = astExpr,
-                             note = CompilerDiagnostic.Note("type '${type.name}' is defined as follows\n" + "    | ".lightGray() + "$type")
-                         )
-                     )
-                 } else if (type.properties.size > astExpr.exprs.size) { // Check for not enough arguments
-                     DiagnosticPipe.report (
-                         CompilerDiagnostic (
-                             level = CompilerDiagnostic.Level.Error,
-                             message = "Not enough arguments for struct literal of type '${type.name}'",
-                             astNode = astExpr,
-                             note = CompilerDiagnostic.Note("type '${type.name}' is defined as follows\n" + "    | ".lightGray() + "$type")
-                         )
-                     )
-                 } else for ((index, field) in type.properties.withIndex()) { // Check for argument type mismatch
-                     val exprFieldValue = FirExpression(this, astExpr.exprs[index])
-
-                     if (!(field.type accepts exprFieldValue.type())) {
+                 when {
+                     astExpr.exprs.size > type.properties.size -> { // Check for too many arguments
                          DiagnosticPipe.report (
                              CompilerDiagnostic (
                                  level = CompilerDiagnostic.Level.Error,
-                                 message = "Type mismatch for argument $index (${field.name}): expected '${field.type}', found '${exprFieldValue.type()}'",
+                                 message = "Too many arguments for struct literal of type '${type.name}'",
                                  astNode = astExpr,
                                  note = CompilerDiagnostic.Note("type '${type.name}' is defined as follows\n" + "    | ".lightGray() + "$type")
                              )
                          )
+                     }
+                     type.properties.size > astExpr.exprs.size -> { // Check for not enough arguments
+                         DiagnosticPipe.report (
+                             CompilerDiagnostic (
+                                 level = CompilerDiagnostic.Level.Error,
+                                 message = "Not enough arguments for struct literal of type '${type.name}'",
+                                 astNode = astExpr,
+                                 note = CompilerDiagnostic.Note("type '${type.name}' is defined as follows\n" + "    | ".lightGray() + "$type")
+                             )
+                         )
+                     }
+                     else -> for ((index, field) in type.properties.withIndex()) { // Check for argument type mismatch
+                         val exprFieldValue = FirExpression(this, astExpr.exprs[index])
+
+                         if (!(field.type accepts exprFieldValue.type())) {
+                             DiagnosticPipe.report (
+                                 CompilerDiagnostic (
+                                     level = CompilerDiagnostic.Level.Error,
+                                     message = "Type mismatch for argument $index (${field.name}): expected '${field.type}', found '${exprFieldValue.type()}'",
+                                     astNode = astExpr,
+                                     note = CompilerDiagnostic.Note("type '${type.name}' is defined as follows\n" + "    | ".lightGray() + "$type")
+                                 )
+                             )
+                         }
                      }
                  }
 
