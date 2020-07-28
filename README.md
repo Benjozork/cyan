@@ -61,3 +61,17 @@ type Person = struct {          // Structs
 let p: Person = { "James", 18 }
 print(p.name)
 ```
+
+## Architecture
+
+The cyan compiler (`cyanc`) currently works using an internal representation called FIR (Frontend Intermediate Representation).
+
+FIR is a transformed code format on which type-checking and symbol resolution is performed. Therefore, any outputted FIR is valid code.
+
+Here are the compilation steps :
+
+1. The runtime source code (`resources/runtime/runtime.cy`) is compiled using the same steps as normal code;
+2. A `FirDocument` (root node of any FIR tree) is created for the program source code, and the symbols from the compiled runtime are inserted into it;
+3. The source code is lexed and parsed (`cỳan.compiler.parser`) into an AST (abstract syntax tree);
+4. The AST is lowered into FIR (`cyan.lower.ast2fir`), using the previously mentionned `FirDocument`. This is where type-checking and symbol resolutioon happens;
+5. (Temporary) The FIR is turned into generated JS.
