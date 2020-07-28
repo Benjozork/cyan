@@ -14,6 +14,7 @@ import cyan.compiler.parser.ast.expression.*
 import cyan.compiler.parser.ast.expression.literal.CyanBooleanLiteralExpression
 import cyan.compiler.parser.ast.expression.literal.CyanNumericLiteralExpression
 import cyan.compiler.parser.ast.expression.literal.CyanStringLiteralExpression
+import cyan.compiler.parser.ast.operator.CyanBinaryComparisonOperator
 import cyan.compiler.parser.ast.function.CyanFunctionCall
 import cyan.compiler.lower.ast2fir.expression.ExpressionLower
 
@@ -151,7 +152,9 @@ class FirExpression(override val parent: FirNode, val astExpr: CyanExpression) :
                      )
                  }
 
-                 lhsType
+                 if (astExpr.operator is CyanBinaryComparisonOperator) {
+                     Type.Primitive(CyanType.Bool, false)
+                 } else lhsType
              }
              is CyanIdentifierExpression -> {
                  val containingScope = this.containingScope()
