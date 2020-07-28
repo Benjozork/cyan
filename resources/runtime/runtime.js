@@ -8,5 +8,6 @@ const __VERSION = '0.1.0';
 
 const builtins = {
     print: console.log,
-    err: console.error
+    err: console.error,
+    strlen: (string) => string.length
 };
