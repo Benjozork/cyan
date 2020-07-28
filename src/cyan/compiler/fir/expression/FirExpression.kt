@@ -150,16 +150,21 @@ class FirExpression(override val parent: FirNode, val astExpr: CyanExpression) :
                  }
              }
              is CyanArrayIndexExpression -> {
-                 return FirExpression(this, astExpr.base).type().also {
-                     if (!it.array) {
-                         DiagnosticPipe.report (
-                             CompilerDiagnostic (
-                                 level = CompilerDiagnostic.Level.Error,
-                                 message = "left-hand side of array index expression must refer to an array",
-                                 astNode = astExpr
-                             )
+                 val baseExprType = FirExpression(this, astExpr.base).type()
+
+                 if (!baseExprType.array) {
+                     DiagnosticPipe.report (
+                         CompilerDiagnostic (
+                             level = CompilerDiagnostic.Level.Error,
+                             message = "left-hand side of array index expression must refer to an array",
+                             astNode = astExpr
                          )
-                     }
+                     )
+                 }
+
+                 when (baseExprType) {
+                     is Type.Primitive -> Type.Primitive(baseExprType.base, false)
+                     is Type.Struct    -> Type.Struct(baseExprType.name, baseExprType.properties, false)
                  }
              }
              else -> error("can't infer type of ${astExpr::class.simpleName}")
