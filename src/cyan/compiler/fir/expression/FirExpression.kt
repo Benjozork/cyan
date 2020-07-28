@@ -14,6 +14,8 @@ import cyan.compiler.parser.ast.expression.*
 import cyan.compiler.parser.ast.expression.literal.CyanBooleanLiteralExpression
 import cyan.compiler.parser.ast.expression.literal.CyanNumericLiteralExpression
 import cyan.compiler.parser.ast.expression.literal.CyanStringLiteralExpression
+import cyan.compiler.parser.ast.function.CyanFunctionCall
+import cyan.compiler.lower.ast2fir.expression.ExpressionLower
 
 import com.andreapivetta.kolor.lightGray
 
@@ -27,6 +29,46 @@ class FirExpression(override val parent: FirNode, val astExpr: CyanExpression) :
              is CyanNumericLiteralExpression -> Type.Primitive(CyanType.Int32, false)
              is CyanStringLiteralExpression  -> Type.Primitive(CyanType.Str, false)
              is CyanBooleanLiteralExpression -> Type.Primitive(CyanType.Bool, false)
+             is CyanFunctionCall -> {
+                 val functionReference = FirReference(this, astExpr.functionIdentifier.value)
+                 val resolvedFunction = findSymbol(functionReference)
+                     ?: DiagnosticPipe.report (
+                         CompilerDiagnostic (
+                             level = CompilerDiagnostic.Level.Error,
+                             message = "Unresolved symbol '${functionReference.text}'",
+                             astNode = astExpr
+                         )
+                     )
+
+                 if (resolvedFunction !is FirFunctionDeclaration) {
+                     DiagnosticPipe.report (
+                         CompilerDiagnostic (
+                             level = CompilerDiagnostic.Level.Error,
+                             message = "Symbol '${functionReference.text}' is not a function",
+                             astNode = astExpr
+                         )
+                     )
+                 }
+
+                 val functionDeclarationArgsToPassedArgs = (resolvedFunction.args zip astExpr.args).toMap()
+                     .mapValues { (_, astArg) -> ExpressionLower.lower(astArg, this) }
+
+                 functionDeclarationArgsToPassedArgs.entries.forEachIndexed { i, (firArg, astArg) -> // Type check args
+                     val astArgType = astArg.type()
+
+                     if (!(firArg.typeAnnotation accepts astArgType)) {
+                         DiagnosticPipe.report (
+                             CompilerDiagnostic (
+                                 level = CompilerDiagnostic.Level.Error,
+                                 message = "Type mismatch for argument $i: expected '${firArg.typeAnnotation}', found '${astArgType}'",
+                                 astNode = astExpr
+                             )
+                         )
+                     }
+                 }
+
+                 resolvedFunction.returnType
+             }
              is CyanStructLiteralExpression -> {
                  val containingDecl = firstAncestorOfType<FirVariableDeclaration>()
                      ?: DiagnosticPipe.report (
