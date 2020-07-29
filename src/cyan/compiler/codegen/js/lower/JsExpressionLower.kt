@@ -32,7 +32,7 @@ object JsExpressionLower : FirItemLower<JsCompilerBackend, FirExpression> {
 
                 val jsName = if (isBuiltin) "builtins.$calleeName" else calleeName
 
-                "$jsName(${expr.args.joinToString(", ") { backend.lowerExpression(FirExpression(item, it)) }})"
+                "$jsName(${expr.args.joinToString(", ") { backend.lowerExpression(item.makeChildExpr(it)) }})"
             }
             is CyanStructLiteralExpression -> {
                 val structType = item.type() as Type.Struct
@@ -54,7 +54,7 @@ object JsExpressionLower : FirItemLower<JsCompilerBackend, FirExpression> {
 
                 "$lhs ${expr.operator} $rhs"
             }
-            is CyanArrayExpression -> expr.exprs.joinToString(prefix = "[", postfix = "]", separator = ", ") { backend.lowerExpression(FirExpression(item, it)) }
+            is CyanArrayExpression -> expr.exprs.joinToString(prefix = "[", postfix = "]", separator = ", ") { backend.lowerExpression(item.makeChildExpr(it)) }
             is CyanMemberAccessExpression -> {
                 val loweredBase = backend.lowerExpression(FirExpression(item, expr.base))
                 val member = backend.lowerExpression(FirExpression(item, expr.member))

@@ -7,7 +7,7 @@ import cyan.compiler.parser.ast.types.CyanTypeAnnotation
 class CyanFunctionArgument (
     val name: String,
     val typeAnnotation: CyanTypeAnnotation,
-    override val span: Span
+    override val span: Span? = null
 ): CyanItem {
     override fun toString() = "$name: $typeAnnotation"
 }

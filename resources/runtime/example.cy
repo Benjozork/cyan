@@ -41,3 +41,9 @@ print(factorial(5))
 
 let w: Fraction = { 2, 3 }
 displayFraction(w)
+
+let z = [56, 24, 0]
+let y = (25 * 25 * 25 * 25 + 5 - 1)
+
+let vv = false || z[0] < 60
+print(vv)

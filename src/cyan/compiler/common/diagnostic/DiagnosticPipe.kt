@@ -29,7 +29,7 @@ object DiagnosticPipe {
         println(diagnostic.astNode.toString().prependIndent(prefix))
 
         if (span != null) {
-            val beginArrow = span.position.first - diagnostic.astNode.span.position.first
+            val beginArrow = span.position.first - diagnostic.astNode.span!!.position.first
             println(" ".repeat(diagnostic.span.line.toString().length + 4 + beginArrow) + "~".lightRed().repeat((span.position.last - span.position.first).coerceAtLeast(0)))
         }
 

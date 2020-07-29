@@ -8,7 +8,7 @@ import cyan.compiler.parser.ast.expression.CyanExpression
 data class CyanFunctionCall (
     val functionIdentifier: CyanIdentifierExpression,
     val args: Array<CyanExpression>,
-    override val span: Span
+    override val span: Span? = null
 ): CyanStatement, CyanExpression {
     override fun toString() = "$functionIdentifier(${args.joinToString(", ")})"
 }

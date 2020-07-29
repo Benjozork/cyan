@@ -1,4 +1,4 @@
-package cyan.compiler.lower.ast2fir.optim
+package cyan.compiler.lower.ast2fir.optimization
 
 import cyan.compiler.fir.FirSource
 

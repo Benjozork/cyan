@@ -31,10 +31,10 @@ class CyanModuleParser : Grammar<CyanModule>() {
 
     fun span(whole: TokenMatch) = Span(whole.row, whole.column..(whole.column + whole.length), arrayOf(whole))
 
-    fun span(expression: CyanExpression) = span(expression.span.fromTokenMatches.first(), expression.span.fromTokenMatches.last())
+    fun span(expression: CyanExpression) = span(expression.span!!.fromTokenMatches.first(), expression.span!!.fromTokenMatches.last())
 
-    fun span(firstExpression: CyanExpression, secondExpression: CyanExpression) =
-        span(firstExpression.span.fromTokenMatches.first(), secondExpression.span.fromTokenMatches.last())
+    fun span(firstExpression: CyanItem, secondExpression: CyanItem) =
+        span(firstExpression.span!!.fromTokenMatches.first(), secondExpression.span!!.fromTokenMatches.last())
 
     fun span(firstSpan: Span, secondSpan: Span) = span(firstSpan.fromTokenMatches.first(), secondSpan.fromTokenMatches.last())
 
@@ -120,14 +120,14 @@ class CyanModuleParser : Grammar<CyanModule>() {
 
     // Complex type parsers
 
-    val structProperty    by (parser(this::referenceParser) * typeSignature) use { CyanStructDeclaration.Property(t1, t2, span(t1.span, t2.span)) }
+    val structProperty    by (parser(this::referenceParser) * typeSignature) use { CyanStructDeclaration.Property(t1, t2, span(t1, t2)) }
     val structProperties  by separatedTerms(structProperty, commaParser)     use { this.toTypedArray() }
     val structBody        by (-lcur * -znws * structProperties * -znws * -rcur)
     val structDeclaration by (-struct * -znws * structBody)
 
     val complexType by (structDeclaration)
 
-    val typeDeclaration by (type * -znws * parser(this::referenceParser) * -znws * -assign * -znws * complexType) use { CyanStructDeclaration(t2, t3, span(t1, t3.last().span.fromTokenMatches.last())) }
+    val typeDeclaration by (type * -znws * parser(this::referenceParser) * -znws * -assign * -znws * complexType) use { CyanStructDeclaration(t2, t3, span(t1, t3.last().span!!.fromTokenMatches.last())) }
 
     // Arithmetic
 
@@ -226,7 +226,7 @@ class CyanModuleParser : Grammar<CyanModule>() {
 
     // Functions
 
-    val functionArgument  by (referenceParser * -znws * typeSignature) use { CyanFunctionArgument(t1.value, t2, span(t1.span, t2.span)) }
+    val functionArgument  by (referenceParser * -znws * typeSignature) use { CyanFunctionArgument(t1.value, t2, span(t1, t2)) }
     val functionSignature by (optional(extern) * -znws * function * -znws * referenceParser * -znws * -leap * separatedTerms(functionArgument, commaParser, true) * reap * -znws * optional(typeSignature))
             .use {
                 val spanStart = t1 ?: t2
@@ -239,27 +239,27 @@ class CyanModuleParser : Grammar<CyanModule>() {
             }
 
     val functionDeclaration: Parser<CyanFunctionDeclaration> by (functionSignature * -znws * optional(block))
-            .use { CyanFunctionDeclaration(t1, t2, t2?.let { span(t1.span, t2!!.span) } ?: t1.span) }
+            .use { CyanFunctionDeclaration(t1, t2, t2?.let { span(t1.span!!, t2!!.span!!) } ?: t1.span) }
 
     // Variables
 
     val variableSignature      by ((let or vark) * -znws * referenceParser * -znws * optional(typeSignature))
     val variableInitialization by (-znws * -assign * -znws * expr)
     val variableDeclaration    by (variableSignature and variableInitialization)
-        .use { CyanVariableDeclaration(t1.t2, t1.t1.type == vark, t1.t3, t2, span(t1.t1, t2.span.fromTokenMatches.last())) }
+        .use { CyanVariableDeclaration(t1.t2, t1.t1.type == vark, t1.t3, t2, span(t1.t1, t2.span!!.fromTokenMatches.last())) }
 
     // Function calls
 
     val functionCall by (referenceParser * -leap * -znws * separatedTerms(expr, commaParser, true) * -znws * reap)
-        .use { CyanFunctionCall(t1, t2.toTypedArray(), span(t1.span.fromTokenMatches.first(), t3)) }
+        .use { CyanFunctionCall(t1, t2.toTypedArray(), span(t1.span!!.fromTokenMatches.first(), t3)) }
 
     // If statements
 
     val ifStatementSignature                    by (-ifToken * -znws * -leap * expr * -reap)
-    val ifStatement: Parser<CyanIfStatement>    by (ifStatementSignature * -znws * block).use { CyanIfStatement(t1, t2, span(t1.span, t2.span)) }
+    val ifStatement: Parser<CyanIfStatement>    by (ifStatementSignature * -znws * block).use { CyanIfStatement(t1, t2, span(t1, t2)) }
     val elseStatement: Parser<CyanSource>       by (-elseToken * -znws * block)
     val ifStatementChain: Parser<CyanStatement> by (separatedTerms(ifStatement, -optional(ws) * elseToken * -znws) * optional(-znws * elseStatement))
-            .use { CyanIfChain(t1.toTypedArray(), elseBlock = t2, span = span(t1.first().span, t2?.span ?: t1.last().span)) }
+            .use { CyanIfChain(t1.toTypedArray(), elseBlock = t2, span = span(t1.first().span!!, t2?.span ?: t1.last().span!!)) }
 
     // Assignment
 
@@ -267,15 +267,15 @@ class CyanModuleParser : Grammar<CyanModule>() {
 
     // Return
 
-    val returnStatement: Parser<CyanReturn> by (returnToken * -znws * expr) use { CyanReturn(t2, span(t1, t2.span.fromTokenMatches.last())) }
+    val returnStatement: Parser<CyanReturn> by (returnToken * -znws * expr) use { CyanReturn(t2, span(t1, t2.span!!.fromTokenMatches.last())) }
 
     // Import
 
-    val importStatement by (import * -znws * referenceParser) use { CyanImportStatement(t2, span(t1, t2.span.fromTokenMatches.last())) }
+    val importStatement by (import * -znws * referenceParser) use { CyanImportStatement(t2, span(t1, t2.span!!.fromTokenMatches.last())) }
 
     // Module declaration
 
-    val moduleDeclaration by (module * -znws * referenceParser) use { CyanModuleDeclaration(t2, span(t1, t2.span.fromTokenMatches.last())) }
+    val moduleDeclaration by (module * -znws * referenceParser) use { CyanModuleDeclaration(t2, span(t1, t2.span!!.fromTokenMatches.last())) }
 
     // Statements
 
@@ -284,11 +284,11 @@ class CyanModuleParser : Grammar<CyanModule>() {
 
     // Source parser
 
-    val sourceParser by separatedTerms(anyStatement, znws) use { CyanSource(this, span(this.first().span, this.last().span)) }
+    val sourceParser by separatedTerms(anyStatement, znws) use { CyanSource(this, span(this.first().span!!, this.last().span!!)) }
 
     // Module parser
 
-    val moduleParser by (moduleDeclaration * -znws * sourceParser) use { CyanModule(t1, t2, span(t1.span, t2.span)) }
+    val moduleParser by (moduleDeclaration * -znws * sourceParser) use { CyanModule(t1, t2, span(t1, t2)) }
 
     override val rootParser = moduleParser
 

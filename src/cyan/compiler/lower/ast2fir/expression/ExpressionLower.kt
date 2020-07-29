@@ -12,7 +12,7 @@ import cyan.compiler.parser.ast.expression.CyanExpression
 object ExpressionLower : Ast2FirLower<CyanExpression, FirExpression> {
 
     override fun lower(astNode: CyanExpression, parentFirNode: FirNode): FirExpression {
-        val firExpression = FirExpression(parentFirNode, astNode)
+        val firExpression = parentFirNode.makeChildExpr(astNode)
 
         if (firExpression.astExpr is CyanArrayExpression) {
             if (ArrayElementsTypeConsistent.check(firExpression, parentFirNode)) {

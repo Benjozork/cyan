@@ -9,7 +9,7 @@ object ArrayElementsTypeConsistent : Check<FirExpression> {
     override fun check(firNode: FirExpression, containingNode: FirNode): Boolean {
         if (firNode.astExpr !is CyanArrayExpression) return false
 
-        val arrayValueTypeSet = firNode.astExpr.exprs.map { FirExpression(firNode, it).type() }.toSet()
+        val arrayValueTypeSet = firNode.astExpr.exprs.map { firNode.makeChildExpr(it).type() }.toSet()
 
         return arrayValueTypeSet.size > 1
     }

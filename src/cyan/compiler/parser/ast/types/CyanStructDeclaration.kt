@@ -8,10 +8,10 @@ import cyan.compiler.parser.ast.expression.CyanIdentifierExpression
 class CyanStructDeclaration (
     val ident: CyanIdentifierExpression,
     val properties: Array<Property>,
-    override val span: Span
+    override val span: Span? = null
 ) : CyanStatement {
 
-    class Property(val ident: CyanIdentifierExpression, val type: CyanTypeAnnotation, override val span: Span): CyanItem {
+    class Property(val ident: CyanIdentifierExpression, val type: CyanTypeAnnotation, override val span: Span? = null): CyanItem {
 
         override fun toString() = "$ident: $type"
 

@@ -226,10 +226,10 @@ class FirExpression(override val parent: FirNode, val astExpr: CyanExpression) :
             val reference = FirReference(this, astExpr.functionIdentifier.value)
             val resolvedFunction = findSymbol(reference)!!
 
-            setOf(resolvedFunction) + astExpr.args.flatMap { FirExpression(this, it).allReferredSymbols() }
+            setOf(resolvedFunction) + astExpr.args.flatMap { this.makeChildExpr(it).allReferredSymbols() }
         }
-        is CyanStructLiteralExpression -> astExpr.exprs.flatMap { FirExpression(this, it).allReferredSymbols() }.toSet()
-        is CyanArrayExpression -> astExpr.exprs.flatMap { FirExpression(this, it).allReferredSymbols() }.toSet()
+        is CyanStructLiteralExpression -> astExpr.exprs.flatMap { this.makeChildExpr(it).allReferredSymbols() }.toSet()
+        is CyanArrayExpression -> astExpr.exprs.flatMap { this.makeChildExpr(it).allReferredSymbols() }.toSet()
         is CyanBinaryExpression -> {
             val lhsFirExpr = FirExpression(this, astExpr.lhs)
             val rhsFirExpr = FirExpression(this, astExpr.rhs)
@@ -247,11 +247,27 @@ class FirExpression(override val parent: FirNode, val astExpr: CyanExpression) :
         else -> error("cannot find resolved symbols for expression of type '${astExpr::class.simpleName}'")
     }
 
-    fun isComplex() = when (astExpr) { // For now we only accept literal exprs as simple
+    /**
+     * Whether or not this expression is pure (doesn't have any side effects on evaluation). For example, an addition of two constants is
+     * reducible, as well as a simple reference to another variable. A regular function call, however, is not.
+     */
+    val isPure: Boolean by lazy { this.isConstant || when (astExpr) { // Note: this is processed based on current language capabilities
+        is CyanBinaryExpression -> FirExpression(this, astExpr.lhs).isPure && FirExpression(this, astExpr.rhs).isPure
+        is CyanIdentifierExpression -> true
+        is CyanArrayExpression -> astExpr.exprs.map { this.makeChildExpr(it) }.all { it.isPure }
+        is CyanArrayIndexExpression -> FirExpression(this, astExpr.base).isPure
+        else -> false
+    }}
+
+    /**
+     * Whether or not this expression is constant.
+     */
+    val isConstant: Boolean by lazy { when (astExpr) {
         is CyanNumericLiteralExpression,
-        is CyanStructLiteralExpression,
-        is CyanBooleanLiteralExpression -> false
-        else -> true
-    }
+        is CyanStringLiteralExpression,
+        is CyanBooleanLiteralExpression -> true
+        is CyanBinaryExpression -> FirExpression(this, astExpr.lhs).isConstant && FirExpression(this, astExpr.rhs).isConstant
+        else -> false
+    }}
 
 }

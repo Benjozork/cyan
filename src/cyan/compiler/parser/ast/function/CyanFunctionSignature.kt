@@ -12,7 +12,7 @@ class CyanFunctionSignature (
     val args: List<CyanFunctionArgument>,
     val typeAnnotation: CyanTypeAnnotation = CyanTypeAnnotation.Literal(Type.Primitive(CyanType.Void, false), Span(0, 0..0, emptyArray())),
     val isExtern: Boolean,
-    override val span: Span
+    override val span: Span? = null
 ): CyanStatement {
     override fun toString() = "$name(${args.joinToString(", ")})" + ": $typeAnnotation"
 }

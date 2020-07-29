@@ -5,13 +5,13 @@ import cyan.compiler.common.types.Type
 import cyan.compiler.parser.ast.CyanItem
 import cyan.compiler.parser.ast.expression.CyanIdentifierExpression
 
-sealed class CyanTypeAnnotation(override val span: Span) : CyanItem {
+sealed class CyanTypeAnnotation(override val span: Span? = null) : CyanItem {
 
-    class Literal(val literalType: Type.Primitive, span: Span): CyanTypeAnnotation(span) {
+    class Literal(val literalType: Type.Primitive, span: Span?): CyanTypeAnnotation(span) {
         override fun toString() = literalType.toString()
     }
 
-    class Reference(val identifierExpression: CyanIdentifierExpression, span: Span): CyanTypeAnnotation(span) {
+    class Reference(val identifierExpression: CyanIdentifierExpression, span: Span?): CyanTypeAnnotation(span) {
         override fun toString() = identifierExpression.value
     }
 

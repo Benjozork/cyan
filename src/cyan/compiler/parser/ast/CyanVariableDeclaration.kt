@@ -10,7 +10,7 @@ data class CyanVariableDeclaration (
     val mutable: Boolean,
     val type: CyanTypeAnnotation?,
     val value: CyanExpression,
-    override val span: Span
+    override val span: Span? = null
 ): CyanStatement {
     override fun toString() = "let $name${if (type != null) ": $type" else ""} = $value"
 }
