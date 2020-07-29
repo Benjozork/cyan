@@ -1,5 +1,11 @@
 package cyan.compiler.parser.ast.expression
 
-class CyanMemberAccessExpression(val base: CyanExpression, val member: CyanIdentifierExpression) : CyanExpression {
+import cyan.compiler.common.Span
+
+class CyanMemberAccessExpression(
+    val base: CyanExpression,
+    val member: CyanIdentifierExpression,
+    override val span: Span
+) : CyanExpression {
     override fun toString() = "$base.$member"
 }

@@ -1,3 +1,7 @@
 package cyan.compiler.parser.ast
 
-interface CyanItem
+import cyan.compiler.common.Span
+
+interface CyanItem {
+    val span: Span
+}

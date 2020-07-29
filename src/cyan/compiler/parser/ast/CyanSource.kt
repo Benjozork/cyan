@@ -1,3 +1,5 @@
 package cyan.compiler.parser.ast
 
-class CyanSource(val statements: List<CyanStatement>): CyanItem
+import cyan.compiler.common.Span
+
+class CyanSource(val statements: List<CyanStatement>, override val span: Span): CyanItem

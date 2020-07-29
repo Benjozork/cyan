@@ -44,7 +44,8 @@ object VariableDeclarationLower : Ast2FirLower<CyanVariableDeclaration, FirVaria
                 CompilerDiagnostic (
                     level = CompilerDiagnostic.Level.Error,
                     message = "Variables cannot have 'void' type",
-                    astNode = astNode
+                    astNode = astNode,
+                    span = astNode.type!!.span
                 )
             )
         }
@@ -58,7 +59,7 @@ object VariableDeclarationLower : Ast2FirLower<CyanVariableDeclaration, FirVaria
                     level = CompilerDiagnostic.Level.Error,
                     message = "Type mismatch: expected '${firVariableDeclaration.typeAnnotation}', found '${initializationExpr.type()}'",
                     astNode = astNode,
-                    note = CompilerDiagnostic.Note("inferred type '${initializationExpr.type()}' from initialization", astNode.value)
+                    span = astNode.value.span
                 )
             )
         }

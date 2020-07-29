@@ -32,7 +32,8 @@ object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirNullN
                 CompilerDiagnostic (
                     level = CompilerDiagnostic.Level.Error,
                     message = "Only extern functions can have no body",
-                    astNode = astNode
+                    astNode = astNode,
+                    span = astNode.span
                 )
             )
         }

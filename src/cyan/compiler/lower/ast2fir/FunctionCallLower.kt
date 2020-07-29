@@ -30,7 +30,8 @@ object FunctionCallLower : Ast2FirLower<CyanFunctionCall, FirFunctionCall> {
                     CompilerDiagnostic (
                         level = CompilerDiagnostic.Level.Error,
                         message = "Type mismatch for argument $i: expected '${firArg.typeAnnotation}', found '${astArgType}'",
-                        astNode = astNode
+                        astNode = astNode,
+                        span = astArg.astExpr.span
                     )
                 )
             }

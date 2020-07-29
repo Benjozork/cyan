@@ -25,7 +25,8 @@ fun FirNode.resolveType(typeAnnotation: CyanTypeAnnotation, inAstNode: CyanItem?
                     CompilerDiagnostic (
                         level = CompilerDiagnostic.Level.Error,
                         message = "Unresolved symbol '${typeAnnotation.identifierExpression.value}'",
-                        astNode = inAstNode ?: typeAnnotation
+                        astNode = inAstNode ?: typeAnnotation,
+                        span = typeAnnotation.span
                     )
                 )
 

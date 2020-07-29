@@ -26,7 +26,8 @@ object ImportStatementLower : Ast2FirLower<CyanImportStatement, FirNullNode> {
                 CompilerDiagnostic (
                     level = CompilerDiagnostic.Level.Error,
                     message = "Unresolved module '${moduleRef.text}'",
-                    astNode = astNode
+                    astNode = astNode,
+                    span = astNode.moduleIdentifier.span
                 )
             )
 

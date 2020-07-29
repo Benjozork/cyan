@@ -1,15 +1,17 @@
 package cyan.compiler.parser.ast.types
 
+import cyan.compiler.common.Span
 import cyan.compiler.parser.ast.CyanItem
 import cyan.compiler.parser.ast.CyanStatement
 import cyan.compiler.parser.ast.expression.CyanIdentifierExpression
 
 class CyanStructDeclaration (
     val ident: CyanIdentifierExpression,
-    val properties: Array<Property>
+    val properties: Array<Property>,
+    override val span: Span
 ) : CyanStatement {
 
-    class Property(val ident: CyanIdentifierExpression, val type: CyanTypeAnnotation): CyanItem {
+    class Property(val ident: CyanIdentifierExpression, val type: CyanTypeAnnotation, override val span: Span): CyanItem {
 
         override fun toString() = "$ident: $type"
 

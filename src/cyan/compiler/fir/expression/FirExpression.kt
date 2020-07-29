@@ -27,7 +27,7 @@ class FirExpression(override val parent: FirNode, val astExpr: CyanExpression) :
      */
     fun type(): Type {
          return when (astExpr) {
-             is CyanNumericLiteralExpression -> Type.Primitive(CyanType.Int32, false)
+             is CyanNumericLiteralExpression -> Type.Primitive(CyanType.I32, false)
              is CyanStringLiteralExpression  -> Type.Primitive(CyanType.Str, false)
              is CyanBooleanLiteralExpression -> Type.Primitive(CyanType.Bool, false)
              is CyanFunctionCall -> {
@@ -37,7 +37,8 @@ class FirExpression(override val parent: FirNode, val astExpr: CyanExpression) :
                          CompilerDiagnostic (
                              level = CompilerDiagnostic.Level.Error,
                              message = "Unresolved symbol '${functionReference.text}'",
-                             astNode = astExpr
+                             astNode = astExpr,
+                             span = astExpr.functionIdentifier.span
                          )
                      )
 
@@ -46,7 +47,8 @@ class FirExpression(override val parent: FirNode, val astExpr: CyanExpression) :
                          CompilerDiagnostic (
                              level = CompilerDiagnostic.Level.Error,
                              message = "Symbol '${functionReference.text}' is not a function",
-                             astNode = astExpr
+                             astNode = astExpr,
+                             span = astExpr.functionIdentifier.span
                          )
                      )
                  }

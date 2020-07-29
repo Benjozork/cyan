@@ -1,5 +1,7 @@
 package cyan.compiler.parser.ast.operator
 
+import cyan.compiler.common.Span
+
 object CyanBinaryPlusOperator : CyanBinaryOperator {
     override fun toString() = "+"
 }

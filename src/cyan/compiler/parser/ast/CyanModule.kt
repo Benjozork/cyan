@@ -1,3 +1,5 @@
 package cyan.compiler.parser.ast
 
-class CyanModule(val declaration: CyanModuleDeclaration, val source: CyanSource) : CyanItem
+import cyan.compiler.common.Span
+
+class CyanModule(val declaration: CyanModuleDeclaration, val source: CyanSource, override val span: Span) : CyanItem
