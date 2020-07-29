@@ -2,11 +2,11 @@ package cyan.compiler.lower.ast2fir
 
 import cyan.compiler.common.diagnostic.CompilerDiagnostic
 import cyan.compiler.common.diagnostic.DiagnosticPipe
-import cyan.compiler.fir.FirNode
-import cyan.compiler.fir.FirTypeDeclaration
-import cyan.compiler.common.types.CyanType
 import cyan.compiler.common.types.Type
+import cyan.compiler.common.types.CyanType
+import cyan.compiler.fir.FirNode
 import cyan.compiler.fir.FirScope
+import cyan.compiler.fir.FirTypeDeclaration
 import cyan.compiler.parser.ast.types.CyanStructDeclaration
 import cyan.compiler.parser.ast.types.CyanTypeAnnotation
 

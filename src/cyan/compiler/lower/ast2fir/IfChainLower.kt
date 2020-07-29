@@ -3,11 +3,11 @@ package cyan.compiler.lower.ast2fir
 import cyan.compiler.common.diagnostic.CompilerDiagnostic
 import cyan.compiler.common.diagnostic.DiagnosticPipe
 import cyan.compiler.common.types.Type
+import cyan.compiler.common.types.CyanType
 import cyan.compiler.fir.FirIfChain
 import cyan.compiler.fir.FirNode
 import cyan.compiler.lower.ast2fir.expression.ExpressionLower
 import cyan.compiler.parser.ast.CyanIfChain
-import cyan.compiler.common.types.CyanType
 
 object IfChainLower : Ast2FirLower<CyanIfChain, FirIfChain> {
 
