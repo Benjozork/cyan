@@ -1,3 +1,9 @@
 package cyan.compiler.fir
 
-interface FirStatement : FirNode
+import cyan.compiler.fir.extensions.firstAncestorOfType
+
+interface FirStatement : FirNode {
+
+    fun delete() = firstAncestorOfType<FirSource>()?.handleDeletionOfChild(this)
+
+}

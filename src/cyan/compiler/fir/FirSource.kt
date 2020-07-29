@@ -12,4 +12,6 @@ class FirSource (
 
     override fun allReferredSymbols() = statements.flatMap { it.allReferredSymbols() }.toSet()
 
+    fun handleDeletionOfChild(child: FirStatement) = statements.removeAll { it == child }.let { Unit }
+
 }
