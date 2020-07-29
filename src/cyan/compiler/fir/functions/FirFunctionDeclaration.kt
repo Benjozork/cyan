@@ -1,10 +1,7 @@
 package cyan.compiler.fir.functions
 
 import cyan.compiler.common.types.Type
-import cyan.compiler.fir.FirNode
-import cyan.compiler.fir.FirScope
-import cyan.compiler.fir.FirSource
-import cyan.compiler.fir.FirSymbol
+import cyan.compiler.fir.*
 
 class FirFunctionDeclaration (
     override val parent: FirNode,
