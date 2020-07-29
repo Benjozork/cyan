@@ -218,6 +218,33 @@ class FirExpression(override val parent: FirNode, val astExpr: CyanExpression) :
         }
     }
 
-    override fun allReferredSymbols(): Set<FirSymbol> = emptySet()
+    override fun allReferredSymbols(): Set<FirSymbol> = when (this.astExpr) {
+        is CyanNumericLiteralExpression,
+        is CyanStringLiteralExpression,
+        is CyanBooleanLiteralExpression -> emptySet()
+        is CyanFunctionCall -> {
+            val reference = FirReference(this, astExpr.functionIdentifier.value)
+            val resolvedFunction = findSymbol(reference)!!
+
+            setOf(resolvedFunction) + astExpr.args.flatMap { FirExpression(this, it).allReferredSymbols() }
+        }
+        is CyanStructLiteralExpression -> astExpr.exprs.flatMap { FirExpression(this, it).allReferredSymbols() }.toSet()
+        is CyanArrayExpression -> astExpr.exprs.flatMap { FirExpression(this, it).allReferredSymbols() }.toSet()
+        is CyanBinaryExpression -> {
+            val lhsFirExpr = FirExpression(this, astExpr.lhs)
+            val rhsFirExpr = FirExpression(this, astExpr.rhs)
+
+            lhsFirExpr.allReferredSymbols() + rhsFirExpr.allReferredSymbols()
+        }
+        is CyanIdentifierExpression -> {
+            val reference = FirReference(this, astExpr.value)
+            val resolvedSymbol = findSymbol(reference)!!
+
+            setOf(resolvedSymbol)
+        }
+        is CyanMemberAccessExpression -> FirExpression(this, astExpr.base).allReferredSymbols() // Temporary
+        is CyanArrayIndexExpression -> FirExpression(this, astExpr.base).allReferredSymbols()
+        else -> error("cannot find resolved symbols for expression of type '${astExpr::class.simpleName}'")
+    }
 
 }
