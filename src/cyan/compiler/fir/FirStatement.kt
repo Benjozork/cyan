@@ -6,4 +6,6 @@ interface FirStatement : FirNode {
 
     fun delete() = firstAncestorOfType<FirSource>()?.handleDeletionOfChild(this)
 
+    fun replaceWith(otherStatements: List<FirStatement>) = firstAncestorOfType<FirSource>()?.handleReplacementOfChild(this, otherStatements)
+
 }

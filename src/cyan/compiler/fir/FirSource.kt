@@ -5,7 +5,7 @@ import cyan.compiler.fir.functions.FirFunctionDeclaration
 class FirSource (
     override val parent: FirNode,
     override val declaredSymbols: MutableSet<FirSymbol> = mutableSetOf(),
-    val statements: MutableList<FirStatement> = mutableListOf()
+    var statements: MutableList<FirStatement> = mutableListOf()
 ) : FirScope {
 
     override val localFunctions get() = declaredSymbols.filterIsInstance<FirFunctionDeclaration>().toMutableSet()
@@ -13,5 +13,9 @@ class FirSource (
     override fun allReferredSymbols() = statements.flatMap { it.allReferredSymbols() }.toSet()
 
     fun handleDeletionOfChild(child: FirStatement) = statements.removeAll { it == child }.let { Unit }
+
+    fun handleReplacementOfChild(child: FirStatement, newStatements: List<FirStatement>) {
+        statements = statements.flatMap { if (it == child) newStatements else listOf(it) }.toMutableList()
+    }
 
 }

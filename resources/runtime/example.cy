@@ -47,3 +47,13 @@ let y = (25 * 25 * 25 * 25 + 5 - 1)
 
 let vv = false || z[0] < 60
 print(vv)
+if (false) {
+    print("wow")
+} else {
+    print("why ?")
+}
+if (true) {
+    print("hi !")
+} else {
+    print("fuck")
+}
