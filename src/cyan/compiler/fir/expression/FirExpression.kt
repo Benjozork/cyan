@@ -247,4 +247,11 @@ class FirExpression(override val parent: FirNode, val astExpr: CyanExpression) :
         else -> error("cannot find resolved symbols for expression of type '${astExpr::class.simpleName}'")
     }
 
+    fun isComplex() = when (astExpr) { // For now we only accept literal exprs as simple
+        is CyanNumericLiteralExpression,
+        is CyanStructLiteralExpression,
+        is CyanBooleanLiteralExpression -> false
+        else -> true
+    }
+
 }
