@@ -40,6 +40,4 @@ print(powerOfTwo(5))
 print(factorial(5))
 
 let w: Fraction = { 2, 3 }
-displayFraction("hji")
-
-let x: i32 = "hello"
+displayFraction(w)
