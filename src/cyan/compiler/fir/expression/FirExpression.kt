@@ -261,6 +261,18 @@ class FirExpression(override val parent: FirNode, val astExpr: CyanExpression) :
         is CyanBinaryExpression -> FirExpression(this, astExpr.lhs).isPure && FirExpression(this, astExpr.rhs).isPure
         is CyanIdentifierExpression -> true
         is CyanArrayExpression -> astExpr.exprs.map { this.makeChildExpr(it) }.all { it.isPure }
+        is CyanMemberAccessExpression -> {
+            if (astExpr.base !is CyanIdentifierExpression) false else {
+                val resolvedReference = findSymbol(FirReference(this, astExpr.base.value))!!
+
+                when (val symbol = resolvedReference.resolvedSymbol) {
+                    is FirVariableDeclaration -> symbol.initializationExpr.type() is Type.Struct
+                    is FirFunctionDeclaration -> symbol.returnType is Type.Struct
+                    is FirFunctionArgument    -> symbol.typeAnnotation is Type.Struct
+                    else -> error("cannot check for return type of '${symbol::class.simpleName}'")
+                }
+            }
+        }
         is CyanArrayIndexExpression -> FirExpression(this, astExpr.base).isPure
         else -> false
     }}
