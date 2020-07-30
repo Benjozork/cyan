@@ -10,6 +10,6 @@ class FirTypeDeclaration (
 
     override fun toString() = struct.toString()
 
-    override fun allReferredSymbols() = emptySet<FirSymbol>()
+    override fun allReferredSymbols() = emptySet<FirResolvedReference>()
 
 }

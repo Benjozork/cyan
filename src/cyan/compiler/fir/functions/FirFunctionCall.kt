@@ -1,12 +1,13 @@
 package cyan.compiler.fir.functions
 
 import cyan.compiler.fir.FirNode
+import cyan.compiler.fir.FirResolvedReference
 import cyan.compiler.fir.FirStatement
-import cyan.compiler.fir.FirSymbol
 import cyan.compiler.fir.expression.FirExpression
 
-class FirFunctionCall(override val parent: FirNode, val callee: FirSymbol, var args: Array<FirExpression>) : FirStatement {
+class FirFunctionCall(override val parent: FirNode, var args: Array<FirExpression> = emptyArray()) : FirStatement {
+
+    lateinit var callee: FirResolvedReference
 
     override fun allReferredSymbols() = setOf(callee, *args.flatMap(FirExpression::allReferredSymbols).toTypedArray()).toSet()
-
 }

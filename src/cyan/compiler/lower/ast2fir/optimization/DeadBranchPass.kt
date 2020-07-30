@@ -8,11 +8,11 @@ object DeadBranchPass : FirOptimizationPass {
 
     private fun FirIfChain.trim() {
         for (branch in branches) {
-            val firstBranchIsConstant = branch.first.astExpr is CyanBooleanLiteralExpression
+            val firstBranchIsConstant = branch.first.realAstExpr is CyanBooleanLiteralExpression
 
             if (firstBranchIsConstant) {
                 // Check branch expr
-                val exprValue = (branch.first.astExpr as CyanBooleanLiteralExpression).value
+                val exprValue = (branch.first.realAstExpr as CyanBooleanLiteralExpression).value
 
                 if (exprValue) {
                     this.replaceWith(branch.second.statements)

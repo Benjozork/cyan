@@ -19,9 +19,7 @@ class FirModule (
 
     override val parent: FirNode? get() = null
 
-    override fun allReferredSymbols(): Set<FirSymbol> {
-        TODO("Not yet implemented")
-    }
+    override fun allReferredSymbols() = source.allReferredSymbols()
 
     fun findModuleByReference(reference: FirReference): FirModule? {
         val moduleInCache = cachedModules[reference.text]

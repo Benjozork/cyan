@@ -9,7 +9,7 @@ class FirAssignment (
 ) : FirStatement {
 
     override fun allReferredSymbols() = if (targetVariable != null && newExpr != null) {
-        setOf(targetVariable!!) + newExpr!!.allReferredSymbols()
+        setOf(targetVariable!!.makeResolvedRef(this)) + newExpr!!.allReferredSymbols()
     } else error("FirSymbol::allReferredSymbols should not be accessed during node initialization")
 
 }

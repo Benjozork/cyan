@@ -17,7 +17,7 @@ import java.lang.StringBuilder
 object JsExpressionLower : FirItemLower<JsCompilerBackend, FirExpression> {
 
     override fun lower(backend: JsCompilerBackend, item: FirExpression): String {
-        return when (val expr = item.astExpr) {
+        return when (val expr = item.inlinedAstExpr ?: item.astExpr) {
             is CyanIdentifierExpression -> expr.value
             is CyanNumericLiteralExpression -> "${expr.value}"
             is CyanStringLiteralExpression  -> "'${expr.value.replace("'", "\\'")}'"

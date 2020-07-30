@@ -55,5 +55,5 @@ if (false) {
 if (true) {
     print("hi !")
 } else {
-    print("fuck")
+    print("frick")
 }

@@ -23,6 +23,12 @@ import com.andreapivetta.kolor.lightGray
 class FirExpression(override val parent: FirNode, val astExpr: CyanExpression) : FirNode {
 
     /**
+     * Contains the inline expression if an expression was inlined to replace this expression.
+     * If not null, should be used over [astExpr].
+     */
+    var inlinedAstExpr: CyanExpression? = null
+
+    /**
      * Infers the type of this FirExpression node.
      */
     fun type(): Type {
@@ -42,7 +48,7 @@ class FirExpression(override val parent: FirNode, val astExpr: CyanExpression) :
                          )
                      )
 
-                 if (resolvedFunction !is FirFunctionDeclaration) {
+                 if (resolvedFunction.resolvedSymbol !is FirFunctionDeclaration) {
                      DiagnosticPipe.report (
                          CompilerDiagnostic (
                              level = CompilerDiagnostic.Level.Error,
@@ -53,7 +59,7 @@ class FirExpression(override val parent: FirNode, val astExpr: CyanExpression) :
                      )
                  }
 
-                 val functionDeclarationArgsToPassedArgs = (resolvedFunction.args zip astExpr.args).toMap()
+                 val functionDeclarationArgsToPassedArgs = (resolvedFunction.resolvedSymbol.args zip astExpr.args).toMap()
                      .mapValues { (_, astArg) -> ExpressionLower.lower(astArg, this) }
 
                  functionDeclarationArgsToPassedArgs.entries.forEachIndexed { i, (firArg, astArg) -> // Type check args
@@ -70,7 +76,7 @@ class FirExpression(override val parent: FirNode, val astExpr: CyanExpression) :
                      }
                  }
 
-                 resolvedFunction.returnType
+                 resolvedFunction.resolvedSymbol.returnType
              }
              is CyanStructLiteralExpression -> {
                  val containingDecl = firstAncestorOfType<FirVariableDeclaration>()
@@ -161,7 +167,7 @@ class FirExpression(override val parent: FirNode, val astExpr: CyanExpression) :
              is CyanIdentifierExpression -> {
                  val containingScope = this.containingScope()
 
-                 when (val referee = containingScope?.findSymbol(FirReference(this, this.astExpr.value))) {
+                 when (val referee = containingScope?.findSymbol(FirReference(this, this.astExpr.value))?.resolvedSymbol) {
                      is FirVariableDeclaration -> referee.initializationExpr.type()
                      is FirFunctionDeclaration -> Type.Primitive(CyanType.Any, false)
                      is FirFunctionArgument -> referee.typeAnnotation
@@ -218,33 +224,33 @@ class FirExpression(override val parent: FirNode, val astExpr: CyanExpression) :
         }
     }
 
-    override fun allReferredSymbols(): Set<FirSymbol> = when (this.astExpr) {
+    override fun allReferredSymbols(): Set<FirResolvedReference> = when (val expr =this.realAstExpr) {
         is CyanNumericLiteralExpression,
         is CyanStringLiteralExpression,
         is CyanBooleanLiteralExpression -> emptySet()
         is CyanFunctionCall -> {
-            val reference = FirReference(this, astExpr.functionIdentifier.value)
+            val reference = FirReference(this, expr.functionIdentifier.value)
             val resolvedFunction = findSymbol(reference)!!
 
-            setOf(resolvedFunction) + astExpr.args.flatMap { this.makeChildExpr(it).allReferredSymbols() }
+            setOf(resolvedFunction) + expr.args.flatMap { this.makeChildExpr(it).allReferredSymbols() }
         }
-        is CyanStructLiteralExpression -> astExpr.exprs.flatMap { this.makeChildExpr(it).allReferredSymbols() }.toSet()
-        is CyanArrayExpression -> astExpr.exprs.flatMap { this.makeChildExpr(it).allReferredSymbols() }.toSet()
+        is CyanStructLiteralExpression -> expr.exprs.flatMap { this.makeChildExpr(it).allReferredSymbols() }.toSet()
+        is CyanArrayExpression -> expr.exprs.flatMap { this.makeChildExpr(it).allReferredSymbols() }.toSet()
         is CyanBinaryExpression -> {
-            val lhsFirExpr = FirExpression(this, astExpr.lhs)
-            val rhsFirExpr = FirExpression(this, astExpr.rhs)
+            val lhsFirExpr = FirExpression(this, expr.lhs)
+            val rhsFirExpr = FirExpression(this, expr.rhs)
 
             lhsFirExpr.allReferredSymbols() + rhsFirExpr.allReferredSymbols()
         }
         is CyanIdentifierExpression -> {
-            val reference = FirReference(this, astExpr.value)
+            val reference = FirReference(this, expr.value)
             val resolvedSymbol = findSymbol(reference)!!
 
             setOf(resolvedSymbol)
         }
-        is CyanMemberAccessExpression -> FirExpression(this, astExpr.base).allReferredSymbols() // Temporary
-        is CyanArrayIndexExpression -> FirExpression(this, astExpr.base).allReferredSymbols()
-        else -> error("cannot find resolved symbols for expression of type '${astExpr::class.simpleName}'")
+        is CyanMemberAccessExpression -> FirExpression(this, expr.base).allReferredSymbols() // Temporary
+        is CyanArrayIndexExpression -> FirExpression(this, expr.base).allReferredSymbols()
+        else -> error("cannot find resolved symbols for expression of type '${expr::class.simpleName}'")
     }
 
     /**
@@ -269,5 +275,7 @@ class FirExpression(override val parent: FirNode, val astExpr: CyanExpression) :
         is CyanBinaryExpression -> FirExpression(this, astExpr.lhs).isConstant && FirExpression(this, astExpr.rhs).isConstant
         else -> false
     }}
+
+    val realAstExpr get() = inlinedAstExpr ?: astExpr
 
 }

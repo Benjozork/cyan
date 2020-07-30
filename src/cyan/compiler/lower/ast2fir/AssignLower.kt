@@ -16,7 +16,7 @@ object AssignLower : Ast2FirLower<CyanAssignment, FirAssignment> {
         val assignment = FirAssignment(parentFirNode)
 
         val variableReference = FirReference(assignment, astNode.reference.value)
-        val resolvedSymbol = parentFirNode.findSymbol(variableReference) // Check symbol exists
+        val resolvedReference = parentFirNode.findSymbol(variableReference) // Check symbol exists
             ?: DiagnosticPipe.report (
                 CompilerDiagnostic (
                     level = CompilerDiagnostic.Level.Error,
@@ -24,6 +24,8 @@ object AssignLower : Ast2FirLower<CyanAssignment, FirAssignment> {
                     astNode = astNode
                 )
             )
+
+        val resolvedSymbol = resolvedReference.resolvedSymbol
 
         if (resolvedSymbol !is FirVariableDeclaration) { // Check symbol is variable
             DiagnosticPipe.report (

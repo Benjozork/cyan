@@ -101,7 +101,7 @@ object ConstantFoldingPass : FirOptimizationPass {
 
         val allIfChains = source.statements.filterIsInstance<FirIfChain>()
 
-        allIfChains.forEach { it.branches = it.branches.map { b ->  simplify(b.first) to b.second } }
+        allIfChains.forEach { it.branches = it.branches.map { b -> simplify(b.first) to b.second } }
     }
 
 }

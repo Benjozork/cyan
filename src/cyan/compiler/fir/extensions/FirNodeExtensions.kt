@@ -9,18 +9,20 @@ import cyan.compiler.parser.ast.types.CyanTypeAnnotation
 
 import kotlin.reflect.full.isSubclassOf
 
-fun FirNode.findSymbol(reference: FirReference): FirSymbol? {
+fun FirNode.findSymbol(reference: FirReference) = findSymbol(reference, reference.parent)
+
+fun FirNode.findSymbol(reference: FirReference, asParentOf: FirNode): FirResolvedReference? {
     return if (this is FirScope) {
-        this.declaredSymbols.firstOrNull { it.name == reference.text }
-            ?: this.parent?.findSymbol(reference)
-    } else this.parent?.findSymbol(reference)
+        this.declaredSymbols.firstOrNull { it.name == reference.text }?.let { FirResolvedReference(reference.parent, it, reference.text) }
+            ?: this.parent?.findSymbol(reference, asParentOf)
+    } else this.parent?.findSymbol(reference, asParentOf)
 }
 
 fun FirNode.resolveType(typeAnnotation: CyanTypeAnnotation, inAstNode: CyanItem? = null): Type {
     return when (typeAnnotation) {
         is CyanTypeAnnotation.Literal -> typeAnnotation.literalType
         is CyanTypeAnnotation.Reference -> {
-            val typeSymbol = findSymbol(FirReference(this, typeAnnotation.identifierExpression.value))
+            val typeSymbol = findSymbol(FirReference(this, typeAnnotation.identifierExpression.value), this)
                 ?: DiagnosticPipe.report (
                     CompilerDiagnostic (
                         level = CompilerDiagnostic.Level.Error,
@@ -30,17 +32,17 @@ fun FirNode.resolveType(typeAnnotation: CyanTypeAnnotation, inAstNode: CyanItem?
                     )
                 )
 
-            if (typeSymbol !is FirTypeDeclaration) {
+            if (typeSymbol.resolvedSymbol !is FirTypeDeclaration) {
                 DiagnosticPipe.report (
                     CompilerDiagnostic (
                         level = CompilerDiagnostic.Level.Error,
-                        message = "Symbol '${typeSymbol.name}' is not a type",
+                        message = "Symbol '${typeSymbol.resolvedSymbol.name}' is not a type",
                         astNode = inAstNode ?: typeAnnotation
                     )
                 )
             }
 
-            typeSymbol.struct
+            typeSymbol.resolvedSymbol.struct
         }
     }
 }

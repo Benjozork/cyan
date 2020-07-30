@@ -13,13 +13,15 @@ import cyan.compiler.parser.ast.function.CyanFunctionCall
 object FunctionCallLower : Ast2FirLower<CyanFunctionCall, FirFunctionCall> {
 
     override fun lower(astNode: CyanFunctionCall, parentFirNode: FirNode): FirFunctionCall {
-        val functionNameReference = FirReference(parentFirNode, astNode.functionIdentifier.value)
-        val resolvedFunctionSymbol = parentFirNode.findSymbol(functionNameReference)
+        val firFunctionCall = FirFunctionCall(parentFirNode)
+
+        val functionNameReference = FirReference(firFunctionCall, astNode.functionIdentifier.value)
+        val resolvedFunctionReference = firFunctionCall.findSymbol(functionNameReference)
             ?: error("ast2fir: cannot find symbol: ${astNode.functionIdentifier.value}")
 
-        val firFunctionCall = FirFunctionCall(parentFirNode, resolvedFunctionSymbol, emptyArray())
+        firFunctionCall.callee = resolvedFunctionReference
 
-        val functionDeclarationArgsToPassedArgs = ((resolvedFunctionSymbol as FirFunctionDeclaration).args zip astNode.args).toMap()
+        val functionDeclarationArgsToPassedArgs = ((resolvedFunctionReference.resolvedSymbol as FirFunctionDeclaration).args zip astNode.args).toMap()
                 .mapValues { (_, astArg) -> ExpressionLower.lower(astArg, firFunctionCall) }
 
         functionDeclarationArgsToPassedArgs.entries.forEachIndexed { i, (firArg, astArg) -> // Type check args
@@ -36,6 +38,8 @@ object FunctionCallLower : Ast2FirLower<CyanFunctionCall, FirFunctionCall> {
                 )
             }
         }
+
+        firFunctionCall.args = functionDeclarationArgsToPassedArgs.values.toTypedArray()
 
         return firFunctionCall.also { it.args = functionDeclarationArgsToPassedArgs.values.toTypedArray() }
     }

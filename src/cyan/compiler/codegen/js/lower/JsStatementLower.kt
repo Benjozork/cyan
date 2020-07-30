@@ -19,7 +19,7 @@ object JsStatementLower : FirItemLower<JsCompilerBackend, FirStatement> {
                 val containingDocument = item.firstAncestorOfType<FirModule>()
                     ?: error("fir2js: no FirDocument as ancestor of node")
 
-                val calleeName = item.callee.name
+                val calleeName = item.callee.resolvedSymbol.name
 
                 val isBuiltin = containingDocument.localFunctions.any { it.isExtern && it.name == calleeName }
 

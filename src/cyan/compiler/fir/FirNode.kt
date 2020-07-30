@@ -7,7 +7,7 @@ interface FirNode {
 
     val parent: FirNode?
 
-    fun allReferredSymbols(): Set<FirSymbol>
+    fun allReferredSymbols(): Set<FirResolvedReference>
 
     fun makeChildExpr(expr: CyanExpression) = FirExpression(this, expr)
 
