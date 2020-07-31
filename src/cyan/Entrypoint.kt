@@ -17,7 +17,7 @@ fun main() {
 
     mainModule.source.statements.removeAll { it is FirNullNode }
 
-    SsaPass.run(mainModule.source)
+//    SsaPass.run(mainModule.source)
 
     println(mainModule.allReferredSymbols().joinToString("\n") { "ref to symbol '${it.resolvedSymbol.name}' in a fir node of type ${it.parent::class.simpleName}" })
 
