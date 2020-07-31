@@ -1,10 +1,9 @@
 package cyan.compiler.common.diagnostic
 
 import cyan.compiler.common.exception.AbortedCompilationException
+import cyan.compiler.common.Span
 
 import com.andreapivetta.kolor.*
-import cyan.compiler.common.Span
-import kotlin.math.absoluteValue
 
 object DiagnosticPipe {
 
