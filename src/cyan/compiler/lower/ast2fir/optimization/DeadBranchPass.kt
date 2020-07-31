@@ -22,7 +22,7 @@ object DeadBranchPass : FirOptimizationPass {
         }
 
         if (elseBranch != null && branches.isEmpty())
-            this.replaceWith(elseBranch.statements)
+            this.replaceWith(elseBranch!!.statements)
     }
 
     override fun run(source: FirSource) {

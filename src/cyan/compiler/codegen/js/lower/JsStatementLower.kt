@@ -39,7 +39,7 @@ object JsStatementLower : FirItemLower<JsCompilerBackend, FirStatement> {
 
                 if (item.elseBranch != null) {
                     builder.append(" else {\n")
-                    builder.append(backend.translateSource(item.elseBranch).prependIndent("    "))
+                    builder.append(backend.translateSource(item.elseBranch!!).prependIndent("    "))
                     builder.append("\n}")
                 }
 
