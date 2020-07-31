@@ -59,7 +59,9 @@ class FirExpression(override val parent: FirNode, val astExpr: CyanExpression) :
                      )
                  }
 
-                 val functionDeclarationArgsToPassedArgs = (resolvedFunction.resolvedSymbol.args zip astExpr.args).toMap()
+                 val firFunctionDeclaration = resolvedFunction.resolvedSymbol as FirFunctionDeclaration
+
+                 val functionDeclarationArgsToPassedArgs = (firFunctionDeclaration.args zip astExpr.args).toMap()
                      .mapValues { (_, astArg) -> ExpressionLower.lower(astArg, this) }
 
                  functionDeclarationArgsToPassedArgs.entries.forEachIndexed { i, (firArg, astArg) -> // Type check args
@@ -76,7 +78,7 @@ class FirExpression(override val parent: FirNode, val astExpr: CyanExpression) :
                      }
                  }
 
-                 resolvedFunction.resolvedSymbol.returnType
+                 firFunctionDeclaration.returnType
              }
              is CyanStructLiteralExpression -> {
                  val containingDecl = firstAncestorOfType<FirVariableDeclaration>()

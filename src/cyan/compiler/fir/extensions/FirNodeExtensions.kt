@@ -42,7 +42,7 @@ fun FirNode.resolveType(typeAnnotation: CyanTypeAnnotation, inAstNode: CyanItem?
                 )
             }
 
-            typeSymbol.resolvedSymbol.struct
+            (typeSymbol.resolvedSymbol as FirTypeDeclaration).struct
         }
     }
 }
