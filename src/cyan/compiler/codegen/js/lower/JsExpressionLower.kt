@@ -37,7 +37,7 @@ object JsExpressionLower : FirItemLower<JsCompilerBackend, FirExpression> {
 
                 builder.append("{ ")
                 for ((index, field) in structType.properties.withIndex()) {
-                    builder.append("${field.name}: ${expr.elements.entries.first { it.key.name == field.name }.value}")
+                    builder.append("${field.name}: ${expr.elements.entries.first { it.key.name == field.name }.value.let { backend.lowerExpression(it) }}")
                     if (index < structType.properties.size - 1) builder.append(", ")
                 }
                 builder.append(" }")
