@@ -33,7 +33,14 @@ object FunctionCallLower : Ast2FirLower<CyanFunctionCall, FirFunctionCall> {
                     val structResolvedReference = firFunctionCall.findSymbol(FirReference(firFunctionCall, memberAccessBaseType.name, astNode))!!
                     val structDeclarationScope = structResolvedReference.resolvedSymbol.containingScope()!!
                     val matchingStructMethod = structDeclarationScope.localFunctions
-                            .single { it.args.first().typeAnnotation == memberAccessBaseType && it.name == loweredBase.member }
+                        .singleOrNull { it.args.first().typeAnnotation == memberAccessBaseType && it.name == loweredBase.member }
+                        ?: DiagnosticPipe.report (
+                            CompilerDiagnostic (
+                                level = CompilerDiagnostic.Level.Error,
+                                message = "Could not find a function called '${loweredBase.member}' that accepts '$memberAccessBaseType' as a receiver",
+                                astNode = astNode, span = astNode.base.span
+                            )
+                        )
 
                     firFunctionCall.args += loweredBase.base
 
