@@ -6,10 +6,7 @@ import cyan.compiler.fir.FirIfChain
 import cyan.compiler.fir.FirSource
 import cyan.compiler.fir.FirVariableDeclaration
 import cyan.compiler.fir.expression.FirExpression
-import cyan.compiler.parser.ast.expression.literal.CyanBooleanLiteralExpression
-import cyan.compiler.parser.ast.expression.literal.CyanNumericLiteralExpression
 import cyan.compiler.parser.ast.operator.*
-import kotlin.math.exp
 
 import kotlin.math.pow
 
@@ -84,11 +81,11 @@ object ConstantFoldingPass : FirOptimizationPass {
                         error("could not evaluate with binary operator '${op::class.simpleName}'")
                     }
                     lhsEvaluated is FirExpression.Literal.Boolean && rhsEvaluated is FirExpression.Literal.Boolean -> {
-                        return expressionParent.makeChildExpr(CyanBooleanLiteralExpression(when (op) {
+                        return FirExpression.Literal.Boolean(when (op) {
                             CyanBinaryOrOperator  -> lhsEvaluated.value || rhsEvaluated.value
                             CyanBinaryAndOperator -> lhsEvaluated.value && rhsEvaluated.value
                             else -> error("could not evaluate with binary operator '${op::class.simpleName}'")
-                        }))
+                        }, expressionParent, expression.fromAstNode)
                     }
                     else -> error("cannot evaluate with binary operands of type '${lhsEvaluated::class.simpleName}' and '${rhsEvaluated::class.simpleName}'")
                 }

@@ -5,10 +5,12 @@ import cyan.compiler.common.diagnostic.DiagnosticPipe
 import cyan.compiler.common.types.Type
 import cyan.compiler.fir.FirNode
 import cyan.compiler.fir.FirReference
+import cyan.compiler.fir.FirResolvedReference
 import cyan.compiler.fir.FirVariableDeclaration
 import cyan.compiler.fir.expression.FirExpression
 import cyan.compiler.fir.extensions.findSymbol
 import cyan.compiler.fir.extensions.firstAncestorOfType
+import cyan.compiler.fir.functions.FirFunctionCall
 import cyan.compiler.lower.ast2fir.Ast2FirLower
 import cyan.compiler.parser.ast.expression.*
 import cyan.compiler.parser.ast.expression.literal.CyanBooleanLiteralExpression
@@ -24,17 +26,22 @@ object ExpressionLower : Ast2FirLower<CyanExpression, FirExpression> {
             is CyanStringLiteralExpression  -> FirExpression.Literal.String(astNode.value, parentFirNode, astNode)
             is CyanBooleanLiteralExpression -> FirExpression.Literal.Boolean(astNode.value, parentFirNode, astNode)
             is CyanFunctionCall -> {
-                val baseReference = FirReference(parentFirNode, astNode.functionIdentifier.value, astNode)
-                val resolvedBaseSymbol = parentFirNode.findSymbol(baseReference) ?: DiagnosticPipe.report (
+                val firFunctionCall = FirFunctionCall(parentFirNode)
+
+                val loweredBase = lower(astNode.base, firFunctionCall)
+                val resolvedFunctionReference = (loweredBase as? FirResolvedReference) ?: DiagnosticPipe.report (
                     CompilerDiagnostic (
-                        level = CompilerDiagnostic.Level.Error,
-                        message = "Unresolved symbol '${astNode.functionIdentifier.value}'",
+                        level = CompilerDiagnostic.Level.Internal,
+                        message = "lowered function call base expr resolved to '${loweredBase::class.simpleName}' but should have been FirResolvedReference",
                         astNode = astNode
                     )
                 )
 
                 val firArgs = astNode.args.map { lower(it, parentFirNode) }.toTypedArray()
-                val firCall = FirExpression.FunctionCall(resolvedBaseSymbol, firArgs, parentFirNode, astNode)
+                val firCall = FirExpression.FunctionCall(resolvedFunctionReference, firArgs, parentFirNode, astNode)
+
+                resolvedFunctionReference.parent = firCall
+                firCall.args.forEach { it.parent = firCall }
 
                 firCall
             }

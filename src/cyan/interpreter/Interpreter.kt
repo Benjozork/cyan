@@ -55,22 +55,23 @@ class Interpreter {
                     ?: statement.elseBlock?.let { run(it, stackFrame) }
             }
             is CyanFunctionCall -> {
-                val (identifier, args) = statement
-                when (identifier.value) {
-                    "print" -> {
-                        val value = evaluate(args[0], stackFrame)
-                        ioutput(value)
-                    }
-                    "dbg" -> stackFrame.printDebug()
-                    else -> {
-                        val found = Resolver.findByIdentifier(identifier, stackFrame)
-                        val arguments = args.map { evaluate(it, stackFrame) }.toTypedArray()
-
-                        if (found is CyanCallable)
-                            found.call(this, stackFrame, arguments)
-                        else ierror("${identifier.value} is not a callable value")
-                    }
-                }
+                error("")
+//                val (_, identifier, args) = statement
+//                when (identifier.value) {
+//                    "print" -> {
+//                        val value = evaluate(args[0], stackFrame)
+//                        ioutput(value)
+//                    }
+//                    "dbg" -> stackFrame.printDebug()
+//                    else -> {
+//                        val found = Resolver.findByIdentifier(identifier, stackFrame)
+//                        val arguments = args.map { evaluate(it, stackFrame) }.toTypedArray()
+//
+//                        if (found is CyanCallable)
+//                            found.call(this, stackFrame, arguments)
+//                        else ierror("${identifier.value} is not a callable value")
+//                    }
+//                }
             }
             is CyanAssignment -> {
                 stackFrame.findByIdentifier(statement.reference)?.let {

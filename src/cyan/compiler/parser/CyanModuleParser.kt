@@ -36,6 +36,9 @@ class CyanModuleParser : Grammar<CyanModule>() {
     fun span(firstExpression: CyanItem, secondExpression: CyanItem) =
         span(firstExpression.span!!.fromTokenMatches.first(), secondExpression.span!!.fromTokenMatches.last())
 
+    fun span(firstExpression: CyanItem, secondTokenMatch: TokenMatch) =
+        span(firstExpression.span!!.fromTokenMatches.first(), secondTokenMatch)
+
     fun span(firstSpan: Span, secondSpan: Span) = span(firstSpan.fromTokenMatches.first(), secondSpan.fromTokenMatches.last())
 
     // Tokens
@@ -189,7 +192,7 @@ class CyanModuleParser : Grammar<CyanModule>() {
     // Members
 
     val memberAccessParser by (referenceParser * -dot * referenceParser)                                   use { CyanMemberAccessExpression(t1, t2, span(t1, t2)) }
-    val arrayIndexParser   by (parser(this::unambiguousTerm) * -znws * -lsq * numericalValueParser * -rsq) use { CyanArrayIndexExpression(t1, t2, span(t1, t2)) }
+    val arrayIndexParser   by (parser(this::unambiguousTermForArrayIndex) * -znws * -lsq * numericalValueParser * -rsq) use { CyanArrayIndexExpression(t1, t2, span(t1, t2)) }
 
     // Expressions
 
@@ -199,7 +202,12 @@ class CyanModuleParser : Grammar<CyanModule>() {
 
     val parenTerm = (-leap * parser(this::expr) * -reap)
 
-    val unambiguousTerm: Parser<CyanExpression>
+    val termForbiddenStarts = listOf(reap, rcur, rsq)
+
+    val unambiguousTermForFunctionCall: Parser<CyanExpression>
+            by (parenTerm or memberAccessParser or referenceParser)
+
+    val unambiguousTermForArrayIndex: Parser<CyanExpression>
             by (parenTerm or memberAccessParser or parser(this::functionCall) or referenceParser)
 
     val term: Parser<CyanExpression>
@@ -247,11 +255,9 @@ class CyanModuleParser : Grammar<CyanModule>() {
     val variableInitialization by (-znws * -assign * -znws * expr)
     val variableDeclaration    by (variableSignature and variableInitialization)
         .use { CyanVariableDeclaration(t1.t2, t1.t1.type == vark, t1.t3, t2, span(t1.t1, t2.span!!.fromTokenMatches.last())) }
-
     // Function calls
-
-    val functionCall by (referenceParser * -leap * -znws * separatedTerms(expr, commaParser, true) * -znws * reap)
-        .use { CyanFunctionCall(t1, t2.toTypedArray(), span(t1.span!!.fromTokenMatches.first(), t3)) }
+    val functionCall by (unambiguousTermForFunctionCall * -znws * -leap * -znws * separatedTerms(expr, commaParser, true) * -znws * reap)
+        .use { CyanFunctionCall(t1, t2.toTypedArray(), span(t1, t3)) }
 
     // If statements
 
@@ -280,7 +286,7 @@ class CyanModuleParser : Grammar<CyanModule>() {
     // Statements
 
     val anyStatement
-            by -znws * (importStatement or variableDeclaration or functionDeclaration or typeDeclaration or functionCall or ifStatementChain or assignStatement or returnStatement) * -znws
+            by -znws * (importStatement or variableDeclaration or functionDeclaration or typeDeclaration or ifStatementChain or functionCall or assignStatement or returnStatement) * -znws
 
     // Source parser
 
