@@ -13,7 +13,7 @@ fun FirNode.findSymbol(reference: FirReference) = findSymbol(reference, referenc
 
 fun FirNode.findSymbol(reference: FirReference, asParentOf: FirNode): FirResolvedReference? {
     return if (this is FirScope) {
-        this.declaredSymbols.firstOrNull { it.name == reference.text }?.let { FirResolvedReference(reference.parent, it, reference.text) }
+        this.declaredSymbols.firstOrNull { it.name == reference.text }?.let { FirResolvedReference(reference.parent, it, reference.text, reference.fromAstNode) }
             ?: this.parent?.findSymbol(reference, asParentOf)
     } else this.parent?.findSymbol(reference, asParentOf)
 }
@@ -22,7 +22,7 @@ fun FirNode.resolveType(typeAnnotation: CyanTypeAnnotation, inAstNode: CyanItem?
     return when (typeAnnotation) {
         is CyanTypeAnnotation.Literal -> typeAnnotation.literalType
         is CyanTypeAnnotation.Reference -> {
-            val typeSymbol = findSymbol(FirReference(this, typeAnnotation.identifierExpression.value), this)
+            val typeSymbol = findSymbol(FirReference(this, typeAnnotation.identifierExpression.value, typeAnnotation.identifierExpression), this)
                 ?: DiagnosticPipe.report (
                     CompilerDiagnostic (
                         level = CompilerDiagnostic.Level.Error,

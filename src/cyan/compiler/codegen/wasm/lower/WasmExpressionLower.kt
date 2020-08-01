@@ -9,13 +9,13 @@ import cyan.compiler.parser.ast.expression.literal.CyanStringLiteralExpression
 object WasmExpressionLower : FirItemLower<WasmCompilerBackend, FirExpression> {
 
     override fun lower(backend: WasmCompilerBackend, item: FirExpression): String {
-        return when (item.astExpr) {
-            is CyanNumericLiteralExpression -> {
-                "(i32.const ${item.astExpr.value})"
-            }
-            is CyanStringLiteralExpression -> {
-               "(i32.const ${backend.alloc(item.astExpr.value.toByteArray())})"
-            }
+        return when (item) {
+//            is CyanNumericLiteralExpression -> {
+//                "(i32.const ${item.astExpr.value})"
+//            }
+//            is CyanStringLiteralExpression -> {
+//               "(i32.const ${backend.alloc(item.astExpr.value.toByteArray())})"
+//            }
             else -> error("fir2wasm: cannot lower expression of type '${item::class.simpleName}'")
         }
     }

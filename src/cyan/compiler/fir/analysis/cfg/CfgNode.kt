@@ -43,7 +43,7 @@ sealed class CfgNode {
                 else base += nextNode?.toString(pos + 1, isInBranch) ?: ""
             }
             is Conditional -> {
-                base += "\tcond: ${(fromFirNode as FirIfChain).branches.first().first.realAstExpr}\n"
+                base += "\tcond: ${(fromFirNode as FirIfChain).branches.first().first.realExpr}\n"
                 base += "\ttrue:\n${trueNode?.toString(0, true)!!.prependIndent("\t\t").removeSuffix("\t")}"
                 base += "false: ${falseNode?.toString(0, true) ?: "<none>"}\n"
                 base += exitNode?.toString(pos + 1, false) + "\n"

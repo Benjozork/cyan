@@ -1,6 +1,7 @@
 package cyan.compiler.lower.ast2fir.optimization
 
 import cyan.compiler.fir.FirAssignment
+import cyan.compiler.fir.FirResolvedReference
 import cyan.compiler.fir.FirSource
 import cyan.compiler.fir.FirVariableDeclaration
 import cyan.compiler.fir.analysis.cfg.StatementChainCfgBuilder
@@ -45,7 +46,7 @@ object SsaPass : FirOptimizationPass {
                         .forEach {
                             when (val item = it.parent) {
                                 is FirFunctionCall -> item.callee.resolvedSymbol = newDecl
-                                is FirExpression -> item.inlinedAstExpr = CyanIdentifierExpression(newDecl.name)
+                                is FirExpression -> item.inlinedExpr = FirResolvedReference(item.parent, newDecl, newDecl.name, CyanIdentifierExpression(newDecl.name))
                                 else -> error("resolvedSymbol parent was not a FirFunctionCall or a FirExpression")
                             }
                         }

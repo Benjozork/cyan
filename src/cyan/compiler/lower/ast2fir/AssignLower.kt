@@ -8,6 +8,7 @@ import cyan.compiler.fir.FirReference
 import cyan.compiler.fir.FirVariableDeclaration
 import cyan.compiler.fir.expression.FirExpression
 import cyan.compiler.fir.extensions.findSymbol
+import cyan.compiler.lower.ast2fir.expression.ExpressionLower
 import cyan.compiler.parser.ast.CyanAssignment
 
 object AssignLower : Ast2FirLower<CyanAssignment, FirAssignment> {
@@ -15,7 +16,7 @@ object AssignLower : Ast2FirLower<CyanAssignment, FirAssignment> {
     override fun lower(astNode: CyanAssignment, parentFirNode: FirNode): FirAssignment {
         val assignment = FirAssignment(parentFirNode)
 
-        val variableReference = FirReference(assignment, astNode.reference.value)
+        val variableReference = FirReference(assignment, astNode.reference.value, astNode.reference)
         val resolvedReference = parentFirNode.findSymbol(variableReference) // Check symbol exists
             ?: DiagnosticPipe.report (
                 CompilerDiagnostic (
@@ -48,7 +49,7 @@ object AssignLower : Ast2FirLower<CyanAssignment, FirAssignment> {
             )
         }
 
-        val newExpr = FirExpression(assignment, astNode.newExpr)
+        val newExpr = ExpressionLower.lower(astNode.newExpr, assignment)
 
         if (!(resolvedSymbol.initializationExpr.type() accepts newExpr.type())) { // Check variable accepts our type
             DiagnosticPipe.report (

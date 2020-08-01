@@ -6,6 +6,7 @@ import cyan.compiler.fir.FirNode
 import cyan.compiler.fir.FirReturn
 import cyan.compiler.fir.expression.FirExpression
 import cyan.compiler.fir.functions.FirFunctionDeclaration
+import cyan.compiler.lower.ast2fir.expression.ExpressionLower
 import cyan.compiler.parser.ast.CyanReturn
 
 object ReturnLower : Ast2FirLower<CyanReturn, FirReturn> {
@@ -21,7 +22,7 @@ object ReturnLower : Ast2FirLower<CyanReturn, FirReturn> {
             )
 
         val firReturn = FirReturn(parentFirNode)
-        val firReturnExpr = FirExpression(firReturn, astNode.expr)
+        val firReturnExpr = ExpressionLower.lower(astNode.expr, firReturn)
 
         if (!(containingFunction.returnType accepts firReturnExpr.type())) {
             DiagnosticPipe.report (

@@ -27,7 +27,7 @@ sealed class Type(val array: Boolean) {
 
     class Struct(val name: String, val properties: Array<Property>, array: Boolean = false) : Type(array) {
 
-        class Property(val name: String, val type: Type) {
+        data class Property(val name: String, val type: Type) {
             override fun toString() = "$name: $type"
         }
 

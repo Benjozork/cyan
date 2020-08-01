@@ -7,6 +7,7 @@ import cyan.compiler.fir.functions.FirFunctionDeclaration
 import cyan.compiler.fir.extensions.findSymbol
 import cyan.compiler.fir.extensions.resolveType
 import cyan.compiler.fir.functions.FirFunctionArgument
+import cyan.compiler.parser.ast.expression.CyanIdentifierExpression
 import cyan.compiler.parser.ast.function.CyanFunctionDeclaration
 
 object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirNullNode> {
@@ -58,7 +59,7 @@ object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirNullN
 //            )
 //        }
 
-        if (parentFirNode.findSymbol(FirReference(parentFirNode, firFunctionDeclaration.name)) != null) { // Check function not already declared
+        if (parentFirNode.findSymbol(FirReference(parentFirNode, firFunctionDeclaration.name, CyanIdentifierExpression(firFunctionDeclaration.name))) != null) { // Check function not already declared
             DiagnosticPipe.report (
                 CompilerDiagnostic (
                     level = CompilerDiagnostic.Level.Error,

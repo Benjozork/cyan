@@ -12,6 +12,7 @@ import cyan.compiler.fir.extensions.findSymbol
 import cyan.compiler.fir.extensions.resolveType
 import cyan.compiler.lower.ast2fir.expression.ExpressionLower
 import cyan.compiler.parser.ast.CyanVariableDeclaration
+import cyan.compiler.parser.ast.expression.CyanIdentifierExpression
 
 object VariableDeclarationLower : Ast2FirLower<CyanVariableDeclaration, FirVariableDeclaration> {
 
@@ -65,7 +66,7 @@ object VariableDeclarationLower : Ast2FirLower<CyanVariableDeclaration, FirVaria
         }
 
         // Check variable not already declared
-        if (parentFirNode.findSymbol(FirReference(parentFirNode, firVariableDeclaration.name)) != null) {
+        if (parentFirNode.findSymbol(FirReference(parentFirNode, firVariableDeclaration.name, CyanIdentifierExpression(firVariableDeclaration.name))) != null) {
             DiagnosticPipe.report (
                 CompilerDiagnostic (
                     level = CompilerDiagnostic.Level.Error,

@@ -15,7 +15,7 @@ object PureVariableInlinePass : FirOptimizationPass {
 
         references.forEach {
             if (it.parent is FirExpression)
-                it.parent.inlinedAstExpr = this.initializationExpr.astExpr
+                (it.parent as FirExpression).inlinedExpr = this.initializationExpr
         }
     }
 

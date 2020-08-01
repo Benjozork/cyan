@@ -15,7 +15,7 @@ object FunctionCallLower : Ast2FirLower<CyanFunctionCall, FirFunctionCall> {
     override fun lower(astNode: CyanFunctionCall, parentFirNode: FirNode): FirFunctionCall {
         val firFunctionCall = FirFunctionCall(parentFirNode)
 
-        val functionNameReference = FirReference(firFunctionCall, astNode.functionIdentifier.value)
+        val functionNameReference = FirReference(firFunctionCall, astNode.functionIdentifier.value, astNode.functionIdentifier)
         val resolvedFunctionReference = firFunctionCall.findSymbol(functionNameReference)
             ?: error("ast2fir: cannot find symbol: ${astNode.functionIdentifier.value}")
 
@@ -33,7 +33,7 @@ object FunctionCallLower : Ast2FirLower<CyanFunctionCall, FirFunctionCall> {
                         level = CompilerDiagnostic.Level.Error,
                         message = "Type mismatch for argument $i: expected '${firArg.typeAnnotation}', found '${astArgType}'",
                         astNode = astNode,
-                        span = astArg.astExpr.span
+                        span = astArg.fromAstNode.span
                     )
                 )
             }

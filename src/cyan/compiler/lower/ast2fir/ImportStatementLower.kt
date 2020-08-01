@@ -12,7 +12,7 @@ import cyan.compiler.parser.ast.CyanImportStatement
 object ImportStatementLower : Ast2FirLower<CyanImportStatement, FirNullNode> {
 
     override fun lower(astNode: CyanImportStatement, parentFirNode: FirNode): FirNullNode {
-        val moduleRef = FirReference(parentFirNode, astNode.moduleIdentifier.value)
+        val moduleRef = FirReference(parentFirNode, astNode.moduleIdentifier.value, astNode.moduleIdentifier)
         val containingModule = parentFirNode.firstAncestorOfType<FirModule>()
             ?: DiagnosticPipe.report (
                 CompilerDiagnostic (

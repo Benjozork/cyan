@@ -6,11 +6,10 @@ import cyan.compiler.fir.FirIfChain
 import cyan.compiler.fir.FirSource
 import cyan.compiler.fir.FirVariableDeclaration
 import cyan.compiler.fir.expression.FirExpression
-import cyan.compiler.parser.ast.expression.CyanBinaryExpression
 import cyan.compiler.parser.ast.expression.literal.CyanBooleanLiteralExpression
 import cyan.compiler.parser.ast.expression.literal.CyanNumericLiteralExpression
-import cyan.compiler.parser.ast.expression.literal.CyanStringLiteralExpression
 import cyan.compiler.parser.ast.operator.*
+import kotlin.math.exp
 
 import kotlin.math.pow
 
@@ -20,17 +19,19 @@ object ConstantFoldingPass : FirOptimizationPass {
      * Simplifies expressions when possible
      */
     private fun simplify(expression: FirExpression): FirExpression {
-        return when (val expr = expression.astExpr) {
-            is CyanBinaryExpression -> {
-                val (lhs, op, rhs) = expr
+        return when (expression) {
+            is FirExpression.Binary -> {
+                val lhs = expression.lhs
+                val op = expression.operator
+                val rhs = expression.rhs
 
-                when {
-                    lhs is CyanBooleanLiteralExpression && Type.Primitive(CyanType.Bool, false) accepts expression.makeChildExpr(rhs).type() -> {
-                        val simplified = expression.parent.makeChildExpr(when (op) {
-                            CyanBinaryAndOperator -> if (!lhs.value) CyanBooleanLiteralExpression(false) else rhs
-                            CyanBinaryOrOperator -> if (lhs.value) CyanBooleanLiteralExpression(true) else rhs
+               when {
+                    lhs is FirExpression.Literal.Boolean && Type.Primitive(CyanType.Bool, false) accepts rhs.type() -> {
+                        val simplified = when (op) {
+                            CyanBinaryAndOperator -> if (!lhs.value) FirExpression.Literal.Boolean(false, expression.parent, expression.fromAstNode) else rhs
+                            CyanBinaryOrOperator -> if (lhs.value) FirExpression.Literal.Boolean(true, expression.parent, expression.fromAstNode) else rhs
                             else -> error("cannot simplify binary boolean expression with operator '${op::class.simpleName}'")
-                        })
+                        }
 
                         simplified
                     }
@@ -45,19 +46,19 @@ object ConstantFoldingPass : FirOptimizationPass {
      * Evaluates constant expressions
      */
     private fun evaluate(expression: FirExpression): FirExpression {
-        return when (val expr = expression.astExpr) {
-            is CyanNumericLiteralExpression,
-            is CyanStringLiteralExpression,
-            is CyanBooleanLiteralExpression -> expression
-            is CyanBinaryExpression -> {
-                val (lhs, op, rhs) = expr
+        return when (expression) {
+            is FirExpression.Literal -> expression
+            is FirExpression.Binary -> {
+                val lhs = expression.lhs
+                val op = expression.operator
+                val rhs = expression.rhs
 
-                val (lhsEvaluated, rhsEvaluated) = evaluate(expression.makeChildExpr(lhs)).astExpr to evaluate(expression.makeChildExpr(rhs)).astExpr
+                val (lhsEvaluated, rhsEvaluated) = evaluate(lhs) to evaluate(rhs)
 
                 val expressionParent = expression.parent
 
                 when {
-                    lhsEvaluated is CyanNumericLiteralExpression && rhsEvaluated is CyanNumericLiteralExpression -> {
+                    lhsEvaluated is FirExpression.Literal.Number && rhsEvaluated is FirExpression.Literal.Number -> {
                         val intValue = when (op) {
                             CyanBinaryPlusOperator  -> lhsEvaluated.value + rhsEvaluated.value
                             CyanBinaryMinusOperator -> lhsEvaluated.value - rhsEvaluated.value
@@ -68,18 +69,18 @@ object ConstantFoldingPass : FirOptimizationPass {
                             else -> null
                         }
 
-                        if (intValue != null) return expressionParent.makeChildExpr(CyanNumericLiteralExpression(intValue))
+                        if (intValue != null) return FirExpression.Literal.Number(intValue, expressionParent, expression.fromAstNode)
 
                         val booleanValue = when (op) {
                             CyanBinaryLesserOperator -> lhsEvaluated.value < rhsEvaluated.value
                             else -> null
                         }
 
-                        if (booleanValue != null) return expressionParent.makeChildExpr(CyanBooleanLiteralExpression(booleanValue))
+                        if (booleanValue != null) return FirExpression.Literal.Boolean(booleanValue, expressionParent, expression.fromAstNode)
 
                         error("could not evaluate with binary operator '${op::class.simpleName}'")
                     }
-                    lhsEvaluated is CyanBooleanLiteralExpression && rhsEvaluated is CyanBooleanLiteralExpression -> {
+                    lhsEvaluated is FirExpression.Literal.Boolean && rhsEvaluated is FirExpression.Literal.Boolean -> {
                         return expressionParent.makeChildExpr(CyanBooleanLiteralExpression(when (op) {
                             CyanBinaryOrOperator  -> lhsEvaluated.value || rhsEvaluated.value
                             CyanBinaryAndOperator -> lhsEvaluated.value && rhsEvaluated.value
@@ -89,7 +90,7 @@ object ConstantFoldingPass : FirOptimizationPass {
                     else -> error("cannot evaluate with binary operands of type '${lhsEvaluated::class.simpleName}' and '${rhsEvaluated::class.simpleName}'")
                 }
             }
-            else -> error("cannot evaluate expression of type '${expr::class.simpleName}'")
+            else -> error("cannot evaluate expression of type '${expression::class.simpleName}'")
         }
     }
 
