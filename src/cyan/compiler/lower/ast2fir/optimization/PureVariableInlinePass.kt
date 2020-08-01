@@ -1,9 +1,9 @@
 package cyan.compiler.lower.ast2fir.optimization
 
 import cyan.compiler.fir.FirAssignment
+import cyan.compiler.fir.FirNullNode
 import cyan.compiler.fir.FirSource
 import cyan.compiler.fir.FirVariableDeclaration
-import cyan.compiler.fir.expression.FirExpression
 import cyan.compiler.fir.extensions.containingScope
 
 object PureVariableInlinePass : FirOptimizationPass {
@@ -11,12 +11,11 @@ object PureVariableInlinePass : FirOptimizationPass {
     private fun FirVariableDeclaration.inline() {
         val references = containingScope()!!.allReferredSymbols().filter { it.resolvedSymbol == this }
 
-        if (references.any { it.parent is FirAssignment }) return
+        if (references.any { it.parent is FirAssignment } || references.size > 2) return
 
-        references.forEach {
-            if (it.parent is FirExpression)
-                (it.parent as FirExpression).inlinedExpr = this.initializationExpr
-        }
+        references.forEach { it.inlinedExpr = this.initializationExpr }
+
+        this.replaceWith(listOf(FirNullNode))
     }
 
     override fun run(source: FirSource) {
