@@ -28,7 +28,11 @@ object DeadBranchPass : FirOptimizationPass {
     override fun run(source: FirSource) {
         val ifChains = source.statements.filterIsInstance<FirIfChain>()
 
-        ifChains.forEach { it.trim() }
+        ifChains.forEach {
+            it.trim()
+            if (it.branches.isEmpty() && it.elseBranch == null)
+                it.delete()
+        }
     }
 
 }

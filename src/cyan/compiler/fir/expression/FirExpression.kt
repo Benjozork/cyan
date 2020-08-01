@@ -210,11 +210,12 @@ open class FirExpression(override var parent: FirNode, val fromAstNode: CyanExpr
     /**
      * Whether or not this expression is constant.
      */
-    val isConstant: Boolean by lazy { when (this) {
+    val isConstant: Boolean get() = when (val expr = this.realExpr) {
         is Literal -> true
-        is Binary -> lhs.isConstant && rhs.isConstant
+        is Binary -> expr.lhs.realExpr.isConstant && expr.rhs.realExpr.isConstant
+        is ArrayIndex -> expr.base.isConstant && expr.index.isConstant
         else -> false
-    }}
+    }
 
     val realExpr get() = inlinedExpr ?: this
 

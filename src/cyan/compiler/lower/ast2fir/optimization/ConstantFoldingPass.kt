@@ -45,8 +45,8 @@ object ConstantFoldingPass : FirOptimizationPass {
     /**
      * Evaluates constant expressions
      */
-    private fun evaluate(expression: FirExpression): FirExpression {
-        return when (expression) {
+    private fun evaluate(expr: FirExpression): FirExpression {
+        return when (val expression = expr.realExpr) {
             is FirExpression.Literal -> expression
             is FirExpression.Binary -> {
                 val lhs = expression.lhs
@@ -72,7 +72,10 @@ object ConstantFoldingPass : FirOptimizationPass {
                         if (intValue != null) return FirExpression.Literal.Number(intValue, expressionParent, expression.fromAstNode)
 
                         val booleanValue = when (op) {
-                            CyanBinaryLesserOperator -> lhsEvaluated.value < rhsEvaluated.value
+                            CyanBinaryLesserOperator        -> lhsEvaluated.value < rhsEvaluated.value
+                            CyanBinaryLesserEqualsOperator  -> lhsEvaluated.value <= rhsEvaluated.value
+                            CyanBinaryGreaterOperator       -> lhsEvaluated.value > rhsEvaluated.value
+                            CyanBinaryGreaterEqualsOperator -> lhsEvaluated.value >= rhsEvaluated.value
                             else -> null
                         }
 
@@ -90,6 +93,15 @@ object ConstantFoldingPass : FirOptimizationPass {
                     else -> error("cannot evaluate with binary operands of type '${lhsEvaluated::class.simpleName}' and '${rhsEvaluated::class.simpleName}'")
                 }
             }
+            is FirExpression.ArrayIndex -> {
+                val base = evaluate(expression.base)
+                val index = evaluate(expression.index)
+
+                require (base is FirExpression.Literal.Array) { "base was not an array" }
+                require (index is FirExpression.Literal.Number) { "index was not a number" }
+
+                base.elements[index.value]
+            }
             else -> error("cannot evaluate expression of type '${expression::class.simpleName}'")
         }
     }
@@ -98,11 +110,17 @@ object ConstantFoldingPass : FirOptimizationPass {
         val allVariables = source.declaredSymbols.filterIsInstance<FirVariableDeclaration>()
 
         allVariables.forEach { it.initializationExpr = simplify(it.initializationExpr) }
-        allVariables.filter { it.initializationExpr.isConstant }.forEach { it.initializationExpr = evaluate(it.initializationExpr) }
+        allVariables.filter { it.initializationExpr.realExpr.isConstant }.forEach { it.initializationExpr = evaluate(it.initializationExpr) }
 
         val allIfChains = source.statements.filterIsInstance<FirIfChain>()
 
-        allIfChains.forEach { it.branches = it.branches.map { b -> simplify(b.first) to b.second } }
+        allIfChains.forEach {
+            it.branches
+                    .forEach { b -> b.first.inlinedExpr = simplify(b.first.realExpr) }
+            it.branches
+                    .filter { b -> b.first.isConstant }
+                    .forEach { b -> b.first.inlinedExpr = evaluate(b.first.realExpr) }
+        }
     }
 
 }

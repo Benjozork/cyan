@@ -10,10 +10,13 @@ import java.io.File
 fun main() {
     val mainModule = FirModule.compileModuleFromFile(File("runtime/example.cy"))
 
-    ConstantFoldingPass.run(mainModule.source)
     PureVariableInlinePass.run(mainModule.source)
+    ConstantFoldingPass.run(mainModule.source)
     DeadBranchPass.run(mainModule.source)
     DeadVariablePass.run(mainModule.source)
+    PureVariableInlinePass.run(mainModule.source)
+    ConstantFoldingPass.run(mainModule.source)
+    DeadBranchPass.run(mainModule.source)
 
     mainModule.source.statements.removeAll { it is FirNullNode }
 
