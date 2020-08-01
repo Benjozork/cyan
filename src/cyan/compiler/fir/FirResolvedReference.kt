@@ -5,7 +5,7 @@ import cyan.compiler.parser.ast.expression.CyanExpression
 
 class FirResolvedReference(parent: FirNode, var resolvedSymbol: FirSymbol, val text: String, fromAstNode: CyanExpression) : FirExpression(parent, fromAstNode) {
 
-    override fun allReferredSymbols() = emptySet<FirResolvedReference>()
+    override fun allReferredSymbols() = setOf(this)
 
     fun reference() = FirReference(parent, text, fromAstNode)
 
