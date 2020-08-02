@@ -12,8 +12,6 @@ object WasmStringTransformer {
 
         val pointerTarget = backend.allocator.prealloc(bytes)
 
-        require (length <= 255) { "strings of length >= 256 are not yet supported" }
-
         val iovPtr = ByteBuffer.allocate(Integer.BYTES).putInt(pointerTarget).array().reversed().toByteArray()
         val iovLen = ByteBuffer.allocate(Integer.BYTES).putInt(string.length).array().reversed().toByteArray()
 
