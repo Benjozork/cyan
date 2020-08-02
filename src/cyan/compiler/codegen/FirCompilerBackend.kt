@@ -39,6 +39,8 @@ abstract class FirCompilerBackend {
             newSource.appendln(lowerStatement(statement))
         }
 
+        if (isRoot) newSource.append(postlude)
+
         return newSource.toString().removeSuffix("\n")
     }
 

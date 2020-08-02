@@ -2,6 +2,7 @@ package cyan
 
 import cyan.compiler.fir.FirModule
 import cyan.compiler.codegen.js.JsCompilerBackend
+import cyan.compiler.codegen.wasm.WasmCompilerBackend
 import cyan.compiler.fir.FirNullNode
 import cyan.compiler.lower.ast2fir.optimization.*
 
@@ -27,4 +28,12 @@ fun main() {
     val jsSource = JsCompilerBackend().translateSource(mainModule.source, isRoot = true)
 
     println(jsSource)
+
+    val simpleModule = FirModule.compileModuleFromFile(File("runtime/simple.cy"))
+
+    simpleModule.source.statements.removeAll { it is FirNullNode }
+
+    val wasmSource = WasmCompilerBackend().translateSource(simpleModule.source, isRoot = true)
+
+    println(wasmSource)
 }
