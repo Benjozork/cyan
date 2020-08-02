@@ -6,6 +6,7 @@ import cyan.compiler.codegen.wasm.lower.WasmFunctionDeclarationLower
 import cyan.compiler.codegen.wasm.lower.WasmStatementLower
 import cyan.compiler.codegen.wasm.utils.Allocator
 import cyan.compiler.fir.FirSource
+import kotlin.math.abs
 
 @Suppress("UNCHECKED_CAST")
 class WasmCompilerBackend : FirCompilerBackend() {
@@ -33,7 +34,7 @@ class WasmCompilerBackend : FirCompilerBackend() {
     """.trimIndent()
 
     override val postlude get() = """
-        (data (i32.const 0) "${allocator.heap.joinToString("") { s -> "\\" + s.toString(16).let { if (it.length == 1) "0$it" else it } }}")
+        (data (i32.const 0) "${heapToByteStr()}")
     """.trimIndent()
 
     override val statementLower           = WasmStatementLower
@@ -45,6 +46,13 @@ class WasmCompilerBackend : FirCompilerBackend() {
     }
 
     val allocator = Allocator()
+
+    private fun heapToByteStr(): String {
+        fun Byte.toUnsigned(): Int = if (this < 0) this + 127 else this.toInt()
+        fun Int.padded(): String = if (this.toString(16).length == 1) "0${this.toString(16)}" else this.toString(16)
+
+        return allocator.heap.joinToString("") { "\\${it.toUnsigned().padded()}" }
+    }
 
     override fun nameForBuiltin(builtinName: String): String {
         TODO("Not yet implemented")
