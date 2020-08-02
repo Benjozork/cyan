@@ -1,6 +1,7 @@
 package cyan.compiler.codegen.wasm
 
 import cyan.compiler.codegen.FirCompilerBackend
+import cyan.compiler.codegen.LoweringContext
 import cyan.compiler.codegen.wasm.lower.WasmExpressionLower
 import cyan.compiler.codegen.wasm.lower.WasmFunctionDeclarationLower
 import cyan.compiler.codegen.wasm.lower.WasmStatementLower
@@ -37,12 +38,14 @@ class WasmCompilerBackend : FirCompilerBackend() {
         (data (i32.const 0) "${heapToByteStr()}")
     """.trimIndent()
 
+    override val loweringContext = WasmLoweringContext(this)
+
     override val statementLower           = WasmStatementLower
     override val expressionLower          = WasmExpressionLower
     override val functionDeclarationLower = WasmFunctionDeclarationLower
 
     fun generateStartSymbol(source: FirSource): String {
-        return "(func \$main (export \"_start\")\n" + source.statements.joinToString("\n", postfix = "\n") { lowerStatement(it).prependIndent("    ") } + ")"
+        return "(func \$main (export \"_start\")\n" + source.statements.joinToString("\n", postfix = "\n") { lowerStatement(it, loweringContext).prependIndent("    ") } + ")"
     }
 
     val allocator = Allocator()

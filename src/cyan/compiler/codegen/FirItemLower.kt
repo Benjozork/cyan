@@ -2,8 +2,8 @@ package cyan.compiler.codegen
 
 import cyan.compiler.fir.FirNode
 
-interface FirItemLower<TBackend: FirCompilerBackend, TItem : FirNode> {
+interface FirItemLower<TBackend: FirCompilerBackend, TLoweringContext: LoweringContext, TItem : FirNode> {
 
-    fun lower(backend: TBackend, item: TItem): String
+    fun lower(context: TLoweringContext, item: TItem): String
 
 }

@@ -1,6 +1,7 @@
 package cyan.compiler.codegen.js
 
 import cyan.compiler.codegen.FirCompilerBackend
+import cyan.compiler.codegen.LoweringContext
 import cyan.compiler.codegen.js.lower.JsExpressionLower
 import cyan.compiler.codegen.js.lower.JsFunctionDeclarationLower
 import cyan.compiler.codegen.js.lower.JsStatementLower
@@ -12,6 +13,8 @@ class JsCompilerBackend : FirCompilerBackend() {
     override val prelude get() = File("runtime/runtime.js").readText()
 
     override val postlude = ""
+
+    override val loweringContext = JsLoweringContext(this)
 
     override val statementLower           = JsStatementLower
     override val expressionLower          = JsExpressionLower
