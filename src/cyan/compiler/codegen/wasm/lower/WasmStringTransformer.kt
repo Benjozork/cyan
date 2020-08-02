@@ -8,7 +8,6 @@ object WasmStringTransformer {
 
     fun stringToIov(backend: WasmCompilerBackend, string: String): Int {
         val bytes = string.toByteArray()
-        val length = string.length
 
         val pointerTarget = backend.allocator.prealloc(bytes)
 
