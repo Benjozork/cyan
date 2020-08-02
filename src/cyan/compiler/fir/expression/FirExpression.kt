@@ -20,11 +20,15 @@ open class FirExpression(override var parent: FirNode, val fromAstNode: CyanExpr
 
     abstract class Literal(override var parent: FirNode, fromAstNode: CyanExpression) : FirExpression(parent, fromAstNode) {
 
-        class Number(val value: Int, parent: FirNode, fromAstNode: CyanExpression) : Literal(parent, fromAstNode)
+        interface Scalar<TValue : Any> {
+            val value: TValue
+        }
 
-        class String(val value: kotlin.String, parent: FirNode, fromAstNode: CyanExpression) : Literal(parent, fromAstNode)
+        class Number(override val value: Int, parent: FirNode, fromAstNode: CyanExpression) : Literal(parent, fromAstNode), Scalar<kotlin.Number>
 
-        class Boolean(val value: kotlin.Boolean, parent: FirNode, fromAstNode: CyanExpression) : Literal(parent, fromAstNode)
+        class String(override val value: kotlin.String, parent: FirNode, fromAstNode: CyanExpression) : Literal(parent, fromAstNode), Scalar<kotlin.String>
+
+        class Boolean(override val value: kotlin.Boolean, parent: FirNode, fromAstNode: CyanExpression) : Literal(parent, fromAstNode), Scalar<kotlin.Boolean>
 
         class Array(val elements: List<FirExpression>, parent: FirNode, fromAstNode: CyanExpression) : Literal(parent, fromAstNode)
 

@@ -14,10 +14,10 @@ object WasmFunctionDeclarationLower : FirItemLower<WasmCompilerBackend, FirFunct
         val functionArguments = item.args.joinToString(" ") { it.typeAnnotation.toString() }
 
         return """
-        (func ${"$"}$functionName (param $functionArguments)
-            ${item.block.statements.joinToString("\n", transform = backend::lowerStatement)}
-        )
-        """.trimIndent()
+        |(func ${"$"}$functionName (param $functionArguments)
+        |${item.block.statements.joinToString("\n") { backend.lowerStatement(it).prependIndent("    ") }}
+        |)
+        """.trimMargin()
     }
 
 }
