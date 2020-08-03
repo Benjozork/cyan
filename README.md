@@ -13,6 +13,7 @@ An experiment in programming languages
 * functions (local only)
 * stack-based interpreter
 * JS codegen
+* (WIP) WASM codegen
 
 ## Goals
 
