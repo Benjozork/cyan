@@ -6,11 +6,29 @@ import java.nio.ByteBuffer
 
 class Allocator {
 
+    private fun Int.bytes() =  ByteBuffer.allocate(Integer.BYTES).putInt(this).array().reversed().toByteArray()
+
     private fun arrayToBytes(array: FirExpression.Literal.Array): List<Byte> {
-        val bytes = mutableListOf<Byte>()
+        val arrLen = array.elements.size.bytes()
+
+        val bytes = mutableListOf(*arrLen.toTypedArray())
 
         for (element in array.elements) {
-            bytes += toBytes(element)
+            bytes += when (element) {
+                is FirExpression.Literal.String -> allocateStringIov(element.value).bytes().toMutableList()
+                is FirExpression.Literal.Scalar<*> -> toBytes(element)
+                else -> error("fir2wasm-allocator: cannot allocate array of type '${array.type()}'")
+            }
+        }
+
+        return bytes
+    }
+
+    private fun structToBytes(expression: FirExpression.Literal.Struct): List<Byte> {
+        val bytes = mutableListOf<Byte>()
+
+        for (field in expression.elements.values) {
+            bytes += toBytes(field)
         }
 
         return bytes
@@ -26,7 +44,8 @@ class Allocator {
             }
             else -> error("fir2wasm-value-transformer: cannot transform scalar value of type '${expression::class.simpleName}'")
         }
-        is FirExpression.Literal.Array -> arrayToBytes(expression)
+        is FirExpression.Literal.Array  -> arrayToBytes(expression)
+        is FirExpression.Literal.Struct -> structToBytes(expression)
         else -> error("fir2wasm-value-transformer: cannot transform value of type '${expression::class.simpleName}'")
     }
 
@@ -38,6 +57,7 @@ class Allocator {
                 else -> error("fir2wasm-allocator: cannot allocate scalar value of type '${expression::class.simpleName}'")
             }
         )
+        is FirExpression.Literal.Struct -> AllocationResult.Heap(prealloc(toBytes(expression).toByteArray(), alignment = 4))
         is FirExpression.Literal -> AllocationResult.Heap(prealloc(toBytes(expression).toByteArray()))
         else -> error("fir2wasm-allocator: cannot allocate value of type '${expression::class.simpleName}'")
     }

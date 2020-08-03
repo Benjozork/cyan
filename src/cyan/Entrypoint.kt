@@ -35,5 +35,7 @@ fun main() {
 
     val wasmSource = WasmCompilerBackend().translateSource(simpleModule.source, isRoot = true)
 
-    println(wasmSource)
+    val outputfile = File("runtime/test.wat")
+
+    outputfile.writeText(wasmSource)
 }

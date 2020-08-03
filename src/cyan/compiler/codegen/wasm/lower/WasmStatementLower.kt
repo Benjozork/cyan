@@ -12,10 +12,18 @@ object WasmStatementLower : FirItemLower<WasmCompilerBackend, WasmLoweringContex
 
     override fun lower(context: WasmLoweringContext, item: FirStatement): String {
         return when (item) {
-            is FirVariableDeclaration -> "(local.set 0 " + when (val allocationResult = context.backend.allocator.allocate(item.initializationExpr)) {
-                is AllocationResult.Stack -> "(i32.const ${allocationResult.literal})"
-                is AllocationResult.Heap -> "(i32.const ${allocationResult.pointer})"
-            } + ")"
+            is FirVariableDeclaration -> {
+                val ptr = when (val allocationResult = context.backend.allocator.allocate(item.initializationExpr)) {
+                    is AllocationResult.Stack -> allocationResult.literal
+                    is AllocationResult.Heap -> allocationResult.pointer
+                }
+
+                context.pointerForLocal[item] = ptr
+                context.numLocals++
+
+                // "(local.set ${context.numLocals} (i32.const $ptr))"
+                ""
+            }
             is FirFunctionCall -> "(call \$${item.callee.resolvedSymbol.name} ${item.args.joinToString(" ") { expr -> context.backend.lowerExpression(expr, context) }})"
             else -> error("fir2wasm: couldn't lower statement of type '${item::class.simpleName}'")
         }

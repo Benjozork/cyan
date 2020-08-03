@@ -22,6 +22,28 @@ class WasmCompilerBackend : FirCompilerBackend() {
         
         (export "memory" (memory 0))
         
+        (func ${d}cy_array_check_idx (param ${d}arr_ptr i32) (param ${d}idx i32) (result i32)
+            get_local ${d}arr_ptr
+            i32.load
+            get_local ${d}idx
+            i32.le_u
+        )
+
+        (func ${d}cy_array_get_i32 (param ${d}arr_ptr i32) (param ${d}arr_idx i32) (result i32)
+            (block ${d}B0
+                (call ${d}cy_array_check_idx (local.get ${d}arr_ptr) (local.get ${d}arr_idx))
+                br_if ${d}B0
+            )
+            local.get ${d}arr_idx
+            i32.const 1
+            i32.add
+            i32.const 4
+            i32.mul
+            local.get ${d}arr_ptr
+            i32.add
+            i32.load
+        )
+        
         (func ${d}print (param i32)
             (call ${d}fd_write
                 (i32.const 1)
