@@ -36,7 +36,9 @@ open class FirExpression(override var parent: FirNode, val fromAstNode: CyanExpr
 
     }
 
-    class Binary(var lhs: FirExpression, var operator: CyanBinaryOperator, var rhs: FirExpression, parent: FirNode, fromAstNode: CyanExpression) : FirExpression(parent, fromAstNode)
+    class Binary(var lhs: FirExpression, var operator: CyanBinaryOperator, var rhs: FirExpression, parent: FirNode, fromAstNode: CyanExpression) : FirExpression(parent, fromAstNode) {
+        val commonType get() = if (lhs.realExpr.type() == rhs.realExpr.type()) lhs.realExpr.type() else null
+    }
 
     class MemberAccess(val base: FirExpression, val member: String, parent: FirNode, fromAstNode: CyanExpression) : FirExpression(parent, fromAstNode)
 
