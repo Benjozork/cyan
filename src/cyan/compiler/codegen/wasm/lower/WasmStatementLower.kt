@@ -24,7 +24,12 @@ object WasmStatementLower : FirItemLower<WasmCompilerBackend, WasmLoweringContex
                 // "(local.set ${context.numLocals} (i32.const $ptr))"
                 ""
             }
-            is FirFunctionCall -> "(call \$${item.callee.resolvedSymbol.name} ${item.args.joinToString(" ") { expr -> context.backend.lowerExpression(expr, context) }})"
+            is FirFunctionCall -> {
+                val name = item.callee.resolvedSymbol.name
+                val exprs = item.args.joinToString(" ") { expr -> context.backend.lowerExpression(expr, context) }
+
+                "(call \$$name ${exprs})\ndrop"
+            }
             else -> error("fir2wasm: couldn't lower statement of type '${item::class.simpleName}'")
         }
     }
