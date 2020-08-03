@@ -9,6 +9,9 @@ import cyan.compiler.common.types.Type
 import cyan.compiler.fir.FirResolvedReference
 import cyan.compiler.fir.FirVariableDeclaration
 import cyan.compiler.fir.expression.FirExpression
+import cyan.compiler.parser.ast.operator.CyanBinaryMinusOperator
+import cyan.compiler.parser.ast.operator.CyanBinaryPlusOperator
+import cyan.compiler.parser.ast.operator.CyanBinaryTimesOperator
 
 object WasmExpressionLower : FirItemLower<WasmCompilerBackend, WasmLoweringContext, FirExpression> {
 
@@ -40,6 +43,16 @@ object WasmExpressionLower : FirItemLower<WasmCompilerBackend, WasmLoweringConte
                     }
                 }
                 else -> error("fir2wasm: array indexes are currently only supported on references")
+            }
+            is FirExpression.Binary -> when (item.commonType) {
+                null -> error("fir2wasm: cannot lower binary expression with different operands")
+                Type.Primitive(CyanType.I32, false) -> when (item.operator) {
+                    CyanBinaryPlusOperator   -> "(i32.add ${lower(context, item.lhs.realExpr)} ${lower(context, item.rhs.realExpr)})"
+                    CyanBinaryMinusOperator  -> "(i32.sub ${lower(context, item.lhs.realExpr)} ${lower(context, item.rhs.realExpr)})"
+                    CyanBinaryTimesOperator  -> "(i32.mul ${lower(context, item.lhs.realExpr)} ${lower(context, item.rhs.realExpr)})"
+                    else -> error("fir2wasm: cannot lower binary expression with operator '${item.operator::class.simpleName}'")
+                }
+                else -> error("fir2wasm: cannot lower binary expression operand type ''${item.lhs.realExpr.type()}")
             }
             else -> error("fir2wasm: cannot lower expression of type '${item::class.simpleName}'")
         }
