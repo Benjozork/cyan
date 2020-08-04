@@ -1,13 +1,11 @@
 package cyan.compiler.codegen.wasm
 
 import cyan.compiler.codegen.FirCompilerBackend
-import cyan.compiler.codegen.LoweringContext
 import cyan.compiler.codegen.wasm.lower.WasmExpressionLower
 import cyan.compiler.codegen.wasm.lower.WasmFunctionDeclarationLower
 import cyan.compiler.codegen.wasm.lower.WasmStatementLower
 import cyan.compiler.codegen.wasm.utils.Allocator
 import cyan.compiler.fir.FirSource
-import kotlin.math.abs
 
 @Suppress("UNCHECKED_CAST")
 class WasmCompilerBackend : FirCompilerBackend() {

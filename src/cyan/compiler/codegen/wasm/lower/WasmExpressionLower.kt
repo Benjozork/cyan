@@ -74,7 +74,7 @@ object WasmExpressionLower : FirItemLower<WasmCompilerBackend, WasmLoweringConte
                     )
                 )
 
-                "(local.get ${context.locals[local]})"
+                "(local.get \$${context.locals[local]})"
             }
             else -> error("fir2wasm: cannot lower expression of type '${expr::class.simpleName}'")
         }

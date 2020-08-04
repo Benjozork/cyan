@@ -14,9 +14,14 @@ object WasmFunctionDeclarationLower : FirItemLower<WasmCompilerBackend, WasmLowe
         val functionName = item.name
         val functionArguments = item.args.joinToString(" ") { it.typeAnnotation.toString() }
 
+        val statements = item.block.statements.joinToString("\n") { context.backend.lowerStatement(it, context).prependIndent("    ") }
+
+        val locals = context.locals.values.joinToString("\n") { "(local $$it i32)".prependIndent("    ") }
+
         return """
         |(func ${"$"}$functionName${functionArguments.takeIf { it.isNotBlank() } ?: ""}
-        |${item.block.statements.joinToString("\n") { context.backend.lowerStatement(it, context).prependIndent("    ") }}
+        |$locals
+        |$statements
         |)
         """.trimMargin()
     }

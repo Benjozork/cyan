@@ -26,13 +26,13 @@ object WasmStatementLower : FirItemLower<WasmCompilerBackend, WasmLoweringContex
                 context.pointerForLocal[item] = value
                 val localId = context.addLocal(item)
 
-                "(local.set $localId (i32.const $value))"
+                "(local.set \$$localId (i32.const $value))"
             }
             is FirFunctionCall -> {
                 val name = item.callee.resolvedSymbol.name
-                val exprs = item.args.joinToString(" ") { expr -> context.backend.lowerExpression(expr, context) }
+                val exprs = item.args.takeIf { it.isNotEmpty() }?.joinToString(prefix = " ", separator = " ") { expr -> context.backend.lowerExpression(expr, context) } ?: ""
 
-                "(call \$$name ${exprs})" +
+                "(call \$$name${exprs})" +
                         if ((item.callee.resolvedSymbol as FirFunctionDeclaration).returnType != Type.Primitive(CyanType.Void, false)) "\ndrop" else ""
             }
             is FirWhileStatement -> {
@@ -42,7 +42,9 @@ object WasmStatementLower : FirItemLower<WasmCompilerBackend, WasmLoweringContex
                 |    br_if ${"$"}B0
                 |    (loop ${"$"}L0
                 |${item.block.statements.joinToString("\n") { context.backend.lowerStatement(it, context).prependIndent("        ") }}
-                |        br ${"$"}L0
+                |${context.backend.lowerExpression(item.conditionExpr, context).prependIndent("        ")}
+                |        i32.eqz
+                |        br_if ${"$"}L0
                 |    )
                 |)
             """.trimMargin()
@@ -51,7 +53,7 @@ object WasmStatementLower : FirItemLower<WasmCompilerBackend, WasmLoweringContex
                 val symbol = item.targetVariable
                 val loweredNewExpr = context.backend.lowerExpression(item.newExpr!!, context)
 
-                "(local.set ${context.locals[symbol]} $loweredNewExpr)"
+                "(local.set \$${context.locals[symbol]} $loweredNewExpr)"
             }
             else -> error("fir2wasm: couldn't lower statement of type '${item::class.simpleName}'")
         }
