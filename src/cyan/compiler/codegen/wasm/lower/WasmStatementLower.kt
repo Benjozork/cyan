@@ -6,27 +6,27 @@ import cyan.compiler.codegen.wasm.WasmLoweringContext
 import cyan.compiler.codegen.wasm.utils.AllocationResult
 import cyan.compiler.common.types.CyanType
 import cyan.compiler.common.types.Type
+import cyan.compiler.fir.FirAssignment
 import cyan.compiler.fir.FirStatement
 import cyan.compiler.fir.FirVariableDeclaration
 import cyan.compiler.fir.functions.FirFunctionCall
 import cyan.compiler.fir.functions.FirFunctionDeclaration
-import cyan.compiler.parser.ast.FirWhileStatement
+import cyan.compiler.fir.FirWhileStatement
 
 object WasmStatementLower : FirItemLower<WasmCompilerBackend, WasmLoweringContext, FirStatement> {
 
     override fun lower(context: WasmLoweringContext, item: FirStatement): String {
         return when (item) {
             is FirVariableDeclaration -> {
-                val ptr = when (val allocationResult = context.backend.allocator.allocate(item.initializationExpr)) {
+                val value = when (val allocationResult = context.backend.allocator.allocate(item.initializationExpr)) {
                     is AllocationResult.Stack -> allocationResult.literal
                     is AllocationResult.Heap -> allocationResult.pointer
                 }
 
-                context.pointerForLocal[item] = ptr
-                context.numLocals++
+                context.pointerForLocal[item] = value
+                val localId = context.addLocal(item)
 
-                // "(local.set ${context.numLocals} (i32.const $ptr))"
-                ""
+                "(local.set $localId (i32.const $value))"
             }
             is FirFunctionCall -> {
                 val name = item.callee.resolvedSymbol.name
@@ -46,6 +46,12 @@ object WasmStatementLower : FirItemLower<WasmCompilerBackend, WasmLoweringContex
                 |    )
                 |)
             """.trimMargin()
+            }
+            is FirAssignment -> {
+                val symbol = item.targetVariable
+                val loweredNewExpr = context.backend.lowerExpression(item.newExpr!!, context)
+
+                "(local.set ${context.locals[symbol]} $loweredNewExpr)"
             }
             else -> error("fir2wasm: couldn't lower statement of type '${item::class.simpleName}'")
         }
