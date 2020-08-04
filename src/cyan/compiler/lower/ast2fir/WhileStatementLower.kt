@@ -7,7 +7,7 @@ import cyan.compiler.common.types.Type
 import cyan.compiler.fir.FirNode
 import cyan.compiler.lower.ast2fir.expression.ExpressionLower
 import cyan.compiler.parser.ast.CyanWhileStatement
-import cyan.compiler.parser.ast.FirWhileStatement
+import cyan.compiler.fir.FirWhileStatement
 
 object WhileStatementLower : Ast2FirLower<CyanWhileStatement, FirWhileStatement> {
 

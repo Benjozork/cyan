@@ -1,8 +1,5 @@
-package cyan.compiler.parser.ast
+package cyan.compiler.fir
 
-import cyan.compiler.fir.FirNode
-import cyan.compiler.fir.FirSource
-import cyan.compiler.fir.FirStatement
 import cyan.compiler.fir.expression.FirExpression
 
 class FirWhileStatement (
