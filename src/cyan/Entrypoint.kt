@@ -23,11 +23,11 @@ fun main() {
 
 //    SsaPass.run(mainModule.source)
 
-    println(mainModule.allReferredSymbols().joinToString("\n") { "ref to symbol '${it.resolvedSymbol.name}' in a fir node of type ${it.parent::class.simpleName}" })
+//    println(mainModule.allReferredSymbols().joinToString("\n") { "ref to symbol '${it.resolvedSymbol.name}' in a fir node of type ${it.parent::class.simpleName}" })
 
-    val jsSource = JsCompilerBackend().translateSource(mainModule.source, isRoot = true)
-
-    println(jsSource)
+//    val jsSource = JsCompilerBackend().translateSource(mainModule.source, isRoot = true)
+//
+//    println(jsSource)
 
     val simpleModule = FirModule.compileModuleFromFile(File("runtime/simple.cy"))
 
