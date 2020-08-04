@@ -63,6 +63,7 @@ object AssignLower : Ast2FirLower<CyanAssignment, FirAssignment> {
 
         assignment.targetVariable = resolvedSymbol
         assignment.newExpr = newExpr
+        assignment.newExpr!!.parent = assignment
 
         return assignment
     }
