@@ -4,11 +4,14 @@ import cyan.compiler.codegen.FirItemLower
 import cyan.compiler.codegen.wasm.WasmCompilerBackend
 import cyan.compiler.codegen.wasm.WasmLoweringContext
 import cyan.compiler.codegen.wasm.utils.AllocationResult
+import cyan.compiler.common.diagnostic.CompilerDiagnostic
+import cyan.compiler.common.diagnostic.DiagnosticPipe
 import cyan.compiler.common.types.CyanType
 import cyan.compiler.common.types.Type
 import cyan.compiler.fir.FirResolvedReference
 import cyan.compiler.fir.FirVariableDeclaration
 import cyan.compiler.fir.expression.FirExpression
+import cyan.compiler.fir.extensions.containingScope
 import cyan.compiler.fir.functions.FirFunctionCall
 import cyan.compiler.parser.ast.operator.*
 
@@ -57,6 +60,21 @@ object WasmExpressionLower : FirItemLower<WasmCompilerBackend, WasmLoweringConte
                     else -> error("fir2wasm: cannot lower binary expression with operator '${expr.operator::class.simpleName}'")
                 }
                 else -> error("fir2wasm: cannot lower binary expression operand type ''${expr.lhs.realExpr.type()}")
+            }
+            is FirResolvedReference -> {
+                val symbol = expr.resolvedSymbol
+
+                val containingScope = item.containingScope()
+
+                val local = containingScope?.declaredSymbols?.firstOrNull { it == symbol } as? FirVariableDeclaration ?: DiagnosticPipe.report (
+                    CompilerDiagnostic (
+                        level = CompilerDiagnostic.Level.Error,
+                        message = "wasm target currently only supports references to local variables or function arguments",
+                        astNode = item.fromAstNode
+                    )
+                )
+
+                "(local.get ${context.locals[local]})"
             }
             else -> error("fir2wasm: cannot lower expression of type '${expr::class.simpleName}'")
         }
