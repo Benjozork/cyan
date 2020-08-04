@@ -1,6 +1,7 @@
 package cyan.compiler.codegen.wasm
 
 import cyan.compiler.codegen.FirCompilerBackend
+import cyan.compiler.codegen.wasm.dsl.Wasm
 import cyan.compiler.codegen.wasm.lower.WasmExpressionLower
 import cyan.compiler.codegen.wasm.lower.WasmFunctionDeclarationLower
 import cyan.compiler.codegen.wasm.lower.WasmStatementLower
@@ -11,7 +12,7 @@ import cyan.compiler.fir.FirSource
 import cyan.compiler.fir.functions.FirFunctionDeclaration
 
 @Suppress("UNCHECKED_CAST")
-class WasmCompilerBackend : FirCompilerBackend() {
+class WasmCompilerBackend : FirCompilerBackend<Wasm.OrderedElement>() {
 
     private val d = "$"
     private val n = "\n"
@@ -66,20 +67,6 @@ class WasmCompilerBackend : FirCompilerBackend() {
     override val statementLower           = WasmStatementLower
     override val expressionLower          = WasmExpressionLower
     override val functionDeclarationLower = WasmFunctionDeclarationLower
-
-    fun generateStartSymbol(source: FirSource): String {
-        val fakeStartFunction = FirFunctionDeclaration (
-            parent = source,
-            name = "main",
-            returnType = Type.Primitive(CyanType.Void, false),
-            isExtern = false,
-            args = arrayOf()
-        )
-
-        fakeStartFunction.block = source
-
-        return lowerFunctionDeclaration(fakeStartFunction)
-    }
 
     val allocator = Allocator()
 

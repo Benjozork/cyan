@@ -8,7 +8,7 @@ import cyan.compiler.codegen.js.lower.JsStatementLower
 
 import java.io.File
 
-class JsCompilerBackend : FirCompilerBackend() {
+class JsCompilerBackend : FirCompilerBackend<String>() {
 
     override val prelude get() = File("runtime/runtime.js").readText()
 

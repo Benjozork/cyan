@@ -1,8 +1,8 @@
 package cyan.compiler.codegen.wasm.lower
 
 import cyan.compiler.codegen.FirItemLower
-import cyan.compiler.codegen.wasm.WasmCompilerBackend
 import cyan.compiler.codegen.wasm.WasmLoweringContext
+import cyan.compiler.codegen.wasm.dsl.*
 import cyan.compiler.codegen.wasm.utils.AllocationResult
 import cyan.compiler.common.types.CyanType
 import cyan.compiler.common.types.Type
@@ -10,9 +10,9 @@ import cyan.compiler.fir.*
 import cyan.compiler.fir.functions.FirFunctionCall
 import cyan.compiler.fir.functions.FirFunctionDeclaration
 
-object WasmStatementLower : FirItemLower<WasmCompilerBackend, WasmLoweringContext, FirStatement> {
+object WasmStatementLower : FirItemLower<WasmLoweringContext, FirStatement, Wasm.OrderedElement> {
 
-    override fun lower(context: WasmLoweringContext, item: FirStatement): String {
+    override fun lower(context: WasmLoweringContext, item: FirStatement): Wasm.OrderedElement {
         return when (item) {
             is FirVariableDeclaration -> {
                 val value = when (val allocationResult = context.backend.allocator.allocate(item.initializationExpr)) {
@@ -23,47 +23,58 @@ object WasmStatementLower : FirItemLower<WasmCompilerBackend, WasmLoweringContex
                 context.pointerForLocal[item] = value
                 val localId = context.addLocal(item)
 
-                "(local.set \$$localId (i32.const $value))"
+                instructions {
+                    local.set(localId, value)
+                }
             }
             is FirFunctionCall -> {
-                val name = item.callee.resolvedSymbol.name
-                val exprs = item.args.takeIf { it.isNotEmpty() }?.joinToString(prefix = " ", separator = " ") { expr -> context.backend.lowerExpression(expr, context) } ?: ""
+                val function = item.callee.resolvedSymbol as FirFunctionDeclaration
+                val functionReturnTypeIsVoid = function.returnType == Type.Primitive(CyanType.Void, false)
 
-                "(call \$$name${exprs})" +
-                        if ((item.callee.resolvedSymbol as FirFunctionDeclaration).returnType != Type.Primitive(CyanType.Void, false)) "\ndrop" else ""
+                instructions {
+                    for (argument in item.args.map { context.backend.lowerExpression(it, context) }) {
+                        +argument
+                    }
+
+                    call(function.name)
+                    if (!functionReturnTypeIsVoid)
+                        drop
+                }
             }
             is FirIfChain -> {
                 require (item.branches.size == 1) { "fir2wasm: if chains can currently only have one condition" }
                 require (item.elseBranch != null) { "fir2wasm: if chains currently must have an else branch" }
 
-                """
-                |${context.backend.lowerExpression(item.branches.first().first, context)}
-                |if ${"$"}C${context.nextConditionIndex}
-                |${item.branches.first().second.statements.joinToString("\n") { context.backend.lowerStatement(it, context).prependIndent("    ") }}
-                |else ${"$"}C${context.nextConditionIndex}
-                |${item.elseBranch!!.statements.joinToString("\n") { context.backend.lowerStatement(it, context).prependIndent("    ") }}
-                |end
-                """.trimMargin().also { context.nextConditionIndex++ }
+                val loweredExpression = instructions {
+                    +context.backend.lowerExpression(item.branches.first().first, context)
+                }
+
+                condition(0, loweredExpression, {
+                    item.branches.first().second.statements.forEach { this.ifElements += context.backend.lowerStatement(it, context) }
+                }, otherwise = {
+                    item.elseBranch!!.statements.forEach { this.elseElements += context.backend.lowerStatement(it, context) }
+                })
             }
-            is FirWhileStatement -> {
-                """
-                |(block ${"$"}B0
-                |${context.backend.lowerExpression(item.conditionExpr, context).prependIndent("    ")}
-                |    br_if ${"$"}B0
-                |    (loop ${"$"}L0
-                |${item.block.statements.joinToString("\n") { context.backend.lowerStatement(it, context).prependIndent("        ") }}
-                |${context.backend.lowerExpression(item.conditionExpr, context).prependIndent("        ")}
-                |        i32.eqz
-                |        br_if ${"$"}L0
-                |    )
-                |)
-            """.trimMargin()
+            is FirWhileStatement -> block(0) {
+                val loweredExpression = context.backend.lowerExpression(item.conditionExpr, context)
+                val loweredBody = instructions {
+                    item.block.statements.map { +context.backend.lowerStatement(it, context) }
+                }
+
+                +loweredExpression
+                br_if(0)
+                loop(0) {
+                    +loweredBody
+                    +loweredExpression
+                    i32.eqz
+                    br_if(0)
+                }
             }
-            is FirAssignment -> {
+        is FirAssignment -> {
                 val symbol = item.targetVariable
                 val loweredNewExpr = context.backend.lowerExpression(item.newExpr!!, context)
 
-                "(local.set \$${context.locals[symbol]} $loweredNewExpr)"
+                Wasm.Instruction("(local.set \$${context.locals[symbol]} $loweredNewExpr)")
             }
             else -> error("fir2wasm: couldn't lower statement of type '${item::class.simpleName}'")
         }

@@ -26,3 +26,11 @@ dependencies {
 
     implementation("com.andreapivetta.kolor", "kolor", "1.0.0")
 }
+
+kotlin {
+    sourceSets.all {
+        languageSettings.apply {
+            enableLanguageFeature("NewInference")
+        }
+    }
+}

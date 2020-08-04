@@ -1,30 +1,27 @@
 package cyan.compiler.codegen.wasm.lower
 
 import cyan.compiler.codegen.FirItemLower
-import cyan.compiler.codegen.wasm.WasmCompilerBackend
 import cyan.compiler.codegen.wasm.WasmLoweringContext
+import cyan.compiler.codegen.wasm.dsl.Wasm
+import cyan.compiler.codegen.wasm.dsl.WasmFunctionBuilder.Parameter.Companion.param
+import cyan.compiler.codegen.wasm.dsl.func
 import cyan.compiler.fir.functions.FirFunctionDeclaration
 
-object WasmFunctionDeclarationLower : FirItemLower<WasmCompilerBackend, WasmLoweringContext, FirFunctionDeclaration> {
+object WasmFunctionDeclarationLower : FirItemLower<WasmLoweringContext, FirFunctionDeclaration, Wasm.OrderedElement> {
 
-    override fun lower(context: WasmLoweringContext, item: FirFunctionDeclaration): String {
-        if (item.name == "wasmMain")
-            return context.backend.generateStartSymbol(item.block)
-
+    override fun lower(context: WasmLoweringContext, item: FirFunctionDeclaration): Wasm.OrderedElement {
         val functionName = item.name
-        val functionExport = if (item.name == "main") " (export \"_start\") " else " "
-        val functionArguments = item.args.joinToString(" ") { it.typeAnnotation.toString() }
+        val isStartExport = item.name == "_start"
 
-        val statements = item.block.statements.joinToString("\n") { context.backend.lowerStatement(it, context).prependIndent("    ") }
+        return func(functionName, *item.args.map { param(it.name, "i32")}.toTypedArray(), exportedAs = if (isStartExport) "_start" else null) {
+            for (statement in item.block.statements) {
+                +context.backend.lowerStatement(statement, context)
+            }
 
-        val locals = context.locals.values.joinToString("\n", postfix = "\n") { "(local $$it i32)".prependIndent("    ") }
-
-        return """
-        |(func ${"$"}$functionName$functionExport${functionArguments.takeIf { it.isNotBlank() } ?: ""}
-        |$locals
-        |$statements
-        |)
-        """.trimMargin()
+            for (local in context.locals.values) {
+                +Wasm.Instruction("(local \$$local i32)")
+            }
+        }
     }
 
 }

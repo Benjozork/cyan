@@ -1,7 +1,6 @@
 package cyan.compiler.codegen.js.lower
 
 import cyan.compiler.codegen.FirItemLower
-import cyan.compiler.codegen.js.JsCompilerBackend
 import cyan.compiler.codegen.js.JsLoweringContext
 import cyan.compiler.fir.*
 import cyan.compiler.fir.extensions.firstAncestorOfType
@@ -9,7 +8,7 @@ import cyan.compiler.fir.functions.FirFunctionCall
 
 import java.lang.StringBuilder
 
-object JsStatementLower : FirItemLower<JsCompilerBackend, JsLoweringContext, FirStatement> {
+object JsStatementLower : FirItemLower<JsLoweringContext, FirStatement, String> {
 
     override fun lower(context: JsLoweringContext, item: FirStatement): String {
         return when (item) {

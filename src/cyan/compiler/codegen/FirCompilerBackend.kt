@@ -8,14 +8,14 @@ import cyan.compiler.fir.functions.FirFunctionDeclaration
 
 import java.lang.StringBuilder
 
-abstract class FirCompilerBackend {
+abstract class FirCompilerBackend<TLowerOutput : Any> {
 
     abstract val prelude: String
     abstract val postlude: String
 
-    abstract val statementLower:  FirItemLower<*, *, FirStatement>
-    abstract val expressionLower: FirItemLower<*, *, FirExpression>
-    abstract val functionDeclarationLower: FirItemLower<*, *, FirFunctionDeclaration>
+    abstract val statementLower:  FirItemLower<*, FirStatement, TLowerOutput>
+    abstract val expressionLower: FirItemLower<*, FirExpression, TLowerOutput>
+    abstract val functionDeclarationLower: FirItemLower<*, FirFunctionDeclaration, TLowerOutput>
 
     fun translateSource(source: FirSource, context: LoweringContext, isRoot: Boolean = false): String {
         val newSource = if (isRoot) StringBuilder(prelude + "\n") else StringBuilder()
@@ -44,15 +44,15 @@ abstract class FirCompilerBackend {
     abstract fun makeLoweringContext(): LoweringContext
 
     @Suppress("UNCHECKED_CAST")
-    open fun lowerFunctionDeclaration(function: FirFunctionDeclaration): String =
-        (functionDeclarationLower as FirItemLower<FirCompilerBackend, LoweringContext, FirFunctionDeclaration>).lower(makeLoweringContext(), function) + "\n"
+    open fun lowerFunctionDeclaration(function: FirFunctionDeclaration): TLowerOutput =
+        (functionDeclarationLower as FirItemLower<LoweringContext, FirFunctionDeclaration, TLowerOutput>).lower(makeLoweringContext(), function)
 
     @Suppress("UNCHECKED_CAST")
-    open fun lowerStatement(stmt: FirStatement, context: LoweringContext): String =
-        (statementLower as FirItemLower<FirCompilerBackend, LoweringContext, FirStatement>).lower(context, stmt)
+    open fun lowerStatement(stmt: FirStatement, context: LoweringContext): TLowerOutput =
+        (statementLower as FirItemLower<LoweringContext, FirStatement, TLowerOutput>).lower(context, stmt)
 
     @Suppress("UNCHECKED_CAST")
-    open fun lowerExpression(expr: FirExpression, context: LoweringContext): String =
-        (expressionLower as FirItemLower<FirCompilerBackend, LoweringContext, FirExpression>).lower(context, expr)
+    open fun lowerExpression(expr: FirExpression, context: LoweringContext): TLowerOutput =
+        (expressionLower as FirItemLower<LoweringContext, FirExpression, TLowerOutput>).lower(context, expr)
 
 }
