@@ -15,7 +15,7 @@ object WasmFunctionDeclarationLower : FirItemLower<WasmCompilerBackend, WasmLowe
         val functionArguments = item.args.joinToString(" ") { it.typeAnnotation.toString() }
 
         return """
-        |(func ${"$"}$functionName (param $functionArguments)
+        |(func ${"$"}$functionName${functionArguments.takeIf { it.isNotBlank() } ?: ""}
         |${item.block.statements.joinToString("\n") { context.backend.lowerStatement(it, context).prependIndent("    ") }}
         |)
         """.trimMargin()
