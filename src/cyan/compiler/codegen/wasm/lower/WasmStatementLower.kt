@@ -6,12 +6,9 @@ import cyan.compiler.codegen.wasm.WasmLoweringContext
 import cyan.compiler.codegen.wasm.utils.AllocationResult
 import cyan.compiler.common.types.CyanType
 import cyan.compiler.common.types.Type
-import cyan.compiler.fir.FirAssignment
-import cyan.compiler.fir.FirStatement
-import cyan.compiler.fir.FirVariableDeclaration
+import cyan.compiler.fir.*
 import cyan.compiler.fir.functions.FirFunctionCall
 import cyan.compiler.fir.functions.FirFunctionDeclaration
-import cyan.compiler.fir.FirWhileStatement
 
 object WasmStatementLower : FirItemLower<WasmCompilerBackend, WasmLoweringContext, FirStatement> {
 
@@ -34,6 +31,19 @@ object WasmStatementLower : FirItemLower<WasmCompilerBackend, WasmLoweringContex
 
                 "(call \$$name${exprs})" +
                         if ((item.callee.resolvedSymbol as FirFunctionDeclaration).returnType != Type.Primitive(CyanType.Void, false)) "\ndrop" else ""
+            }
+            is FirIfChain -> {
+                require (item.branches.size == 1) { "fir2wasm: if chains can currently only have one condition" }
+                require (item.elseBranch != null) { "fir2wasm: if chains currently must have an else branch" }
+
+                """
+                |${context.backend.lowerExpression(item.branches.first().first, context)}
+                |if ${"$"}C${context.nextConditionIndex}
+                |${item.branches.first().second.statements.joinToString("\n") { context.backend.lowerStatement(it, context).prependIndent("    ") }}
+                |else ${"$"}C${context.nextConditionIndex}
+                |${item.elseBranch!!.statements.joinToString("\n") { context.backend.lowerStatement(it, context).prependIndent("    ") }}
+                |end
+                """.trimMargin().also { context.nextConditionIndex++ }
             }
             is FirWhileStatement -> {
                 """

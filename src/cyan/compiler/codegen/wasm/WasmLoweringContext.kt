@@ -7,7 +7,7 @@ class WasmLoweringContext(override val backend: WasmCompilerBackend) : LoweringC
 
     val locals = mutableMapOf<FirVariableDeclaration, Int>()
 
-    var numLocals = 0
+    var nextConditionIndex = 0
 
     val pointerForLocal = mutableMapOf<FirVariableDeclaration, Int>()
 
