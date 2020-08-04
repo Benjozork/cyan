@@ -29,7 +29,7 @@ abstract class FirCompilerBackend {
         // do this if we are not the direct child of a FirModule, because then we would inline all imported functions into
         // all FirSources.
         if (source.parent is FirModule) source.parent.let { module ->
-            for (function in module.localFunctions.filter { !it.isExtern }) {
+            for (function in (module as FirModule).localFunctions.filter { !it.isExtern }) {
                 newSource.appendln(lowerFunctionDeclaration(function, loweringContext))
             }
         } else for (function in source.localFunctions) {

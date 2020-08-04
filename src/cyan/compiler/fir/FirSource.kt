@@ -3,7 +3,7 @@ package cyan.compiler.fir
 import cyan.compiler.fir.functions.FirFunctionDeclaration
 
 class FirSource (
-    override val parent: FirNode,
+    override var parent: FirNode,
     override val declaredSymbols: MutableSet<FirSymbol> = mutableSetOf(),
     var statements: MutableList<FirStatement> = mutableListOf()
 ) : FirScope {

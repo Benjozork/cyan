@@ -22,7 +22,7 @@ object IfChainLower : Ast2FirLower<CyanIfChain, FirIfChain> {
                DiagnosticPipe.report (
                    CompilerDiagnostic (
                        level = CompilerDiagnostic.Level.Error,
-                       message = "if statement condition must be a boolean expression",
+                       message = "if statement condition must be a boolean expression, not ${firBranchExpr.type()}",
                        astNode = branch
                    )
                )
