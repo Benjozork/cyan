@@ -13,15 +13,11 @@ abstract class FirCompilerBackend {
     abstract val prelude: String
     abstract val postlude: String
 
-    abstract val loweringContext: LoweringContext
-
     abstract val statementLower:  FirItemLower<*, *, FirStatement>
     abstract val expressionLower: FirItemLower<*, *, FirExpression>
     abstract val functionDeclarationLower: FirItemLower<*, *, FirFunctionDeclaration>
 
-    abstract fun nameForBuiltin(builtinName: String): String
-
-    fun translateSource(source: FirSource, isRoot: Boolean = false): String {
+    fun translateSource(source: FirSource, context: LoweringContext, isRoot: Boolean = false): String {
         val newSource = if (isRoot) StringBuilder(prelude + "\n") else StringBuilder()
 
         // Here, for now we include all functions in the `declaredSymbols` of the parent module if the parent of this
@@ -30,14 +26,14 @@ abstract class FirCompilerBackend {
         // all FirSources.
         if (source.parent is FirModule) source.parent.let { module ->
             for (function in (module as FirModule).localFunctions.filter { !it.isExtern }) {
-                newSource.appendln(lowerFunctionDeclaration(function, loweringContext))
+                newSource.appendln(lowerFunctionDeclaration(function))
             }
         } else for (function in source.localFunctions) {
-            newSource.appendln(lowerFunctionDeclaration(function, loweringContext))
+            newSource.appendln(lowerFunctionDeclaration(function))
         }
 
         for (statement in source.statements) {
-            newSource.appendln(lowerStatement(statement, loweringContext))
+            newSource.appendln(lowerStatement(statement, context))
         }
 
         if (isRoot) newSource.append(postlude)
@@ -45,16 +41,18 @@ abstract class FirCompilerBackend {
         return newSource.toString().removeSuffix("\n")
     }
 
-    @Suppress("UNCHECKED_CAST")
-    fun lowerFunctionDeclaration(function: FirFunctionDeclaration, context: LoweringContext): String =
-        (functionDeclarationLower as FirItemLower<FirCompilerBackend, LoweringContext, FirFunctionDeclaration>).lower(context, function) + "\n"
+    abstract fun makeLoweringContext(): LoweringContext
 
     @Suppress("UNCHECKED_CAST")
-    fun lowerStatement(stmt: FirStatement, context: LoweringContext): String =
+    open fun lowerFunctionDeclaration(function: FirFunctionDeclaration): String =
+        (functionDeclarationLower as FirItemLower<FirCompilerBackend, LoweringContext, FirFunctionDeclaration>).lower(makeLoweringContext(), function) + "\n"
+
+    @Suppress("UNCHECKED_CAST")
+    open fun lowerStatement(stmt: FirStatement, context: LoweringContext): String =
         (statementLower as FirItemLower<FirCompilerBackend, LoweringContext, FirStatement>).lower(context, stmt)
 
     @Suppress("UNCHECKED_CAST")
-    fun lowerExpression(expr: FirExpression, context: LoweringContext): String =
+    open fun lowerExpression(expr: FirExpression, context: LoweringContext): String =
         (expressionLower as FirItemLower<FirCompilerBackend, LoweringContext, FirExpression>).lower(context, expr)
 
 }

@@ -11,7 +11,7 @@ object JsFunctionDeclarationLower : FirItemLower<JsCompilerBackend, JsLoweringCo
     override fun lower(context: JsLoweringContext, item: FirFunctionDeclaration): String {
         return """
         |function ${item.name}(${item.args.joinToString(transform = FirFunctionArgument::name)}) {
-        |${context.backend.translateSource(item.block).prependIndent("    ")}
+        |${context.backend.translateSource(item.block, context).prependIndent("    ")}
         |}
         """.trimMargin()
     }

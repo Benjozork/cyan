@@ -3,6 +3,7 @@ package cyan
 import cyan.compiler.fir.FirModule
 import cyan.compiler.codegen.js.JsCompilerBackend
 import cyan.compiler.codegen.wasm.WasmCompilerBackend
+import cyan.compiler.codegen.wasm.WasmLoweringContext
 import cyan.compiler.fir.FirNullNode
 import cyan.compiler.lower.ast2fir.optimization.*
 
@@ -33,7 +34,7 @@ fun main() {
 
     simpleModule.source.statements.removeAll { it is FirNullNode }
 
-    val wasmSource = WasmCompilerBackend().translateSource(simpleModule.source, isRoot = true)
+    val wasmSource = WasmCompilerBackend().let { it.translateSource(simpleModule.source, WasmLoweringContext(it), true) }
 
     val outputfile = File("runtime/test.wat")
 

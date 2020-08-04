@@ -5,7 +5,10 @@ import cyan.compiler.codegen.wasm.lower.WasmExpressionLower
 import cyan.compiler.codegen.wasm.lower.WasmFunctionDeclarationLower
 import cyan.compiler.codegen.wasm.lower.WasmStatementLower
 import cyan.compiler.codegen.wasm.utils.Allocator
+import cyan.compiler.common.types.CyanType
+import cyan.compiler.common.types.Type
 import cyan.compiler.fir.FirSource
+import cyan.compiler.fir.functions.FirFunctionDeclaration
 
 @Suppress("UNCHECKED_CAST")
 class WasmCompilerBackend : FirCompilerBackend() {
@@ -58,14 +61,24 @@ class WasmCompilerBackend : FirCompilerBackend() {
         (data (i32.const 0) "${heapToByteStr()}")
     """.trimIndent()
 
-    override val loweringContext = WasmLoweringContext(this)
+    override fun makeLoweringContext() = WasmLoweringContext(this)
 
     override val statementLower           = WasmStatementLower
     override val expressionLower          = WasmExpressionLower
     override val functionDeclarationLower = WasmFunctionDeclarationLower
 
     fun generateStartSymbol(source: FirSource): String {
-        return "(func \$main (export \"_start\")\n" + source.statements.joinToString("\n", postfix = "\n") { lowerStatement(it, loweringContext).prependIndent("    ") } + ")"
+        val fakeStartFunction = FirFunctionDeclaration (
+            parent = source,
+            name = "main",
+            returnType = Type.Primitive(CyanType.Void, false),
+            isExtern = false,
+            args = arrayOf()
+        )
+
+        fakeStartFunction.block = source
+
+        return lowerFunctionDeclaration(fakeStartFunction)
     }
 
     val allocator = Allocator()
@@ -75,10 +88,6 @@ class WasmCompilerBackend : FirCompilerBackend() {
         fun Int.padded(): String = if (this.toString(16).length == 1) "0${this.toString(16)}" else this.toString(16)
 
         return allocator.heap.joinToString("") { "\\${it.toUnsigned().padded()}" }
-    }
-
-    override fun nameForBuiltin(builtinName: String): String {
-        TODO("Not yet implemented")
     }
 
 }

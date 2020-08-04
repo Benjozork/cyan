@@ -34,13 +34,13 @@ object JsStatementLower : FirItemLower<JsCompilerBackend, JsLoweringContext, Fir
                 for ((index, branch) in item.branches.withIndex()) {
                     if (index > 0) builder.append(" else ")
                     builder.append("if (${context.backend.lowerExpression(branch.first, context)}) {\n")
-                    builder.append(context.backend.translateSource(branch.second).prependIndent("    "))
+                    builder.append(context.backend.translateSource(branch.second, context).prependIndent("    "))
                     builder.append("\n}")
                 }
 
                 if (item.elseBranch != null) {
                     builder.append(" else {\n")
-                    builder.append(context.backend.translateSource(item.elseBranch!!).prependIndent("    "))
+                    builder.append(context.backend.translateSource(item.elseBranch!!, context).prependIndent("    "))
                     builder.append("\n}")
                 }
 

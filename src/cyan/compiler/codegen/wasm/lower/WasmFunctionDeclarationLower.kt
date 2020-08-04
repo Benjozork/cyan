@@ -12,14 +12,15 @@ object WasmFunctionDeclarationLower : FirItemLower<WasmCompilerBackend, WasmLowe
             return context.backend.generateStartSymbol(item.block)
 
         val functionName = item.name
+        val functionExport = if (item.name == "main") " (export \"_start\") " else " "
         val functionArguments = item.args.joinToString(" ") { it.typeAnnotation.toString() }
 
         val statements = item.block.statements.joinToString("\n") { context.backend.lowerStatement(it, context).prependIndent("    ") }
 
-        val locals = context.locals.values.joinToString("\n") { "(local $$it i32)".prependIndent("    ") }
+        val locals = context.locals.values.joinToString("\n", postfix = "\n") { "(local $$it i32)".prependIndent("    ") }
 
         return """
-        |(func ${"$"}$functionName${functionArguments.takeIf { it.isNotBlank() } ?: ""}
+        |(func ${"$"}$functionName$functionExport${functionArguments.takeIf { it.isNotBlank() } ?: ""}
         |$locals
         |$statements
         |)

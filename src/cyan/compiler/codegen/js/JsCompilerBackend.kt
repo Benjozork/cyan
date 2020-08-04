@@ -14,12 +14,10 @@ class JsCompilerBackend : FirCompilerBackend() {
 
     override val postlude = ""
 
-    override val loweringContext = JsLoweringContext(this)
+    override fun makeLoweringContext() = JsLoweringContext(this)
 
     override val statementLower           = JsStatementLower
     override val expressionLower          = JsExpressionLower
     override val functionDeclarationLower = JsFunctionDeclarationLower
-
-    override fun nameForBuiltin(builtinName: String) = "builtins.$builtinName"
 
 }
