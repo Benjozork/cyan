@@ -70,7 +70,7 @@ object WasmStatementLower : FirItemLower<WasmLoweringContext, FirStatement, Wasm
                     br_if(0)
                 }
             }
-        is FirAssignment -> {
+            is FirAssignment -> {
                 val symbol = item.targetVariable
                 val loweredNewExpr = context.backend.lowerExpression(item.newExpr!!, context)
 
