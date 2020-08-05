@@ -15,7 +15,7 @@ object WasmStatementLower : FirItemLower<WasmLoweringContext, FirStatement, Wasm
     override fun lower(context: WasmLoweringContext, item: FirStatement): Wasm.OrderedElement {
         return when (item) {
             is FirVariableDeclaration -> {
-                val value = when (val allocationResult = context.backend.allocator.allocate(item.initializationExpr)) {
+                val value = when (val allocationResult = context.allocator.allocate(item.initializationExpr)) {
                     is AllocationResult.Stack -> allocationResult.literal
                     is AllocationResult.Heap -> allocationResult.pointer
                 }

@@ -5,9 +5,9 @@ import cyan.compiler.fir.FirVariableDeclaration
 
 class WasmLoweringContext(override val backend: WasmCompilerBackend) : LoweringContext {
 
-    val locals = mutableMapOf<FirVariableDeclaration, Int>()
+    val allocator get() = backend.allocator
 
-    var nextConditionIndex = 0
+    val locals = mutableMapOf<FirVariableDeclaration, Int>()
 
     val pointerForLocal = mutableMapOf<FirVariableDeclaration, Int>()
 

@@ -35,8 +35,12 @@ interface WasmBlock : Wasm.OrderedElement {
             pushElement(Wasm.Instruction("i32.le_u"))
 
     @WasmInstructionsBuilderDsl
-    fun Int32Instructions.le_u(l1: Int, l2: Int) =
-            pushElement(Wasm.Instruction("(i32.le_u $l1 $l2)"))
+    val Int32Instructions.gt_u get() =
+        pushElement(Wasm.Instruction("i32.gt_u"))
+
+    @WasmInstructionsBuilderDsl
+    val Int32Instructions.ge_u get() =
+        pushElement(Wasm.Instruction("i32.ge_u"))
 
     @WasmInstructionsBuilderDsl
     val Int32Instructions.eqz get() =

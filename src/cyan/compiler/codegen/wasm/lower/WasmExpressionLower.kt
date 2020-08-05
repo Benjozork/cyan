@@ -21,15 +21,15 @@ import cyan.compiler.parser.ast.operator.*
 object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wasm.OrderedElement> {
 
     override fun lower(context: WasmLoweringContext, item: FirExpression): Wasm.OrderedElement {
-        return if (item.parent is FirFunctionCall && (item.parent as FirFunctionCall).callee.resolvedSymbol.name == "print")
+        return if (item.parent is FirFunctionCall && (item.parent as FirFunctionCall).callee.resolvedSymbol.name == "print") instructions {
             when (item) {
-                is FirExpression.Literal.String -> Wasm.Instruction("(i32.const ${context.backend.allocator.allocateStringIov(item.value)})")
-                is FirExpression.Literal.Number -> Wasm.Instruction("(i32.const ${context.backend.allocator.allocateStringIov(item.value.toString())})")
+                is FirExpression.Literal.String -> i32.const(context.allocator.allocateStringIov(item.value))
+                is FirExpression.Literal.Number -> i32.const(context.allocator.allocateStringIov(item.value.toString()))
                 else -> error("fir2wasm-print-formatter: cannot format value of type '${item::class.simpleName}'")
             }
-        else when (val expr = item.realExpr) {
+        } else when (val expr = item.realExpr) {
             is FirExpression.Literal -> instructions {
-                when (val allocationResult = context.backend.allocator.allocate(expr)) {
+                when (val allocationResult = context.allocator.allocate(expr)) {
                     is AllocationResult.Stack -> i32.const(allocationResult.literal)
                     is AllocationResult.Heap  -> i32.const(allocationResult.pointer)
                 }
@@ -60,10 +60,13 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
                     +lower(context, expr.lhs)
 
                     when (expr.operator) {
-                        CyanBinaryPlusOperator   -> i32.add
-                        CyanBinaryMinusOperator  -> i32.sub
-                        CyanBinaryTimesOperator  -> i32.mul
-                        CyanBinaryLesserOperator -> i32.lt_u
+                        CyanBinaryPlusOperator          -> i32.add
+                        CyanBinaryMinusOperator         -> i32.sub
+                        CyanBinaryTimesOperator         -> i32.mul
+                        CyanBinaryLesserOperator        -> i32.lt_u
+                        CyanBinaryLesserEqualsOperator  -> i32.le_u
+                        CyanBinaryGreaterOperator       -> i32.gt_u
+                        CyanBinaryGreaterEqualsOperator -> i32.ge_u
                         else -> error("fir2wasm: cannot lower binary expression with operator '${expr.operator::class.simpleName}'")
                     }
                 }
