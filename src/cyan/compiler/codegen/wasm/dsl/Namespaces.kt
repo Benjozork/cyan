@@ -7,7 +7,7 @@ object Int32Instructions
 object LocalInstructions
 
 @WasmTypesNamesDsl
-val WasmBlock.i32 get() = Int32Instructions
+val WasmScope.i32 get() = Int32Instructions
 
 @WasmTypesNamesDsl
-val WasmBlock.local get() = LocalInstructions
+val WasmScope.local get() = LocalInstructions

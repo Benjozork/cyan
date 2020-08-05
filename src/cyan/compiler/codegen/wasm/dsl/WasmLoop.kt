@@ -1,6 +1,6 @@
 package cyan.compiler.codegen.wasm.dsl
 
-class WasmBlockBuilder(val blockNum: Int) : WasmBlock {
+class WasmLoop(val blockNum: Int) : WasmScope {
 
     override val elements = mutableListOf<Wasm.OrderedElement>()
 
@@ -12,11 +12,10 @@ class WasmBlockBuilder(val blockNum: Int) : WasmBlock {
         }
 
         return """
-        |(block ${"$"}B$blockNum
+        |(loop ${"$"}L$blockNum
         |$elements
         |)
         """.trimMargin()
     }
-
 
 }

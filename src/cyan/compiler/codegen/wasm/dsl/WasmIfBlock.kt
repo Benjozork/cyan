@@ -1,8 +1,8 @@
 package cyan.compiler.codegen.wasm.dsl
 
-class WasmIfBlockBuilder (
+class WasmIfBlock (
     private val conditionNum: Int,
-    private val conditionExpression: WasmInstructionSequenceBuilder
+    private val conditionExpression: WasmInstructionSequence
 ) : Wasm.OrderedElement {
 
     val ifElements = mutableListOf<Wasm.OrderedElement>()

@@ -1,6 +1,6 @@
 package cyan.compiler.codegen.wasm.dsl
 
-class WasmInstructionSequenceBuilder : WasmBlock {
+class WasmInstructionSequence : WasmScope {
 
     override val elements = mutableListOf<Wasm.OrderedElement>()
 

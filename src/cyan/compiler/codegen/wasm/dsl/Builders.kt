@@ -5,39 +5,39 @@ fun func(funcName: String, vararg parameters: WasmFunctionBuilder.Parameter, exp
         = WasmFunctionBuilder(funcName, parameters.toMutableList(), exportedAs).also(block)
 
 @WasmInstructionsBuilderDsl
-fun block(blockNum: Int, block: WasmBlockBuilder.() -> Unit): WasmBlockBuilder
-        = WasmBlockBuilder(blockNum).also(block)
+fun block(blockNum: Int, block: WasmBlock.() -> Unit): WasmBlock
+        = WasmBlock(blockNum).also(block)
 
 @WasmInstructionsBuilderDsl
-fun loop(blockNum: Int, block: WasmLoopBuilder.() -> Unit): WasmLoopBuilder
-        = WasmLoopBuilder(blockNum).also(block)
+fun loop(blockNum: Int, block: WasmLoop.() -> Unit): WasmLoop
+        = WasmLoop(blockNum).also(block)
 
 @WasmInstructionsBuilderDsl
 fun condition (
     conditionNum: Int,
-    conditionExpression: WasmInstructionSequenceBuilder,
-    ifBlockBuilder: WasmIfBlockBuilder.() -> Unit,
-    otherwise: WasmIfBlockBuilder.() -> Unit
-): WasmIfBlockBuilder
-        = WasmIfBlockBuilder(conditionNum, conditionExpression).also(ifBlockBuilder).also(otherwise)
+    conditionExpression: WasmInstructionSequence,
+    ifBlock: WasmIfBlock.() -> Unit,
+    otherwise: WasmIfBlock.() -> Unit
+): WasmIfBlock
+        = WasmIfBlock(conditionNum, conditionExpression).also(ifBlock).also(otherwise)
 
 @WasmInstructionsBuilderDsl
-fun instructions(block: WasmInstructionSequenceBuilder.() -> Unit): WasmInstructionSequenceBuilder =
-    WasmInstructionSequenceBuilder().also(block)
+fun instructions(block: WasmInstructionSequence.() -> Unit): WasmInstructionSequence =
+    WasmInstructionSequence().also(block)
 
 @WasmInstructionsBuilderDsl
-fun WasmBlock.block(blockNum: Int, block: WasmBlockBuilder.() -> Unit): WasmBlockBuilder
-        = WasmBlockBuilder(blockNum).also(block).also { this.pushElement(it) }
+fun WasmScope.block(blockNum: Int, block: WasmBlock.() -> Unit): WasmBlock
+        = WasmBlock(blockNum).also(block).also { this.pushElement(it) }
 
 @WasmInstructionsBuilderDsl
-fun WasmBlock.loop(blockNum: Int, block: WasmLoopBuilder.() -> Unit): WasmLoopBuilder
-        = WasmLoopBuilder(blockNum).also(block).also { this.pushElement(it) }
+fun WasmScope.loop(blockNum: Int, block: WasmLoop.() -> Unit): WasmLoop
+        = WasmLoop(blockNum).also(block).also { this.pushElement(it) }
 
 @WasmInstructionsBuilderDsl
-fun WasmBlock.condition (
+fun WasmScope.condition (
     conditionNum: Int,
-    conditionExpression: WasmInstructionSequenceBuilder.() -> Unit,
-    ifBlockBuilder: WasmIfBlockBuilder.() -> Unit,
-    elseBlockBuilder: WasmIfBlockBuilder.() -> Unit
-): WasmIfBlockBuilder
-        = WasmIfBlockBuilder(conditionNum, WasmInstructionSequenceBuilder().also(conditionExpression)).also(ifBlockBuilder).also(elseBlockBuilder)
+    conditionExpression: WasmInstructionSequence.() -> Unit,
+    ifBlock: WasmIfBlock.() -> Unit,
+    elseBlock: WasmIfBlock.() -> Unit
+): WasmIfBlock
+        = WasmIfBlock(conditionNum, WasmInstructionSequence().also(conditionExpression)).also(ifBlock).also(elseBlock)
