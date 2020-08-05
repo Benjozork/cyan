@@ -59,6 +59,10 @@ interface WasmScope : Wasm.OrderedElement {
         pushElement(Wasm.Instruction("local.set \$$numLocal"))
 
     @WasmInstructionsBuilderDsl
+    fun LocalInstructions.new(numLocal: Int, type: Wasm.Type) =
+            pushElement(Wasm.Instruction("(local \$$numLocal $type)"))
+
+    @WasmInstructionsBuilderDsl
     fun LocalInstructions.tee() =
         pushElement(Wasm.Instruction("local.tee"))
 

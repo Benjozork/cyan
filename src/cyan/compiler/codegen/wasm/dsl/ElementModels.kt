@@ -2,8 +2,9 @@ package cyan.compiler.codegen.wasm.dsl
 
 object Wasm {
 
+    @Suppress("EnumEntryName")
     enum class Type {
-        I32, I64, F32, F64;
+        i32, i64, f32, f64;
 
         override fun toString() = super.toString().toLowerCase()
     }
