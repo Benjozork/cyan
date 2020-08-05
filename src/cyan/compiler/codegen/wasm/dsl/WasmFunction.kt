@@ -2,14 +2,14 @@ package cyan.compiler.codegen.wasm.dsl
 
 class WasmFunction(private val name: String, private val parameters: MutableList<Parameter> = mutableListOf(), private val exportedAs: String? = null) : WasmScope {
 
-    class Parameter(val name: String, val type: String) {
+    class Parameter(val name: String, val type: Wasm.Type) {
 
         override fun toString() = "(param \$$name $type)"
 
         companion object {
 
             @WasmInstructionsBuilderDsl
-            fun param(name: String, type: String) = Parameter(name, type)
+            fun param(name: String, type: Wasm.Type) = Parameter(name, type)
 
         }
 
