@@ -1,6 +1,6 @@
 package cyan.compiler.codegen.wasm.dsl
 
-class WasmFunctionBuilder(private val name: String, private val parameters: MutableList<Parameter> = mutableListOf(), private val exportedAs: String? = null) : WasmScope {
+class WasmFunction(private val name: String, private val parameters: MutableList<Parameter> = mutableListOf(), private val exportedAs: String? = null) : WasmScope {
 
     class Parameter(val name: String, val type: String) {
 

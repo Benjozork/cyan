@@ -1,8 +1,8 @@
 package cyan.compiler.codegen.wasm.dsl
 
 @WasmInstructionsBuilderDsl
-fun func(funcName: String, vararg parameters: WasmFunctionBuilder.Parameter, exportedAs: String? = null, block: WasmFunctionBuilder.() -> Unit): WasmFunctionBuilder
-        = WasmFunctionBuilder(funcName, parameters.toMutableList(), exportedAs).also(block)
+fun func(funcName: String, vararg parameters: WasmFunction.Parameter, exportedAs: String? = null, block: WasmFunction.() -> Unit): WasmFunction
+        = WasmFunction(funcName, parameters.toMutableList(), exportedAs).also(block)
 
 @WasmInstructionsBuilderDsl
 fun block(blockNum: Int, block: WasmBlock.() -> Unit): WasmBlock

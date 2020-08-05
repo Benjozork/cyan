@@ -3,7 +3,7 @@ package cyan.compiler.codegen.wasm.lower
 import cyan.compiler.codegen.FirItemLower
 import cyan.compiler.codegen.wasm.WasmLoweringContext
 import cyan.compiler.codegen.wasm.dsl.Wasm
-import cyan.compiler.codegen.wasm.dsl.WasmFunctionBuilder.Parameter.Companion.param
+import cyan.compiler.codegen.wasm.dsl.WasmFunction.Parameter.Companion.param
 import cyan.compiler.codegen.wasm.dsl.func
 import cyan.compiler.fir.functions.FirFunctionDeclaration
 
