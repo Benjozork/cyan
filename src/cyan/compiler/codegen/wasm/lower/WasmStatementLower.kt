@@ -24,7 +24,8 @@ object WasmStatementLower : FirItemLower<WasmLoweringContext, FirStatement, Wasm
                 val localId = context.addLocal(item)
 
                 instructions {
-                    local.set(localId, value)
+                    i32.const(value)
+                    local.set(localId)
                 }
             }
             is FirFunctionCall -> {
@@ -71,10 +72,13 @@ object WasmStatementLower : FirItemLower<WasmLoweringContext, FirStatement, Wasm
                 }
             }
             is FirAssignment -> {
-                val symbol = item.targetVariable
+                val symbol = item.targetVariable!!
                 val loweredNewExpr = context.backend.lowerExpression(item.newExpr!!, context)
 
-                Wasm.Instruction("(local.set \$${context.locals[symbol]} $loweredNewExpr)")
+                instructions {
+                    +loweredNewExpr
+                    local.set(context.locals[symbol] ?: error("no local was set for symbol '${symbol.name}'"))
+                }
             }
             else -> error("fir2wasm: couldn't lower statement of type '${item::class.simpleName}'")
         }

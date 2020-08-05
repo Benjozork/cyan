@@ -51,8 +51,8 @@ interface WasmBlock : Wasm.OrderedElement {
         pushElement(Wasm.Instruction("(local.get \$$numLocal)"))
 
     @WasmInstructionsBuilderDsl
-    fun LocalInstructions.set(numLocal: Int, value: Int) =
-        pushElement(Wasm.Instruction("(local.set \$$numLocal (i32.const $value))"))
+    fun LocalInstructions.set(numLocal: Int) =
+        pushElement(Wasm.Instruction("local.set \$$numLocal"))
 
     @WasmInstructionsBuilderDsl
     fun LocalInstructions.tee() =
