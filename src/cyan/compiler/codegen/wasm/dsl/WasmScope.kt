@@ -12,7 +12,7 @@ interface WasmScope : Wasm.OrderedElement {
 
     @WasmInstructionsBuilderDsl
     fun Int32Instructions.const(value: Int) =
-            pushElement(Wasm.Instruction("(i32.const $value)"))
+            pushElement(Wasm.Instruction("i32.const $value"))
 
     @WasmInstructionsBuilderDsl
     val Int32Instructions.add get() =
@@ -44,7 +44,7 @@ interface WasmScope : Wasm.OrderedElement {
 
     @WasmInstructionsBuilderDsl
     val Int32Instructions.eqz get() =
-        pushElement(Wasm.Instruction("(i32.eqz)"))
+        pushElement(Wasm.Instruction("i32.eqz"))
 
     @WasmInstructionsBuilderDsl
     fun LocalInstructions.get() =
