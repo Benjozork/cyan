@@ -46,7 +46,7 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
                 val fieldIndex = baseStruct.properties.indexOfFirst { it == baseStructField }.takeIf { it > 0 }
                         ?: error("fir2wasm: base struct field index was -1")
 
-                return instructions {
+                instructions {
                     i32.const(baseValuePtr + (fieldIndex * 4))
                 }
             }
