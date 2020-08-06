@@ -7,6 +7,7 @@ import cyan.compiler.codegen.wasm.dsl.i32
 import cyan.compiler.codegen.wasm.dsl.instructions
 import cyan.compiler.codegen.wasm.dsl.local
 import cyan.compiler.codegen.wasm.utils.AllocationResult
+import cyan.compiler.codegen.wasm.utils.ValueSerializer
 import cyan.compiler.common.diagnostic.CompilerDiagnostic
 import cyan.compiler.common.diagnostic.DiagnosticPipe
 import cyan.compiler.common.types.CyanType
@@ -22,11 +23,7 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
 
     override fun lower(context: WasmLoweringContext, item: FirExpression): Wasm.OrderedElement {
         return if (item.parent is FirFunctionCall && (item.parent as FirFunctionCall).callee.resolvedSymbol.name == "print") instructions {
-            when (item) {
-                is FirExpression.Literal.String -> i32.const(context.allocator.allocateStringIov(item.value))
-                is FirExpression.Literal.Number -> i32.const(context.allocator.allocateStringIov(item.value.toString()))
-                else -> error("fir2wasm-print-formatter: cannot format value of type '${item::class.simpleName}'")
-            }
+            i32.const(ValueSerializer.convert(item).let { context.allocator.allocateStringIov(it) })
         } else when (val expr = item.realExpr) {
             is FirExpression.Literal -> instructions {
                 when (val allocationResult = context.allocator.allocate(expr)) {
