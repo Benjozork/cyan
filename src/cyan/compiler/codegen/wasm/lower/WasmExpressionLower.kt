@@ -34,6 +34,25 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
                     is AllocationResult.Heap  -> i32.const(allocationResult.pointer)
                 }
             }
+            is FirExpression.MemberAccess -> {
+                val baseStruct = expr.base.type() as Type.Struct
+                val baseStructField = baseStruct.properties.first { it.name == expr.member }
+
+                val baseValuePtr = when (expr.base) {
+                    is FirResolvedReference -> when (val symbol = expr.base.resolvedSymbol) {
+                        is FirVariableDeclaration -> context.pointerForLocal[symbol] ?: error("no local created for symbol '${symbol.name}'")
+                        else -> error("fir2wasm: cannot make structure base ptr for ${symbol::class.simpleName}")
+                    }
+                    else -> error("fir2wasm: member access is currently only supported on references")
+                }
+
+                val baseFieldOffset = baseStruct.properties.indexOfFirst { it == baseStructField }.takeIf { it > 0 }
+                        ?: error("fir2wasm: base struct field index was -1")
+
+                return instructions {
+                    i32.const(baseValuePtr + baseFieldOffset)
+                }
+            }
             is FirExpression.ArrayIndex -> when (val base = expr.base) {
                 is FirResolvedReference -> {
                     val originalDeclaration = base.resolvedSymbol
