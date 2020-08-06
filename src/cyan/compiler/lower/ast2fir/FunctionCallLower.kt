@@ -56,10 +56,26 @@ object FunctionCallLower : Ast2FirLower<CyanFunctionCall, FirFunctionCall> {
             )
         }
 
+        val resolvedFunction = resolvedFunctionReference.resolvedSymbol as FirFunctionDeclaration
+
         firFunctionCall.callee = resolvedFunctionReference
 
         val functionDeclarationArgsToPassedArgs = ((resolvedFunctionReference.resolvedSymbol as FirFunctionDeclaration).args zip astNode.args).toMap()
                 .mapValues { (_, astArg) -> ExpressionLower.lower(astArg, firFunctionCall) }
+
+        if (astNode.args.size < resolvedFunction.args.size) DiagnosticPipe.report (
+            CompilerDiagnostic (
+                level = CompilerDiagnostic.Level.Error,
+                message = "Not enough arguments for function ${resolvedFunction.name}",
+                astNode = astNode
+            )
+        ) else if (astNode.args.size > resolvedFunction.args.size) DiagnosticPipe.report (
+            CompilerDiagnostic (
+                level = CompilerDiagnostic.Level.Error,
+                message = "Too many arguments for type ${resolvedFunction.name}",
+                astNode = astNode
+            )
+        )
 
         functionDeclarationArgsToPassedArgs.entries.forEachIndexed { i, (firArg, astArg) -> // Type check args
             val astArgType = astArg.type()
