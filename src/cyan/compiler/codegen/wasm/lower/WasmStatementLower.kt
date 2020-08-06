@@ -7,6 +7,7 @@ import cyan.compiler.codegen.wasm.utils.AllocationResult
 import cyan.compiler.common.types.CyanType
 import cyan.compiler.common.types.Type
 import cyan.compiler.fir.*
+import cyan.compiler.fir.expression.FirExpression
 import cyan.compiler.fir.functions.FirFunctionCall
 import cyan.compiler.fir.functions.FirFunctionDeclaration
 
@@ -15,16 +16,17 @@ object WasmStatementLower : FirItemLower<WasmLoweringContext, FirStatement, Wasm
     override fun lower(context: WasmLoweringContext, item: FirStatement): Wasm.OrderedElement {
         return when (item) {
             is FirVariableDeclaration -> {
-                val value = when (val allocationResult = context.allocator.allocate(item.initializationExpr)) {
-                    is AllocationResult.Stack -> allocationResult.literal
-                    is AllocationResult.Heap -> allocationResult.pointer
+                if (item.initializationExpr is FirExpression.Literal) {
+                    val allocationResult = context.allocator.allocate(item.initializationExpr)
+
+                    if (allocationResult is AllocationResult.Heap)
+                        context.pointerForLocal[item] = allocationResult.pointer
                 }
 
-                context.pointerForLocal[item] = value
                 val localId = context.addLocal(item)
 
                 instructions {
-                    i32.const(value)
+                    +context.backend.lowerExpression(item.initializationExpr, context)
                     local.set(localId)
                 }
             }
