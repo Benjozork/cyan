@@ -36,7 +36,7 @@ class Allocator {
 
     private fun toBytes(expression: FirExpression): List<Byte> = when (expression) {
         is FirExpression.Literal.Scalar<*> -> when (val value = expression.value) {
-            is String -> value.toByteArray().toList()
+            is String -> value.toByteArray().toList() + 0x00
             is Int -> {
                 val buffer = ByteBuffer.allocate(Integer.BYTES).putInt(value).array().reversed().toByteArray()
 
