@@ -28,7 +28,10 @@ class Allocator {
         val bytes = mutableListOf<Byte>()
 
         for (field in expression.elements.values) {
-            bytes += toBytes(field)
+            bytes += when (val allocation = allocate(field)) {
+                is AllocationResult.Heap  -> allocation.pointer.bytes().toList()
+                is AllocationResult.Stack -> allocation.literal.bytes().toList()
+            }
         }
 
         return bytes
