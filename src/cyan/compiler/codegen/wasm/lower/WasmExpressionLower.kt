@@ -46,11 +46,11 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
                     else -> error("fir2wasm: member access is currently only supported on references")
                 }
 
-                val baseFieldOffset = baseStruct.properties.indexOfFirst { it == baseStructField }.takeIf { it > 0 }
+                val fieldIndex = baseStruct.properties.indexOfFirst { it == baseStructField }.takeIf { it > 0 }
                         ?: error("fir2wasm: base struct field index was -1")
 
                 return instructions {
-                    i32.const(baseValuePtr + baseFieldOffset)
+                    i32.const(baseValuePtr + (fieldIndex * 4))
                 }
             }
             is FirExpression.ArrayIndex -> when (val base = expr.base) {
