@@ -31,7 +31,7 @@ class WasmCompilerBackend : FirCompilerBackend<Wasm.OrderedElement>() {
             i32.le_u
         )
 
-        (func ${d}cy_array_get_i32 (param ${d}arr_ptr i32) (param ${d}arr_idx i32) (result i32)
+        (func ${d}cy_array_get (param ${d}arr_ptr i32) (param ${d}arr_idx i32) (result i32)
             (block ${d}B0
                 (call ${d}cy_array_check_idx (local.get ${d}arr_ptr) (local.get ${d}arr_idx))
                 br_if ${d}B0

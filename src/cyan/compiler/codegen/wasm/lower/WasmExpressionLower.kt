@@ -63,7 +63,7 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
 
                     when (val declType = originalDeclaration.initializationExpr.type()) {
                         Type.Primitive(CyanType.Str, true),
-                        Type.Primitive(CyanType.I32, true) -> Wasm.Instruction("(call \$cy_array_get_i32 (i32.const $ptr) (i32.const $idx))")
+                        Type.Primitive(CyanType.I32, true) -> Wasm.Instruction("(call \$cy_array_get (i32.const $ptr) (i32.const $idx))")
                         else -> error("fir2wasm: cannot lower array index on array of type '$declType'")
                     }
                 }
