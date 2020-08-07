@@ -1,6 +1,11 @@
 package cyan.compiler.codegen.wasm.dsl
 
-class WasmFunction(private val name: String, private val parameters: MutableList<Parameter> = mutableListOf(), private val exportedAs: String? = null) : WasmScope {
+class WasmFunction (
+    private val name: String,
+    private val parameters: MutableList<Parameter> = mutableListOf(),
+    private val returnType: Wasm.Type?,
+    private val exportedAs: String? = null
+) : WasmScope {
 
     class Parameter(val name: String, val type: Wasm.Type) {
 
@@ -34,9 +39,10 @@ class WasmFunction(private val name: String, private val parameters: MutableList
         }
 
         val exportString = if (exportedAs != null) " (export \"$exportedAs\") " else ""
+        val returnTypeString = if (returnType != null) " (result $returnType) " else ""
 
         return """
-        |(func ${"$"}$name$exportString${parameters.joinToString(" ", prefix = " ")}
+        |(func ${"$"}$name$exportString${parameters.joinToString(" ")}$returnTypeString
         |$body
         |)
         """.trimMargin()

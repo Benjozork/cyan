@@ -23,7 +23,13 @@ object WasmFunctionDeclarationLower : FirItemLower<WasmLoweringContext, FirFunct
             WasmFunction.Parameter(arg.name, i32)
         }.toTypedArray()
 
-        return func(functionName, *wasmFunctionParameters, exportedAs = if (isStartExport) "_start" else null) {
+        val wasmReturnType = when (item.returnType) {
+            Type.Primitive(CyanType.I32) -> i32
+            Type.Primitive(CyanType.Void) -> null
+            else -> error("fir2wasm: cyan return type '${item.returnType}' not supported yet")
+        }
+
+        return func(functionName, *wasmFunctionParameters, returnType = wasmReturnType, exportedAs = if (isStartExport) "_start" else null) {
             for (statement in item.block.statements) {
                 +context.backend.lowerStatement(statement, context)
             }
