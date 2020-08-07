@@ -90,6 +90,7 @@ object WasmStatementLower : FirItemLower<WasmLoweringContext, FirStatement, Wasm
                     local.set(context.locals[symbol] ?: error("no local was set for symbol '${symbol.name}'"))
                 }
             }
+            is FirReturn -> context.backend.lowerExpression(item.expr, context)
             else -> error("fir2wasm: couldn't lower statement of type '${item::class.simpleName}'")
         }
     }
