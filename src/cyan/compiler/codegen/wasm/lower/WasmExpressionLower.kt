@@ -82,8 +82,8 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
             is FirExpression.Binary -> when (expr.commonType) {
                 null -> error("fir2wasm: cannot lower binary expression with different operands")
                 Type.Primitive(CyanType.I32, false) -> instructions {
-                    +lower(context, expr.rhs)
                     +lower(context, expr.lhs)
+                    +lower(context, expr.rhs)
 
                     when (expr.operator) {
                         CyanBinaryPlusOperator          -> i32.add
