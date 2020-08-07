@@ -6,10 +6,8 @@ import cyan.compiler.codegen.wasm.lower.WasmExpressionLower
 import cyan.compiler.codegen.wasm.lower.WasmFunctionDeclarationLower
 import cyan.compiler.codegen.wasm.lower.WasmStatementLower
 import cyan.compiler.codegen.wasm.utils.Allocator
-import cyan.compiler.common.types.CyanType
-import cyan.compiler.common.types.Type
-import cyan.compiler.fir.FirSource
-import cyan.compiler.fir.functions.FirFunctionDeclaration
+
+import kotlin.math.abs
 
 @Suppress("UNCHECKED_CAST")
 class WasmCompilerBackend : FirCompilerBackend<Wasm.OrderedElement>() {
@@ -71,7 +69,7 @@ class WasmCompilerBackend : FirCompilerBackend<Wasm.OrderedElement>() {
     val allocator = Allocator()
 
     private fun heapToByteStr(): String {
-        fun Byte.toUnsigned(): Int = if (this < 0) this + 127 else this.toInt()
+        fun Byte.toUnsigned(): Int = if (this < 0) (128 - abs(this.toInt())) + 128 else this.toInt()
         fun Int.padded(): String = if (this.toString(16).length == 1) "0${this.toString(16)}" else this.toString(16)
 
         return allocator.heap.joinToString("") { "\\${it.toUnsigned().padded()}" }
