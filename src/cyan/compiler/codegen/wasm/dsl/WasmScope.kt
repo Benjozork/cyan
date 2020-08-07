@@ -55,6 +55,10 @@ interface WasmScope : Wasm.OrderedElement {
         pushElement(Wasm.Instruction("(local.get \$$numLocal)"))
 
     @WasmInstructionsBuilderDsl
+    fun LocalInstructions.get(local: String) =
+            pushElement(Wasm.Instruction("(local.get \$$local)"))
+
+    @WasmInstructionsBuilderDsl
     fun LocalInstructions.set(numLocal: Int) =
         pushElement(Wasm.Instruction("local.set \$$numLocal"))
 
