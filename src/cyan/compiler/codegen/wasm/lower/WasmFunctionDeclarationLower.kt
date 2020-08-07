@@ -18,7 +18,7 @@ object WasmFunctionDeclarationLower : FirItemLower<WasmLoweringContext, FirFunct
         val isStartExport = item.name == "_start"
 
         val wasmFunctionParameters = item.args.map { arg ->
-            require (arg.typeAnnotation == Type.Primitive(CyanType.I32, false))
+            require (arg.typeAnnotation accepts Type.Primitive(CyanType.I32, false))
 
             WasmFunction.Parameter(arg.name, i32)
         }.toTypedArray()
