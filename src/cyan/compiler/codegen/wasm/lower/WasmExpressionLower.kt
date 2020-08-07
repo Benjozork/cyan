@@ -17,6 +17,7 @@ import cyan.compiler.fir.FirVariableDeclaration
 import cyan.compiler.fir.expression.FirExpression
 import cyan.compiler.fir.functions.FirFunctionArgument
 import cyan.compiler.fir.functions.FirFunctionCall
+import cyan.compiler.fir.functions.FirFunctionDeclaration
 import cyan.compiler.parser.ast.operator.*
 
 object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wasm.OrderedElement> {
@@ -29,6 +30,17 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
                 when (val allocationResult = context.allocator.allocate(expr)) {
                     is AllocationResult.Stack -> i32.const(allocationResult.literal)
                     is AllocationResult.Heap  -> i32.const(allocationResult.pointer)
+                }
+            }
+            is FirExpression.FunctionCall -> {
+                val function = expr.callee.resolvedSymbol as FirFunctionDeclaration
+
+                instructions {
+                    for (argument in expr.args.map { context.backend.lowerExpression(it, context) }) {
+                        +argument
+                    }
+
+                    call(function.name)
                 }
             }
             is FirExpression.MemberAccess -> {
