@@ -73,11 +73,11 @@ object WasmStatementLower : FirItemLower<WasmLoweringContext, FirStatement, Wasm
                 }
 
                 +loweredExpression
+                i32.eqz
                 br_if(0)
                 loop(0) {
                     +loweredBody
                     +loweredExpression
-                    i32.eqz
                     br_if(0)
                 }
             }
