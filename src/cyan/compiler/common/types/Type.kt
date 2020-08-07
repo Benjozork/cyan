@@ -5,6 +5,8 @@ sealed class Type(val array: Boolean) {
 
     class Primitive(val base: CyanType, array: Boolean = false): Type(array) {
 
+        constructor(base: CyanType): this(base, false)
+
         override fun toString() = base.toString().toLowerCase() + if (array) "[]" else ""
 
         override infix fun accepts(other: Type) =
