@@ -60,7 +60,7 @@ interface WasmScope : Wasm.OrderedElement {
 
     @WasmInstructionsBuilderDsl
     fun LocalInstructions.set(numLocal: Int) =
-        pushElement(Wasm.Instruction("local.set \$$numLocal"))
+            pushElement(Wasm.Instruction("local.set \$$numLocal"))
 
     @WasmInstructionsBuilderDsl
     fun LocalInstructions.new(numLocal: Int, type: Wasm.Type) =
@@ -68,11 +68,15 @@ interface WasmScope : Wasm.OrderedElement {
 
     @WasmInstructionsBuilderDsl
     fun LocalInstructions.tee() =
-        pushElement(Wasm.Instruction("local.tee"))
+            pushElement(Wasm.Instruction("local.tee"))
 
     @WasmInstructionsBuilderDsl
     fun LocalInstructions.tee(numLocal: Int, value: Int) =
-        pushElement(Wasm.Instruction("(local.tee \$$numLocal ${i32.const(value)})"))
+            pushElement(Wasm.Instruction("(local.tee \$$numLocal ${i32.const(value)})"))
+
+    @WasmInstructionsBuilderDsl
+    fun CyanIntrinsics.malloc(size: Int) =
+            pushElement(Wasm.Instruction("i32.const $size\ncall \$cy_malloc"))
 
     @WasmInstructionsBuilderDsl
     fun br(blockNum: Int): Boolean {
@@ -89,7 +93,6 @@ interface WasmScope : Wasm.OrderedElement {
     @WasmInstructionsBuilderDsl
     fun call(funcName: String) =
         pushElement(Wasm.Instruction("call \$$funcName"))
-
 
     @WasmInstructionsBuilderDsl
     val drop get() =
