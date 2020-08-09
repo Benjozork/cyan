@@ -1,11 +1,16 @@
 package cyan.compiler.codegen.wasm
 
 import cyan.compiler.codegen.FirCompilerBackend
+import cyan.compiler.codegen.LoweringContext
 import cyan.compiler.codegen.wasm.dsl.Wasm
 import cyan.compiler.codegen.wasm.lower.WasmExpressionLower
 import cyan.compiler.codegen.wasm.lower.WasmFunctionDeclarationLower
 import cyan.compiler.codegen.wasm.lower.WasmStatementLower
 import cyan.compiler.codegen.wasm.utils.Allocator
+import cyan.compiler.fir.FirModule
+import cyan.compiler.fir.FirSource
+
+import java.io.File
 
 import kotlin.math.abs
 
@@ -15,89 +20,7 @@ class WasmCompilerBackend : FirCompilerBackend<Wasm.OrderedElement>() {
     private val d = "$"
     private val n = "\n"
 
-    override val prelude = """
-        (import "wasi_unstable" "fd_write" (func ${d}fd_write (param i32 i32 i32 i32) (result i32)))
-        
-        (memory 1)
-        
-        (export "memory" (memory 0))
-        
-        (func ${d}cy_array_check_idx (param ${d}arr_ptr i32) (param ${d}idx i32) (result i32)
-            get_local ${d}arr_ptr
-            i32.load
-            get_local ${d}idx
-            i32.le_u
-        )
-
-        (func ${d}cy_array_get (param ${d}arr_ptr i32) (param ${d}arr_idx i32) (result i32)
-            (block ${d}B0
-                (call ${d}cy_array_check_idx (local.get ${d}arr_ptr) (local.get ${d}arr_idx))
-                br_if ${d}B0
-            )
-            local.get ${d}arr_idx
-            i32.const 1
-            i32.add
-            i32.const 4
-            i32.mul
-            local.get ${d}arr_ptr
-            i32.add
-            i32.load
-        )
-        
-        (func ${d}cy_malloc (result i32)
-            (local ${d}block_ptr i32)
-
-            i32.const 128
-            local.set ${d}block_ptr
-
-            loop ${d}search (result i32)
-                ;; find if block is free
-                local.get ${d}block_ptr
-
-                ;; break if block is not free
-                i32.load8_s
-                i32.const 0
-                i32.ne
-                if ${d}not_free
-                    ;; read ptr to next block
-                    i32.const 1
-                    local.get ${d}block_ptr
-                    i32.add
-                    i32.load
-        
-                    local.set ${d}block_ptr
-        
-                    br ${d}search
-                end
-    
-                ;; return block if it is free
-        
-                local.get ${d}block_ptr
-                i32.const 1
-                i32.store8
-
-                local.get ${d}block_ptr
-                i32.const 5
-                i32.add
-            end
-        )
-        
-        (func ${d}print (param i32)
-            (call ${d}fd_write
-                (i32.const 1)
-                (local.get 0)
-                (i32.const 1)
-                (i32.const 20)
-            )
-        
-            drop
-        )$n
-    """.trimIndent()
-
-    override val postlude get() = """
-        (data (i32.const 0) "${heapToByteStr()}")
-        (data (i32.const ${(allocator.heap.size + 4 - 1) / 4 * 4}) "\00\51\00\00\00\cc\cc\cc\cc\cc\cc\cc\cc\cc\cc\cc\cc\00\ff\ff\ff")
-    """.trimIndent()
+    private val templateText = File("runtime/runtime.wat").readText()
 
     override fun makeLoweringContext() = WasmLoweringContext(this)
 
@@ -106,6 +29,37 @@ class WasmCompilerBackend : FirCompilerBackend<Wasm.OrderedElement>() {
     override val functionDeclarationLower = WasmFunctionDeclarationLower
 
     val allocator = Allocator()
+
+    override fun translateSource(source: FirSource, context: LoweringContext, isRoot: Boolean): String {
+        val newSource = StringBuilder()
+
+        // Here, for now we include all functions in the `declaredSymbols` of the parent module if the parent of this
+        // FirSource is a module. That way, we inline functions imported from other modules. However, we need to not
+        // do this if we are not the direct child of a FirModule, because then we would inline all imported functions into
+        // all FirSources.
+        if (source.parent is FirModule) source.parent.let { module ->
+            for (function in (module as FirModule).localFunctions.filter { !it.isExtern }) {
+                newSource.appendln(lowerFunctionDeclaration(function))
+            }
+        } else for (function in source.localFunctions) {
+            newSource.appendln(lowerFunctionDeclaration(function))
+        }
+
+        for (statement in source.statements) {
+            newSource.appendln(lowerStatement(statement, context))
+        }
+
+        val newSourceText = newSource.toString().removeSuffix("\n")
+
+        return if (isRoot) {
+            val heapStart = (allocator.heap.size + 4 - 1) / 4 * 4
+
+            templateText
+                    .replace(";; cyanc_insert_heap_start_here", "(global \$heap_start i32 (i32.const $heapStart))")
+                    .replace(";; cyanc_insert_here", newSourceText)
+                    .replace(";; cyanc_insert_prealloc_here", "(data (i32.const 0) \"" + heapToByteStr() + "\")")
+        } else newSourceText
+    }
 
     private fun heapToByteStr(): String {
         fun Byte.toUnsigned(): Int = if (this < 0) (128 - abs(this.toInt())) + 128 else this.toInt()

@@ -1,30 +1,130 @@
-(module
-    (import "wasi_unstable" "fd_write" (func $fd_write (param i32 i32 i32 i32) (result i32)))
+(import "wasi_unstable" "fd_write" (func $fd_write (param i32 i32 i32 i32) (result i32)))
 
-    (memory 1)
-    (export "memory" (memory 0))
+(memory 1)
 
-    (data (i32.const 16) "hello world\n")
-    (data (i32.const 32) "What ???\n")
+(export "memory" (memory 0))
 
-    (func $cy_b_print (param i32)
-        (call $fd_write
-            (i32.const 1)
-            (local.get 0)
-            (i32.const 1)
-            (i32.const 20)
-        )
+;; cyanc_insert_heap_start_here
 
-        drop
-    )
-
-    (func $main (export "_start")
-        (i32.store (i32.const 0) (i32.const 16)) ;; str0 ptr @ 0x00
-        (i32.store (i32.const 4) (i32.const 12)) ;; str0 len @ 0x04
-        (i32.store (i32.const 8) (i32.const 32)) ;; str1 ptr @ 0x08
-        (i32.store (i32.const 12) (i32.const 9)) ;; str1 len @ 0x12
-
-        (call $cy_b_print (i32.const 0)) ;; print @ 0x00
-        (call $cy_b_print (i32.const 8)) ;; print @ 0x08
-    )
+(func $cy_array_check_idx (param $arr_ptr i32) (param $idx i32) (result i32)
+    get_local $arr_ptr
+    i32.load
+    get_local $idx
+    i32.le_u
 )
+
+(func $cy_array_get (param $arr_ptr i32) (param $arr_idx i32) (result i32)
+    (block $B0
+        (call $cy_array_check_idx (local.get $arr_ptr) (local.get $arr_idx))
+        br_if $B0
+    )
+    local.get $arr_idx
+    i32.const 1
+    i32.add
+    i32.const 4
+    i32.mul
+    local.get $arr_ptr
+    i32.add
+    i32.load
+)
+
+(func $cy_init_heap
+    (local $curr_block_ptr i32)
+    (local $next_block_ptr i32)
+
+    global.get $heap_start
+    local.set $curr_block_ptr
+
+    loop $init_blocks
+         ;; set block free
+         local.get $curr_block_ptr
+         i32.const 0
+         i32.store8
+
+         ;; calculate next block addr
+         local.get $curr_block_ptr
+         i32.const 64
+         i32.add
+         local.set $next_block_ptr
+
+         ;; set next block addr in curr block
+         local.get $curr_block_ptr
+         i32.const 1
+         i32.add
+         local.get $next_block_ptr
+         i32.store
+
+         ;; if we are not at end, do again
+         i32.const 1024
+         local.get $curr_block_ptr
+         i32.gt_u
+         if $continue
+            local.get $next_block_ptr
+            local.set $curr_block_ptr
+            br $init_blocks
+        end
+    end
+)
+
+(func $cy_malloc (result i32)
+    (local $block_ptr i32)
+
+    global.get $heap_start
+    local.set $block_ptr
+
+    loop $search (result i32)
+        ;; find if block is free
+        local.get $block_ptr
+
+        ;; break if block is not free
+        i32.load8_s
+        i32.const 0
+        i32.ne
+        if $not_free
+            ;; read ptr to next block
+            i32.const 1
+            local.get $block_ptr
+            i32.add
+            i32.load
+
+            local.set $block_ptr
+
+            br $search
+        end
+
+        ;; return block if it is free
+
+        local.get $block_ptr
+        i32.const 1
+        i32.store8
+
+        local.get $block_ptr
+        i32.const 5
+        i32.add
+    end
+)
+
+(func $cy_dump_mem
+    i32.const 0
+    i32.const 0
+    i32.store
+    i32.const 4
+    i32.const 512
+    i32.store
+    (call $print (i32.const 0))
+)
+
+(func $print (param i32)
+    (call $fd_write
+        (i32.const 1)
+        (local.get 0)
+        (i32.const 1)
+        (i32.const 20)
+    )
+
+    drop
+)
+
+;; cyanc_insert_here
+
+;; cyanc_insert_prealloc_here
