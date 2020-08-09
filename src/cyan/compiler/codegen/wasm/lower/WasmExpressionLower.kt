@@ -85,14 +85,18 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
                 val staticPtr = context.staticPointerForLocal[symbol]
                 val dynPtrLocal = context.locals[symbol]
 
+                val fieldOffset = fieldIndex * 4
+
                 when {
                     staticPtr != null -> { // Base was statically allocated
-                        i32.const(staticPtr + (fieldIndex * 4))
+                        i32.const(staticPtr + fieldOffset)
                     }
                     dynPtrLocal != null -> { // Base will be dynamically allocated
                         local.get(dynPtrLocal)
-                        i32.const(fieldIndex * 4)
-                        i32.add
+                        if (fieldOffset > 1) {
+                            i32.const(fieldOffset)
+                            i32.add
+                        }
                         i32.load
                     }
                     else -> error("fir2wasm: could not find pointer for ${symbol.name}")
