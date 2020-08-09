@@ -44,6 +44,44 @@ class WasmCompilerBackend : FirCompilerBackend<Wasm.OrderedElement>() {
             i32.load
         )
         
+        (func ${d}cy_malloc (result i32)
+            (local ${d}block_ptr i32)
+
+            i32.const 128
+            local.set ${d}block_ptr
+
+            loop ${d}search (result i32)
+                ;; find if block is free
+                local.get ${d}block_ptr
+
+                ;; break if block is not free
+                i32.load8_s
+                i32.const 0
+                i32.ne
+                if ${d}not_free
+                    ;; read ptr to next block
+                    i32.const 1
+                    local.get ${d}block_ptr
+                    i32.add
+                    i32.load
+        
+                    local.set ${d}block_ptr
+        
+                    br ${d}search
+                end
+    
+                ;; return block if it is free
+        
+                local.get ${d}block_ptr
+                i32.const 1
+                i32.store8
+
+                local.get ${d}block_ptr
+                i32.const 5
+                i32.add
+            end
+        )
+        
         (func ${d}print (param i32)
             (call ${d}fd_write
                 (i32.const 1)
@@ -58,6 +96,7 @@ class WasmCompilerBackend : FirCompilerBackend<Wasm.OrderedElement>() {
 
     override val postlude get() = """
         (data (i32.const 0) "${heapToByteStr()}")
+        (data (i32.const ${(allocator.heap.size + 4 - 1) / 4 * 4}) "\00\51\00\00\00\cc\cc\cc\cc\cc\cc\cc\cc\cc\cc\cc\cc\00\ff\ff\ff")
     """.trimIndent()
 
     override fun makeLoweringContext() = WasmLoweringContext(this)

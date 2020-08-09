@@ -2,10 +2,7 @@ package cyan.compiler.codegen.wasm.lower
 
 import cyan.compiler.codegen.FirItemLower
 import cyan.compiler.codegen.wasm.WasmLoweringContext
-import cyan.compiler.codegen.wasm.dsl.Wasm
-import cyan.compiler.codegen.wasm.dsl.i32
-import cyan.compiler.codegen.wasm.dsl.instructions
-import cyan.compiler.codegen.wasm.dsl.local
+import cyan.compiler.codegen.wasm.dsl.*
 import cyan.compiler.codegen.wasm.utils.AllocationResult
 import cyan.compiler.codegen.wasm.utils.ValueSerializer
 import cyan.compiler.common.types.CyanType
@@ -25,9 +22,39 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
             i32.const(ValueSerializer.convert(item).let { context.allocator.allocateStringIov(it) })
         } else when (val expr = item.realExpr) {
             is FirExpression.Literal -> instructions {
-                when (val allocationResult = context.allocator.allocate(expr)) {
+                if (expr.isConstant) when (val allocationResult = context.allocator.preAllocate(expr)) {
+                    // Static allocation
                     is AllocationResult.Stack -> i32.const(allocationResult.literal)
                     is AllocationResult.Heap  -> i32.const(allocationResult.pointer)
+                } else { // Dynamic allocation
+                    val structureBasePtr = "structure_" + expr.hashCode().toString(16)
+
+                    local.new(structureBasePtr, Wasm.Type.i32)
+
+                    cy.malloc(0)
+                    local.set(structureBasePtr)
+
+                    val elements = when (expr) {
+                        is FirExpression.Literal.Array  -> expr.elements.withIndex()
+                        is FirExpression.Literal.Struct -> expr.elements.values.withIndex()
+                        else -> error("fir2wasm: cannot dynmaically allocate expression of type '${expr::class.simpleName}'")
+                    }
+
+                    for ((index, element) in elements) {
+                        if (index == 0) {
+                            local.get(structureBasePtr)
+                        } else {
+                            i32.const(index * 4)
+                            local.get(structureBasePtr)
+                            i32.add
+                        }
+
+                        +context.backend.lowerExpression(element, context)
+
+                        i32.store // Store there
+                    }
+
+                    local.get(structureBasePtr)
                 }
             }
             is FirExpression.FunctionCall -> {
@@ -41,23 +68,34 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
                     call(function.name)
                 }
             }
-            is FirExpression.MemberAccess -> {
+            is FirExpression.MemberAccess -> instructions {
                 val baseStruct = expr.base.type() as Type.Struct
                 val baseStructField = baseStruct.properties.first { it.name == expr.member }
-
-                val baseValuePtr = when (expr.base) {
-                    is FirResolvedReference -> when (val symbol = expr.base.resolvedSymbol) {
-                        is FirVariableDeclaration -> context.pointerForLocal[symbol] ?: error("no local created for symbol '${symbol.name}'")
-                        else -> error("fir2wasm: cannot make structure base ptr for ${symbol::class.simpleName}")
-                    }
-                    else -> error("fir2wasm: member access is currently only supported on references")
-                }
 
                 val fieldIndex = baseStruct.properties.indexOfFirst { it == baseStructField }.takeIf { it > 0 }
                         ?: error("fir2wasm: base struct field index was -1")
 
-                instructions {
-                    i32.const(baseValuePtr + (fieldIndex * 4))
+                require (
+                    expr.base is FirResolvedReference &&
+                    expr.base.resolvedSymbol is FirVariableDeclaration
+                ) { "fir2wasm: member access is currently only supported on references to local variables" }
+
+                val symbol = expr.base.resolvedSymbol
+
+                val staticPtr = context.staticPointerForLocal[symbol]
+                val dynPtrLocal = context.locals[symbol]
+
+                when {
+                    staticPtr != null -> { // Base was statically allocated
+                        i32.const(staticPtr + (fieldIndex * 4))
+                    }
+                    dynPtrLocal != null -> { // Base will be dynamically allocated
+                        local.get(dynPtrLocal)
+                        i32.const(fieldIndex * 4)
+                        i32.add
+                        i32.load
+                    }
+                    else -> error("fir2wasm: could not find pointer for ${symbol.name}")
                 }
             }
             is FirExpression.ArrayIndex -> when (val base = expr.base) {
@@ -66,7 +104,7 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
 
                     require(originalDeclaration is FirVariableDeclaration)
 
-                    val ptr = context.pointerForLocal[originalDeclaration]
+                    val ptr = context.staticPointerForLocal[originalDeclaration]
                         ?: error("fir2wasm: no ptr local generated for '${originalDeclaration.name}'")
                     val idx = (expr.index as? FirExpression.Literal.Number)?.value
                         ?: error("fir2wasm: array indexes are currently only supported with numeric literals")

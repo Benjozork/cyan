@@ -217,6 +217,8 @@ open class FirExpression(override var parent: FirNode, val fromAstNode: CyanExpr
      * Whether or not this expression is constant.
      */
     val isConstant: Boolean get() = when (val expr = this.realExpr) {
+        is Literal.Array -> expr.elements.all { it.isConstant }
+        is Literal.Struct -> expr.elements.all { it.value.isConstant }
         is Literal -> true
         is Binary -> expr.lhs.isConstant && expr.rhs.isConstant
         is ArrayIndex -> expr.base.isConstant && expr.index.isConstant

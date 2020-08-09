@@ -25,8 +25,14 @@ class WasmFunction (
     override fun toString(): String {
         var body = ""
 
-        val localDeclarations = this.elements.filter { it is Wasm.Instruction && it.text.startsWith("(local ") }
-        val nonLocalDeclarations = this.elements - localDeclarations
+        var flattenedElements = this.elements.toList()
+
+        while (flattenedElements.any { it is WasmInstructionSequence }) {
+            flattenedElements = flattenedElements.flatMap { if (it is WasmInstructionSequence) it.elements else listOf(it) }
+        }
+
+        val localDeclarations = flattenedElements.filterIsInstance<Wasm.Local>()
+        val nonLocalDeclarations = flattenedElements - localDeclarations
 
         for ((index, local) in localDeclarations.withIndex()) {
             body += (if (index > 0) "\n" else "") + local.toString().prependIndent("    ")

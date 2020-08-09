@@ -15,17 +15,25 @@ object WasmStatementLower : FirItemLower<WasmLoweringContext, FirStatement, Wasm
 
     override fun lower(context: WasmLoweringContext, item: FirStatement): Wasm.OrderedElement {
         return when (item) {
-            is FirVariableDeclaration -> when (item.initializationExpr) {
+            is FirVariableDeclaration -> when (val expr = item.initializationExpr) {
                 is FirExpression.Literal -> {
-                    val allocationResult = context.allocator.allocate(item.initializationExpr)
+                    if (expr.isConstant) {
+                        val allocationResult = context.allocator.preAllocate(item.initializationExpr)
 
-                    val localId = context.addLocal(item)
+                        val localId = context.addLocal(item)
 
-                    instructions {
-                        i32.const(when (allocationResult) {
-                            is AllocationResult.Heap  -> allocationResult.pointer.also { context.pointerForLocal[item] = it }
-                            is AllocationResult.Stack -> allocationResult.literal
-                        })
+                        instructions {
+                            i32.const(when (allocationResult) {
+                                is AllocationResult.Heap  -> allocationResult.pointer.also { context.staticPointerForLocal[item] = it }
+                                is AllocationResult.Stack -> allocationResult.literal
+                            })
+                            local.set(localId)
+                        }
+                    } else instructions {
+                        val localId = context.addLocal(item)
+
+                        +context.backend.lowerExpression(expr, context)
+
                         local.set(localId)
                     }
                 }

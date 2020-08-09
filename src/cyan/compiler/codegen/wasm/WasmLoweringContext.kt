@@ -9,7 +9,7 @@ class WasmLoweringContext(override val backend: WasmCompilerBackend) : LoweringC
 
     val locals = mutableMapOf<FirVariableDeclaration, Int>()
 
-    val pointerForLocal = mutableMapOf<FirVariableDeclaration, Int>()
+    val staticPointerForLocal = mutableMapOf<FirVariableDeclaration, Int>()
 
     fun addLocal(declaration: FirVariableDeclaration): Int {
         val n = this.locals.size + 1

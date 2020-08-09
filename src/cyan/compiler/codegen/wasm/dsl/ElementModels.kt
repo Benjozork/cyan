@@ -15,6 +15,12 @@ object Wasm {
 
     }
 
+    class Local(val name: String, val type: Type) : OrderedElement {
+
+        override fun toString() = "(local \$$name $type)"
+
+    }
+
     class Instruction(val text: String) : OrderedElement {
 
         override fun toString() = text

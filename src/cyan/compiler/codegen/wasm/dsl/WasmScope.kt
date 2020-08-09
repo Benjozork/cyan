@@ -15,6 +15,14 @@ interface WasmScope : Wasm.OrderedElement {
             pushElement(Wasm.Instruction("i32.const $value"))
 
     @WasmInstructionsBuilderDsl
+    val Int32Instructions.load get() =
+        pushElement(Wasm.Instruction("i32.load"))
+
+    @WasmInstructionsBuilderDsl
+    val Int32Instructions.store get() =
+        pushElement(Wasm.Instruction("i32.store"))
+
+    @WasmInstructionsBuilderDsl
     val Int32Instructions.add get() =
         pushElement(Wasm.Instruction("i32.add"))
 
@@ -52,19 +60,28 @@ interface WasmScope : Wasm.OrderedElement {
 
     @WasmInstructionsBuilderDsl
     fun LocalInstructions.get(numLocal: Int) =
-        pushElement(Wasm.Instruction("(local.get \$$numLocal)"))
+        pushElement(Wasm.Instruction("local.get \$$numLocal"))
 
     @WasmInstructionsBuilderDsl
     fun LocalInstructions.get(local: String) =
-            pushElement(Wasm.Instruction("(local.get \$$local)"))
+            pushElement(Wasm.Instruction("local.get \$$local"))
 
     @WasmInstructionsBuilderDsl
     fun LocalInstructions.set(numLocal: Int) =
             pushElement(Wasm.Instruction("local.set \$$numLocal"))
 
     @WasmInstructionsBuilderDsl
+    fun LocalInstructions.set(local: String) =
+            pushElement(Wasm.Instruction("local.set \$$local"))
+
+
+    @WasmInstructionsBuilderDsl
     fun LocalInstructions.new(numLocal: Int, type: Wasm.Type) =
-            pushElement(Wasm.Instruction("(local \$$numLocal $type)"))
+            pushElement(Wasm.Local(numLocal.toString(), type))
+
+    @WasmInstructionsBuilderDsl
+    fun LocalInstructions.new(local: String, type: Wasm.Type) =
+            pushElement(Wasm.Local(local, type))
 
     @WasmInstructionsBuilderDsl
     fun LocalInstructions.tee() =
@@ -76,7 +93,7 @@ interface WasmScope : Wasm.OrderedElement {
 
     @WasmInstructionsBuilderDsl
     fun CyanIntrinsics.malloc(size: Int) =
-            pushElement(Wasm.Instruction("i32.const $size\ncall \$cy_malloc"))
+            pushElement(Wasm.Instruction("call \$cy_malloc"))
 
     @WasmInstructionsBuilderDsl
     fun br(blockNum: Int): Boolean {

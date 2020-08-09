@@ -17,7 +17,7 @@ class Allocator {
             bytes += when (element) {
                 is FirExpression.Literal.String -> allocateStringIov(element.value).bytes().toMutableList()
                 is FirExpression.Literal.Scalar<*> -> toBytes(element)
-                else -> error("fir2wasm-allocator: cannot allocate array of type '${array.type()}'")
+                else -> error("fir2wasm-allocator: cannot statically allocate array of type '${array.type()}'")
             }
         }
 
@@ -28,7 +28,7 @@ class Allocator {
         val bytes = mutableListOf<Byte>()
 
         for (field in expression.elements.values) {
-            bytes += when (val allocation = allocate(field)) {
+            bytes += when (val allocation = preAllocate(field)) {
                 is AllocationResult.Heap  -> allocation.pointer.bytes().toList()
                 is AllocationResult.Stack -> allocation.literal.bytes().toList()
             }
@@ -52,7 +52,7 @@ class Allocator {
         else -> error("fir2wasm-value-transformer: cannot transform value of type '${expression::class.simpleName}'")
     }
 
-    fun allocate(expression: FirExpression): AllocationResult = when (expression) {
+    fun preAllocate(expression: FirExpression): AllocationResult = when (expression) {
         is FirExpression.Literal.String -> AllocationResult.Heap(prealloc(toBytes(expression).toByteArray(), alignment = 4))
         is FirExpression.Literal.Scalar<*> -> AllocationResult.Stack (
             when(val value = expression.value) {
