@@ -37,7 +37,7 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
                     val elements = when (expr) {
                         is FirExpression.Literal.Array  -> expr.elements.withIndex()
                         is FirExpression.Literal.Struct -> expr.elements.values.withIndex()
-                        else -> error("fir2wasm: cannot dynmaically allocate expression of type '${expr::class.simpleName}'")
+                        else -> error("fir2wasm: cannot dynamically allocate expression of type '${expr::class.simpleName}'")
                     }
 
                     for ((index, element) in elements) {
