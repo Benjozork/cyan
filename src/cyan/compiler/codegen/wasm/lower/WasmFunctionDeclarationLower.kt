@@ -30,6 +30,9 @@ object WasmFunctionDeclarationLower : FirItemLower<WasmLoweringContext, FirFunct
         }
 
         return func(functionName, *wasmFunctionParameters, returnType = wasmReturnType, exportedAs = if (isStartExport) "_start" else null) {
+            if (isStartExport)
+                call("cy_init_heap")
+
             for (statement in item.block.statements) {
                 +context.backend.lowerStatement(statement, context)
             }
