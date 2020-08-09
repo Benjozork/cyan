@@ -72,7 +72,7 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
                 val baseStruct = expr.base.type() as Type.Struct
                 val baseStructField = baseStruct.properties.first { it.name == expr.member }
 
-                val fieldIndex = baseStruct.properties.indexOfFirst { it == baseStructField }.takeIf { it > 0 }
+                val fieldIndex = baseStruct.properties.indexOfFirst { it == baseStructField }.takeIf { it >= 0 }
                         ?: error("fir2wasm: base struct field index was -1")
 
                 require (
