@@ -42,7 +42,7 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
                     }
 
                     val typeSize = when (expr) {
-                        is FirExpression.Literal.Array -> expr.elements.size * expr.type().size
+                        is FirExpression.Literal.Array -> 4 * expr.elements.size
                         else -> expr.type().size
                     }
 
