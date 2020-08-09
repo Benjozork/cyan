@@ -92,7 +92,7 @@ interface WasmScope : Wasm.OrderedElement {
             pushElement(Wasm.Instruction("(local.tee \$$numLocal ${i32.const(value)})"))
 
     @WasmInstructionsBuilderDsl
-    fun CyanIntrinsics.malloc(size: Int) =
+    fun CyanIntrinsics.malloc(size: Int) = if (size > 60) error("only types with size < 60 can be allocated by cy_malloc at the moment (size: $size)") else
             pushElement(Wasm.Instruction("call \$cy_malloc"))
 
     @WasmInstructionsBuilderDsl

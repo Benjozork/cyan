@@ -5,6 +5,7 @@ import cyan.compiler.codegen.wasm.WasmLoweringContext
 import cyan.compiler.codegen.wasm.dsl.*
 import cyan.compiler.codegen.wasm.utils.AllocationResult
 import cyan.compiler.codegen.wasm.utils.ValueSerializer
+import cyan.compiler.codegen.wasm.utils.size
 import cyan.compiler.common.types.CyanType
 import cyan.compiler.common.types.Type
 import cyan.compiler.fir.FirResolvedReference
@@ -40,7 +41,12 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
                         structureBasePtr
                     }
 
-                    cy.malloc(0)
+                    val typeSize = when (expr) {
+                        is FirExpression.Literal.Array -> expr.elements.size * expr.type().size
+                        else -> expr.type().size
+                    }
+
+                    cy.malloc(typeSize)
                     local.set(localName)
 
                     val elements = when (expr) {
