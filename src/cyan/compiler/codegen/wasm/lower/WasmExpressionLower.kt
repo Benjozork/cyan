@@ -27,12 +27,21 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
                     is AllocationResult.Stack -> i32.const(allocationResult.literal)
                     is AllocationResult.Heap  -> i32.const(allocationResult.pointer)
                 } else { // Dynamic allocation
-                    val structureBasePtr = "structure_" + expr.hashCode().toString(16)
+                    val isInVariableDeclaration = expr.parent is FirVariableDeclaration
 
-                    local.new(structureBasePtr, Wasm.Type.i32)
+                    val localName = if (isInVariableDeclaration) {
+                        // Avoid creating a temp local if this is for a variable declaration
+                        context.locals[expr.parent].toString()
+                    } else {
+                        val structureBasePtr = "structure_" + expr.hashCode().toString(16)
+
+                        local.new(structureBasePtr, Wasm.Type.i32)
+
+                        structureBasePtr
+                    }
 
                     cy.malloc(0)
-                    local.set(structureBasePtr)
+                    local.set(localName)
 
                     val elements = when (expr) {
                         is FirExpression.Literal.Array  -> expr.elements.withIndex()
@@ -42,10 +51,10 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
 
                     for ((index, element) in elements) {
                         if (index == 0) {
-                            local.get(structureBasePtr)
+                            local.get(localName)
                         } else {
                             i32.const(index * 4)
-                            local.get(structureBasePtr)
+                            local.get(localName)
                             i32.add
                         }
 
@@ -54,7 +63,7 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
                         i32.store // Store there
                     }
 
-                    local.get(structureBasePtr)
+                    local.get(localName)
                 }
             }
             is FirExpression.FunctionCall -> {
