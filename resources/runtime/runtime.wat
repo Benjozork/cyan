@@ -6,17 +6,14 @@
 
 ;; cyanc_insert_heap_start_here
 
-(func $cy_array_check_idx (param $arr_ptr i32) (param $idx i32) (result i32)
-    get_local $arr_ptr
-    i32.load
-    get_local $idx
-    i32.le_u
-)
-
 (func $cy_array_get (param $arr_ptr i32) (param $arr_idx i32) (result i32)
     (block $B0
-        (call $cy_array_check_idx (local.get $arr_ptr) (local.get $arr_idx))
+        get_local $arr_idx
+        get_local $arr_ptr
+        i32.load
+        i32.lt_u
         br_if $B0
+        unreachable
     )
     local.get $arr_idx
     i32.const 1
