@@ -97,25 +97,16 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
 
                 val symbol = expr.base.resolvedSymbol
 
-                val staticPtr = context.staticPointerForLocal[symbol]
-                val dynPtrLocal = context.locals[symbol]
+                val dynPtrLocal = context.locals[symbol]!!
 
                 val fieldOffset = fieldIndex * 4
 
-                when {
-                    staticPtr != null -> { // Base was statically allocated
-                        i32.const(staticPtr + fieldOffset)
-                    }
-                    dynPtrLocal != null -> { // Base will be dynamically allocated
-                        local.get(dynPtrLocal)
-                        if (fieldOffset > 1) {
-                            i32.const(fieldOffset)
-                            i32.add
-                        }
-                        i32.load
-                    }
-                    else -> error("fir2wasm: could not find pointer for ${symbol.name}")
+                local.get(dynPtrLocal)
+                if (fieldOffset > 1) {
+                    i32.const(fieldOffset)
+                    i32.add
                 }
+                i32.load
             }
             is FirExpression.ArrayIndex -> when (val base = expr.base) {
                 is FirResolvedReference -> {
@@ -123,14 +114,16 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
 
                     require(originalDeclaration is FirVariableDeclaration)
 
-                    val ptr = context.staticPointerForLocal[originalDeclaration]
-                        ?: error("fir2wasm: no ptr local generated for '${originalDeclaration.name}'")
-                    val idx = (expr.index as? FirExpression.Literal.Number)?.value
-                        ?: error("fir2wasm: array indexes are currently only supported with numeric literals")
+                    val ptr = context.locals[originalDeclaration]
+                        ?: error("fir2wasm: no local generated for '${originalDeclaration.name}'")
 
                     when (val declType = originalDeclaration.initializationExpr.type()) {
                         Type.Primitive(CyanType.Str, true),
-                        Type.Primitive(CyanType.I32, true) -> Wasm.Instruction("(call \$cy_array_get (i32.const $ptr) (i32.const $idx))")
+                        Type.Primitive(CyanType.I32, true) -> instructions {
+                            local.get(ptr)
+                            +context.backend.lowerExpression(expr.index, context)
+                            call("cy_array_get")
+                        }
                         else -> error("fir2wasm: cannot lower array index on array of type '$declType'")
                     }
                 }
