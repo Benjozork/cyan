@@ -15,7 +15,7 @@ class Allocator {
 
         for (element in array.elements) {
             bytes += when (element) {
-                is FirExpression.Literal.String -> allocateStringIov(element.value).bytes().toMutableList()
+                is FirExpression.Literal.String -> allocateStringNullTerminated(element.value).bytes().toMutableList()
                 is FirExpression.Literal.Scalar<*> -> toBytes(element)
                 else -> error("fir2wasm-allocator: cannot statically allocate array of type '${array.type()}'")
             }
@@ -74,6 +74,10 @@ class Allocator {
         val iovLen = ByteBuffer.allocate(Integer.BYTES).putInt(string.length).array().reversed().toByteArray()
 
         return prealloc(byteArrayOf(*iovPtr, *iovLen), alignment = 4)
+    }
+
+    fun allocateStringNullTerminated(string: String): Int {
+        return prealloc(string.toByteArray() + 0x00)
     }
 
     var heap = ByteArray(64)
