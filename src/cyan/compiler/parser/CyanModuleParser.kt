@@ -196,7 +196,7 @@ class CyanModuleParser : Grammar<CyanModule>() {
     // Members
 
     val memberAccessParser by (referenceParser * -dot * referenceParser)                                   use { CyanMemberAccessExpression(t1, t2, span(t1, t2)) }
-    val arrayIndexParser   by (parser(this::unambiguousTermForArrayIndex) * -znws * -lsq * numericalValueParser * rsq) use { CyanArrayIndexExpression(t1, t2, span(t1, t3)) }
+    val arrayIndexParser   by (parser(this::unambiguousTermForArrayIndex) * -znws * -lsq * parser(this::expr) * rsq) use { CyanArrayIndexExpression(t1, t2, span(t1, t3)) }
 
     // Expressions
 
