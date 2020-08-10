@@ -24,7 +24,7 @@ object WasmStatementLower : FirItemLower<WasmLoweringContext, FirStatement, Wasm
 
                         instructions {
                             i32.const(when (allocationResult) {
-                                is AllocationResult.Heap  -> allocationResult.pointer.also { context.staticPointerForLocal[item] = it }
+                                is AllocationResult.Heap  -> allocationResult.pointer
                                 is AllocationResult.Stack -> allocationResult.literal
                             })
                             local.set(localId)
