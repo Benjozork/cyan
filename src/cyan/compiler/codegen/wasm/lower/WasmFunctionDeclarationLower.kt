@@ -24,7 +24,8 @@ object WasmFunctionDeclarationLower : FirItemLower<WasmLoweringContext, FirFunct
         }.toTypedArray()
 
         val wasmReturnType = when (item.returnType) {
-            Type.Primitive(CyanType.I32) -> i32
+            Type.Primitive(CyanType.I32),
+            Type.Primitive(CyanType.Str) -> i32
             Type.Primitive(CyanType.Void) -> null
             else -> error("fir2wasm: cyan return type '${item.returnType}' not supported yet")
         }
