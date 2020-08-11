@@ -96,6 +96,18 @@ interface WasmScope : Wasm.OrderedElement {
             pushElement(Wasm.Instruction("call \$cy_malloc"))
 
     @WasmInstructionsBuilderDsl
+    val CyanIntrinsics.strlen get() =
+        pushElement(Wasm.Instruction("call \$cy_str_len"))
+
+    @WasmInstructionsBuilderDsl
+    val CyanIntrinsics.strcpy get() =
+        pushElement(Wasm.Instruction("call \$cy_str_copy"))
+
+    @WasmInstructionsBuilderDsl
+    val CyanIntrinsics.strcat get() =
+        pushElement(Wasm.Instruction("call \$cy_str_cat"))
+
+    @WasmInstructionsBuilderDsl
     fun br(blockNum: Int): Boolean {
         val prefix = if (this is WasmLoop) "L" else "B"
         return pushElement(Wasm.Instruction("br \$$prefix$blockNum"))
