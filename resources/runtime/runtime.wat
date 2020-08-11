@@ -170,6 +170,47 @@
     end
 )
 
+(func $cy_str_cat (param $first i32) (param $second i32) (result i32)
+    (local $new_first_addr i32)
+    (local $new_second_addr i32)
+    (local $first_len i32)
+    (local $second_len i32)
+
+    local.get $first
+    call $cy_str_len
+    local.set $first_len
+
+    local.get $second
+    call $cy_str_len
+    local.set $second_len
+
+    call $cy_malloc
+    local.set $new_first_addr
+
+    local.get $first
+    local.get $new_first_addr
+    call $cy_str_copy
+
+    local.get $first_len
+    local.get $new_first_addr
+    i32.add
+    local.set $new_second_addr ;; dest addr = (first_len + new_first_addr)
+
+    local.get $second
+    local.get $new_second_addr
+    call $cy_str_copy
+
+    local.get $new_second_addr
+    local.get $second_len
+    i32.add
+    i32.const 1
+    i32.add
+    i32.const 0
+    i32.store8 ;; add null terminator
+
+    local.get $new_first_addr
+)
+
 (func $cy_dump_mem
     i32.const 0
     i32.const 0
