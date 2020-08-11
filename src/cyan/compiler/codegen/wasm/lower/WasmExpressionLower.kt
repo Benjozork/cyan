@@ -131,7 +131,7 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
             }
             is FirExpression.Binary -> when (expr.commonType) {
                 null -> error("fir2wasm: cannot lower binary expression with different operands")
-                Type.Primitive(CyanType.I32, false) -> instructions {
+                Type.Primitive(CyanType.I32) -> instructions {
                     +lower(context, expr.lhs)
                     +lower(context, expr.rhs)
 
@@ -146,7 +146,12 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
                         else -> error("fir2wasm: cannot lower binary expression with operator '${expr.operator::class.simpleName}'")
                     }
                 }
-                else -> error("fir2wasm: cannot lower binary expression operand type ''${expr.lhs.realExpr.type()}")
+                Type.Primitive(CyanType.Str) -> instructions {
+                    +context.backend.lowerExpression(expr.lhs, context)
+                    +context.backend.lowerExpression(expr.rhs, context)
+                    cy.strcat
+                }
+                else -> error("fir2wasm: cannot lower binary expression operand type '${expr.lhs.realExpr.type()}'")
             }
             is FirResolvedReference -> instructions {
                 when (val symbol = expr.resolvedSymbol) {
