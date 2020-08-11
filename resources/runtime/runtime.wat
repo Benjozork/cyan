@@ -144,7 +144,7 @@
         local.get $curr_dest_char
         local.get $curr_src_char
         i32.load
-        i32.store
+        i32.store8
 
         ;; increment src char
         local.get $curr_src_char
@@ -158,7 +158,15 @@
         local.get $src
         i32.sub
         i32.gt_u
-        br_if $copy
+        if $continue
+            ;; increment dest char
+            local.get $curr_dest_char
+            i32.const 1
+            i32.add
+            local.set $curr_dest_char
+
+            br $copy
+        end
     end
 )
 
