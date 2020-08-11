@@ -101,6 +101,67 @@
     end
 )
 
+(func $cy_str_len (param $str i32) (result i32)
+    (local $curr_idx i32)
+
+    local.get $str
+    local.set $curr_idx
+
+    (loop $check_length
+        local.get $curr_idx
+        i32.load8_u
+        if $continue
+            local.get $curr_idx
+            i32.const 1
+            i32.add
+            local.set $curr_idx
+            br $check_length
+        end
+    )
+
+    local.get $curr_idx
+    local.get $str
+    i32.sub
+)
+
+(func $cy_str_copy (param $src i32) (param $dest i32)
+    (local $src_len i32)
+    (local $curr_src_char i32)
+    (local $curr_dest_char i32)
+
+    local.get $src
+    local.set $curr_src_char
+
+    local.get $dest
+    local.set $curr_dest_char
+
+    ;; find src len
+    local.get $src
+    call $cy_str_len
+    local.set $src_len
+
+    loop $copy
+        local.get $curr_dest_char
+        local.get $curr_src_char
+        i32.load
+        i32.store
+
+        ;; increment src char
+        local.get $curr_src_char
+        i32.const 1
+        i32.add
+        local.set $curr_src_char
+
+        ;; break if lower than len
+        local.get $src_len
+        local.get $curr_src_char
+        local.get $src
+        i32.sub
+        i32.gt_u
+        br_if $copy
+    end
+)
+
 (func $cy_dump_mem
     i32.const 0
     i32.const 0
