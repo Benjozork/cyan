@@ -1,5 +1,7 @@
 package cyan.compiler.lower.ast2fir.expression
 
+import com.github.h0tk3y.betterParse.grammar.parseToEnd
+
 import cyan.compiler.common.diagnostic.CompilerDiagnostic
 import cyan.compiler.common.diagnostic.DiagnosticPipe
 import cyan.compiler.common.types.Type
@@ -12,6 +14,7 @@ import cyan.compiler.fir.extensions.findSymbol
 import cyan.compiler.fir.extensions.firstAncestorOfType
 import cyan.compiler.fir.functions.FirFunctionCall
 import cyan.compiler.lower.ast2fir.Ast2FirLower
+import cyan.compiler.lower.ast2fir.expression.string.StringContentParser
 import cyan.compiler.parser.ast.expression.*
 import cyan.compiler.parser.ast.expression.literal.CyanBooleanLiteralExpression
 import cyan.compiler.parser.ast.expression.literal.CyanNumericLiteralExpression
@@ -20,10 +23,16 @@ import cyan.compiler.parser.ast.function.CyanFunctionCall
 
 object ExpressionLower : Ast2FirLower<CyanExpression, FirExpression> {
 
+    private val stringContentParser = StringContentParser()
+
     override fun lower(astNode: CyanExpression, parentFirNode: FirNode): FirExpression {
         return when (astNode) {
             is CyanNumericLiteralExpression -> FirExpression.Literal.Number(astNode.value, parentFirNode, astNode)
-            is CyanStringLiteralExpression  -> FirExpression.Literal.String(astNode.value, parentFirNode, astNode)
+            is CyanStringLiteralExpression -> {
+                val content = stringContentParser.parseToEnd(astNode.value).toString()
+
+                FirExpression.Literal.String(content, parentFirNode, astNode)
+            }
             is CyanBooleanLiteralExpression -> FirExpression.Literal.Boolean(astNode.value, parentFirNode, astNode)
             is CyanFunctionCall -> {
                 val firFunctionCall = FirFunctionCall(parentFirNode)
