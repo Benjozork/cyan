@@ -92,16 +92,16 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
 
                 require (
                     expr.base is FirResolvedReference &&
-                    expr.base.resolvedSymbol is FirVariableDeclaration
+                    (expr.base.resolvedSymbol is FirVariableDeclaration || expr.base.resolvedSymbol is FirFunctionArgument)
                 ) { "fir2wasm: member access is currently only supported on references to local variables" }
 
-                val symbol = expr.base.resolvedSymbol
-
-                val dynPtrLocal = context.locals[symbol]!!
+                when (val symbol = expr.base.resolvedSymbol) {
+                    is FirVariableDeclaration -> local.get(context.locals[symbol]!!)
+                    is FirFunctionArgument    -> local.get(symbol.name)
+                }
 
                 val fieldOffset = fieldIndex * 4
 
-                local.get(dynPtrLocal)
                 if (fieldOffset > 1) {
                     i32.const(fieldOffset)
                     i32.add
