@@ -44,11 +44,12 @@ class WasmFunction (
             body += (if (index > 0) "\n" else "") + element.toString().prependIndent("    ")
         }
 
+        val paramString = if (parameters.size > 0) " ${parameters.joinToString(" ")}" else ""
         val exportString = if (exportedAs != null) " (export \"$exportedAs\") " else ""
         val returnTypeString = if (returnType != null) " (result $returnType) " else ""
 
         return """
-        |(func ${"$"}$name$exportString${parameters.joinToString(" ")}$returnTypeString
+        |(func ${"$"}$name$exportString$paramString$returnTypeString
         |$body
         |)
         """.trimMargin()
