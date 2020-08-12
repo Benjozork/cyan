@@ -25,6 +25,9 @@ dependencies {
     implementation("com.github.h0tk3y.betterParse", "better-parse", "0.4.0")
 
     implementation("com.andreapivetta.kolor", "kolor", "1.0.0")
+
+    testImplementation("org.junit.jupiter", "junit-jupiter-api", "5.5.2")
+    testRuntimeOnly("org.junit.jupiter", "junit-jupiter-engine", "5.5.2")
 }
 
 kotlin {
@@ -32,5 +35,13 @@ kotlin {
         languageSettings.apply {
             enableLanguageFeature("NewInference")
         }
+    }
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
+
+    testLogging {
+        events("passed", "skipped", "failed")
     }
 }
