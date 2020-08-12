@@ -1,5 +1,6 @@
 package cyan.compiler.fir
 
+import com.andreapivetta.kolor.lightGreen
 import cyan.compiler.fir.functions.FirFunctionDeclaration
 import cyan.compiler.lower.ast2fir.SourceLower
 import cyan.compiler.parser.CyanModuleParser
@@ -43,6 +44,8 @@ class FirModule (
         private val runtimeModule get() = cachedModules["__runtime__"] ?: error("fatal: runtime module not in module cache")
 
         fun compileModuleFromFile(it: File): FirModule {
+            println("Compiling".lightGreen() + "\t\t'${it.name}'")
+
             val moduleText = it.readText()
             val parsedModule = moduleParser.parseToEnd(moduleText)
 

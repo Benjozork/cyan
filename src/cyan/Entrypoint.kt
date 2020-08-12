@@ -1,42 +1,42 @@
 package cyan
 
 import cyan.compiler.fir.FirModule
-import cyan.compiler.codegen.js.JsCompilerBackend
+import cyan.compiler.fir.FirNullNode
 import cyan.compiler.codegen.wasm.WasmCompilerBackend
 import cyan.compiler.codegen.wasm.WasmLoweringContext
-import cyan.compiler.fir.FirNullNode
-import cyan.compiler.lower.ast2fir.optimization.*
 
 import java.io.File
 
+import com.andreapivetta.kolor.lightGray
+import com.andreapivetta.kolor.lightMagenta
+
 fun main() {
-    val mainModule = FirModule.compileModuleFromFile(File("runtime/example.cy"))
-
-    PureVariableInlinePass.run(mainModule.source)
-    ConstantFoldingPass.run(mainModule.source)
-    DeadBranchPass.run(mainModule.source)
-    DeadVariablePass.run(mainModule.source)
-    PureVariableInlinePass.run(mainModule.source)
-    ConstantFoldingPass.run(mainModule.source)
-    DeadBranchPass.run(mainModule.source)
-
-    mainModule.source.statements.removeAll { it is FirNullNode }
-
-//    SsaPass.run(mainModule.source)
-
-//    println(mainModule.allReferredSymbols().joinToString("\n") { "ref to symbol '${it.resolvedSymbol.name}' in a fir node of type ${it.parent::class.simpleName}" })
-
-//    val jsSource = JsCompilerBackend().translateSource(mainModule.source, isRoot = true)
+//    val file = File("runtime/example.cy")
 //
-//    println(jsSource)
+//    val mainModule = FirModule.compileModuleFromFile(file)
+//
+//    PureVariableInlinePass.run(mainModule.source)
+//    ConstantFoldingPass.run(mainModule.source)
+//    DeadBranchPass.run(mainModule.source)
+//    DeadVariablePass.run(mainModule.source)
+//    PureVariableInlinePass.run(mainModule.source)
+//    ConstantFoldingPass.run(mainModule.source)
+//    DeadBranchPass.run(mainModule.source)
+//
+//    mainModule.source.statements.removeAll { it is FirNullNode }
 
-    val simpleModule = FirModule.compileModuleFromFile(File("runtime/simple.cy"))
+    val file = File("runtime/simple.cy")
+
+    val simpleModule = FirModule.compileModuleFromFile(file)
 
     simpleModule.source.statements.removeAll { it is FirNullNode }
 
+    println("Emitting ".lightMagenta() + "(wasm)".lightGray() + "\t'${file.name}'")
     val wasmSource = WasmCompilerBackend().let { it.translateSource(simpleModule.source, WasmLoweringContext(it), true) }
 
     val outputfile = File("runtime/test.wat")
+
+    println("\n\t+ " + outputfile.path.lightGray())
 
     outputfile.writeText(wasmSource)
 }
