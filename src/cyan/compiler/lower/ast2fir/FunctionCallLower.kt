@@ -9,14 +9,15 @@ import cyan.compiler.fir.FirResolvedReference
 import cyan.compiler.fir.expression.FirExpression
 import cyan.compiler.fir.extensions.containingScope
 import cyan.compiler.fir.extensions.findSymbol
+import cyan.compiler.fir.functions.FirCall
 import cyan.compiler.fir.functions.FirFunctionDeclaration
 import cyan.compiler.fir.functions.FirFunctionCall
 import cyan.compiler.lower.ast2fir.expression.ExpressionLower
 import cyan.compiler.parser.ast.function.CyanFunctionCall
 
-object FunctionCallLower : Ast2FirLower<CyanFunctionCall, FirFunctionCall> {
+object FunctionCallLower : Ast2FirLower<CyanFunctionCall, FirCall> {
 
-    override fun lower(astNode: CyanFunctionCall, parentFirNode: FirNode): FirFunctionCall {
+    override fun lower(astNode: CyanFunctionCall, parentFirNode: FirNode): FirCall {
         val firFunctionCall = FirFunctionCall(parentFirNode)
 
         val resolvedFunctionReference = when (val loweredBase = ExpressionLower.lower(astNode.base, firFunctionCall)) {

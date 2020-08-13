@@ -12,8 +12,8 @@ import cyan.compiler.fir.FirVariableDeclaration
 import cyan.compiler.fir.expression.FirExpression
 import cyan.compiler.fir.extensions.findSymbol
 import cyan.compiler.fir.extensions.firstAncestorOfType
-import cyan.compiler.fir.functions.FirFunctionCall
 import cyan.compiler.lower.ast2fir.Ast2FirLower
+import cyan.compiler.lower.ast2fir.FunctionCallLower
 import cyan.compiler.lower.ast2fir.expression.string.StringContentParser
 import cyan.compiler.parser.ast.expression.*
 import cyan.compiler.parser.ast.expression.literal.CyanBooleanLiteralExpression
@@ -34,26 +34,7 @@ object ExpressionLower : Ast2FirLower<CyanExpression, FirExpression> {
                 FirExpression.Literal.String(content, parentFirNode, astNode)
             }
             is CyanBooleanLiteralExpression -> FirExpression.Literal.Boolean(astNode.value, parentFirNode, astNode)
-            is CyanFunctionCall -> {
-                val firFunctionCall = FirFunctionCall(parentFirNode)
-
-                val loweredBase = lower(astNode.base, firFunctionCall)
-                val resolvedFunctionReference = (loweredBase as? FirResolvedReference) ?: DiagnosticPipe.report (
-                    CompilerDiagnostic (
-                        level = CompilerDiagnostic.Level.Internal,
-                        message = "lowered function call base expr resolved to '${loweredBase::class.simpleName}' but should have been FirResolvedReference",
-                        astNode = astNode
-                    )
-                )
-
-                val firArgs = astNode.args.map { lower(it, parentFirNode) }.toTypedArray()
-                val firCall = FirExpression.FunctionCall(resolvedFunctionReference, firArgs, parentFirNode, astNode)
-
-                resolvedFunctionReference.parent = firCall
-                firCall.args.forEach { it.parent = firCall }
-
-                firCall
-            }
+            is CyanFunctionCall -> FirExpression.FunctionCall(FunctionCallLower.lower(astNode, parentFirNode), parentFirNode, astNode)
             is CyanIdentifierExpression -> {
                 val reference = FirReference(parentFirNode, astNode.value, astNode)
                 val resolvedReference = parentFirNode.findSymbol(reference) ?: DiagnosticPipe.report (

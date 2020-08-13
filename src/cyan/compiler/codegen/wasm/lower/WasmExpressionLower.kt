@@ -69,10 +69,10 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
                 }
             }
             is FirExpression.FunctionCall -> {
-                val function = expr.callee.resolvedSymbol as FirFunctionDeclaration
+                val function = expr.call.callee.resolvedSymbol as FirFunctionDeclaration
 
                 instructions {
-                    for (argument in expr.args.map { context.backend.lowerExpression(it, context) }) {
+                    for (argument in expr.call.args.map { context.backend.lowerExpression(it, context) }) {
                         +argument
                     }
 
