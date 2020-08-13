@@ -4,7 +4,6 @@ import cyan.compiler.codegen.FirItemLower
 import cyan.compiler.codegen.wasm.WasmLoweringContext
 import cyan.compiler.codegen.wasm.dsl.*
 import cyan.compiler.codegen.wasm.utils.AllocationResult
-import cyan.compiler.codegen.wasm.utils.ValueSerializer
 import cyan.compiler.codegen.wasm.utils.size
 import cyan.compiler.common.types.CyanType
 import cyan.compiler.common.types.Type
@@ -12,16 +11,13 @@ import cyan.compiler.fir.FirResolvedReference
 import cyan.compiler.fir.FirVariableDeclaration
 import cyan.compiler.fir.expression.FirExpression
 import cyan.compiler.fir.functions.FirFunctionArgument
-import cyan.compiler.fir.functions.FirFunctionCall
 import cyan.compiler.fir.functions.FirFunctionDeclaration
 import cyan.compiler.parser.ast.operator.*
 
 object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wasm.OrderedElement> {
 
     override fun lower(context: WasmLoweringContext, item: FirExpression): Wasm.OrderedElement {
-        return if (item.parent is FirFunctionCall && (item.parent as FirFunctionCall).callee.resolvedSymbol.name == "print") instructions {
-            i32.const(ValueSerializer.convert(item).let { context.allocator.allocateStringIov(it) })
-        } else when (val expr = item.realExpr) {
+        return when (val expr = item.realExpr) {
             is FirExpression.Literal -> instructions {
                 if (expr.isConstant) when (val allocationResult = context.allocator.preAllocate(expr)) {
                     // Static allocation

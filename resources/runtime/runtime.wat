@@ -211,6 +211,28 @@
     local.get $new_first_addr
 )
 
+(func $cy_str_to_iov (param $str i32) (result i32)
+    (local $addr i32)
+
+    call $cy_malloc
+    i32.const 3
+    i32.add
+    local.set $addr
+
+    local.get $addr
+    local.get $str
+    i32.store
+
+    local.get $addr
+    i32.const 4
+    i32.add
+    local.get $str
+    call $cy_str_len
+    i32.store
+
+    local.get $addr
+)
+
 (func $cy_dump_mem
     i32.const 0
     i32.const 0
@@ -221,10 +243,16 @@
     (call $print (i32.const 0))
 )
 
-(func $print (param i32)
+(func $print (param $str i32)
+    (local $iov i32)
+
+    local.get $str
+    call $cy_str_to_iov
+    local.set $iov
+
     (call $fd_write
         (i32.const 1)
-        (local.get 0)
+        (local.get $iov)
         (i32.const 1)
         (i32.const 20)
     )

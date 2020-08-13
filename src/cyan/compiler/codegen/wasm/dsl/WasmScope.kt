@@ -108,6 +108,11 @@ interface WasmScope : Wasm.OrderedElement {
         pushElement(Wasm.Instruction("call \$cy_str_cat"))
 
     @WasmInstructionsBuilderDsl
+    val CyanIntrinsics.strtoiov get() =
+        pushElement(Wasm.Instruction("call \$cy_str_to_iov"))
+
+
+    @WasmInstructionsBuilderDsl
     fun br(blockNum: Int): Boolean {
         val prefix = if (this is WasmLoop) "L" else "B"
         return pushElement(Wasm.Instruction("br \$$prefix$blockNum"))
