@@ -213,7 +213,7 @@ class CyanModuleParser : Grammar<CyanModule>() {
             by (parenTerm or memberAccessParser or parser(this::functionCall) or referenceParser)
 
     val term: Parser<CyanExpression>
-            by (parenTerm or arrayExpressionParser or literalExpressionParser or memberAccessParser or arrayIndexParser or parser(this::functionCall) or referenceParser)
+            by (parenTerm or arrayExpressionParser or literalExpressionParser or parser(this::functionCall) or memberAccessParser or arrayIndexParser or referenceParser)
 
     val mulDivModOp by (times or div or mod) use { tokenToOp[this.type]!! }
     val mulDivModOrTerm: Parser<CyanExpression> by leftAssociative(term, -optional(ws) * mulDivModOp * -optional(ws)) { l, o, r -> CyanBinaryExpression(l, o, r, span(l, r)) }
