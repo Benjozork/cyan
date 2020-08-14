@@ -12,5 +12,5 @@ data class CyanVariableDeclaration (
     val value: CyanExpression,
     override val span: Span? = null
 ): CyanStatement {
-    override fun toString() = "let $name${if (type != null) ": $type" else ""} = $value"
+    override fun toString() = "${if (mutable) "var" else "let"} $name${if (type != null) ": $type" else ""} = $value"
 }
