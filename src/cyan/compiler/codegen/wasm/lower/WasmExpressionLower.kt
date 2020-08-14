@@ -143,6 +143,8 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
                     }
                 }
                 Type.Primitive(CyanType.Str) -> instructions {
+                    require (expr.operator == CyanBinaryPlusOperator) { "fir2wasm: cannot lower string binary expression with operator '${expr.operator::class.simpleName}'" }
+
                     +context.backend.lowerExpression(expr.lhs, context)
                     +context.backend.lowerExpression(expr.rhs, context)
                     cy.strcat
