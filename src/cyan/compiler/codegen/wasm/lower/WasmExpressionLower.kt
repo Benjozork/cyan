@@ -118,7 +118,7 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
                         Type.Primitive(CyanType.I32, true) -> instructions {
                             local.get(ptr)
                             +context.backend.lowerExpression(expr.index, context)
-                            call("cy_array_get")
+                            cy.array_get
                         }
                         else -> error("fir2wasm: cannot lower array index on array of type '$declType'")
                     }

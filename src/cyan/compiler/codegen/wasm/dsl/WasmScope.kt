@@ -96,6 +96,10 @@ interface WasmScope : Wasm.OrderedElement {
             pushElement(Wasm.Instruction("call \$cy_malloc"))
 
     @WasmInstructionsBuilderDsl
+    val CyanIntrinsics.array_get get() =
+        pushElement(Wasm.Instruction("call \$cy_array_get"))
+
+    @WasmInstructionsBuilderDsl
     val CyanIntrinsics.strlen get() =
         pushElement(Wasm.Instruction("call \$cy_str_len"))
 
