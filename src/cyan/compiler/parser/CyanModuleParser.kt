@@ -190,8 +190,8 @@ class CyanModuleParser : Grammar<CyanModule>() {
 
     // Struct literals
 
-    val structLiteralParser by (lcur * -znws * separatedTerms(parser(this::expr), commaParser) * -znws * rcur)
-        .use { CyanStructLiteralExpression(t2.toTypedArray(), span(t1, t3)) }
+    val structLiteralParser by (optional(referenceParser) * -znws * lcur * -znws * separatedTerms(parser(this::expr), commaParser) * -znws * rcur)
+        .use { CyanStructLiteralExpression(t3.toTypedArray(), t1?.let { span(t1!!, t4) } ?: span(t2, t4)) }
 
     // Members
 
