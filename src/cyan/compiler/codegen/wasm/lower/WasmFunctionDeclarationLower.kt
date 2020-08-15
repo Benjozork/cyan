@@ -9,6 +9,7 @@ import cyan.compiler.codegen.wasm.dsl.func
 import cyan.compiler.codegen.wasm.dsl.local
 import cyan.compiler.common.types.CyanType
 import cyan.compiler.common.types.Type
+import cyan.compiler.fir.functions.FirFunctionArgument
 import cyan.compiler.fir.functions.FirFunctionDeclaration
 
 object WasmFunctionDeclarationLower : FirItemLower<WasmLoweringContext, FirFunctionDeclaration, Wasm.OrderedElement> {
@@ -17,7 +18,8 @@ object WasmFunctionDeclarationLower : FirItemLower<WasmLoweringContext, FirFunct
         val functionName = item.name
         val isStartExport = item.name == "_start"
 
-        val wasmFunctionParameters = item.args.map { arg -> WasmFunction.Parameter(arg.name, i32) }.toTypedArray()
+        val wasmFunctionParameters = (item.args.toList() + item.receiver?.let { FirFunctionArgument(item, "_r", it.type) })
+                .filterNotNull().map { arg -> WasmFunction.Parameter(arg.name, i32) }.toTypedArray()
 
         val wasmReturnType = when (item.returnType) {
             Type.Primitive(CyanType.I32),

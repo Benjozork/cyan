@@ -12,7 +12,9 @@ import cyan.compiler.fir.FirVariableDeclaration
 import cyan.compiler.fir.expression.FirExpression
 import cyan.compiler.fir.functions.FirFunctionArgument
 import cyan.compiler.fir.functions.FirFunctionDeclaration
+import cyan.compiler.fir.functions.FirFunctionReceiver
 import cyan.compiler.parser.ast.operator.*
+import kotlin.math.exp
 
 object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wasm.OrderedElement> {
 
@@ -72,7 +74,7 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
                 val function = expr.callee.resolvedSymbol as FirFunctionDeclaration
 
                 instructions {
-                    for (argument in expr.args.map { context.backend.lowerExpression(it, context) }) {
+                    for (argument in (expr.args + expr.receiver).filterNotNull().map { context.backend.lowerExpression(it, context) }) {
                         +argument
                     }
 
@@ -86,14 +88,19 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
                 val fieldIndex = baseStruct.properties.indexOfFirst { it == baseStructField }.takeIf { it >= 0 }
                         ?: error("fir2wasm: base struct field index was -1")
 
-                require (
-                    expr.base is FirResolvedReference &&
-                    (expr.base.resolvedSymbol is FirVariableDeclaration || expr.base.resolvedSymbol is FirFunctionArgument)
-                ) { "fir2wasm: member access is currently only supported on references to local variables" }
+                require (expr.base is FirResolvedReference)
 
-                when (val symbol = expr.base.resolvedSymbol) {
-                    is FirVariableDeclaration -> local.get(context.locals[symbol]!!)
-                    is FirFunctionArgument    -> local.get(symbol.name)
+                val baseSymbol = expr.base.resolvedSymbol
+
+                require (
+                    baseSymbol is FirVariableDeclaration || baseSymbol is FirFunctionArgument || baseSymbol is FirFunctionReceiver
+                ) { "fir2wasm: member access is currently only supported on references to local variables, function arguments or function receivers" }
+
+                when (baseSymbol) {
+                    is FirVariableDeclaration -> local.get(context.locals[baseSymbol]!!)
+                    is FirFunctionArgument    -> local.get(baseSymbol.name)
+                    is FirFunctionReceiver    -> local.get("_r")
+                    else -> error("fir2wasm: cannot lower access to a reference to '${baseSymbol::class.simpleName}'")
                 }
 
                 val fieldOffset = fieldIndex * 4
