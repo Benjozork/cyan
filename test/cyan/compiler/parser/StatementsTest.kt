@@ -10,9 +10,8 @@ import cyan.compiler.parser.ast.CyanVariableDeclaration
 import cyan.compiler.parser.ast.expression.CyanArrayExpression
 import cyan.compiler.parser.ast.expression.CyanIdentifierExpression
 import cyan.compiler.parser.ast.expression.literal.CyanNumericLiteralExpression
-import cyan.compiler.parser.ast.function.CyanFunctionArgument
-import cyan.compiler.parser.ast.function.CyanFunctionDeclaration
-import cyan.compiler.parser.ast.function.CyanFunctionSignature
+import cyan.compiler.parser.ast.expression.literal.CyanStringLiteralExpression
+import cyan.compiler.parser.ast.function.*
 import cyan.compiler.parser.ast.types.CyanTypeAnnotation
 
 import org.junit.jupiter.api.Test
@@ -189,6 +188,28 @@ class StatementsTest {
                         isExtern = true
                     ),
                     source = null
+                )
+            )
+        )
+
+        @Test fun `simple receiver`() = doTest (
+            """
+                function (Person).describe() {
+                    print("yes")
+                }
+            """.trimIndent(),
+            listOf (
+                CyanFunctionDeclaration (
+                    CyanFunctionSignature (
+                        receiver = CyanFunctionReceiver (
+                            CyanTypeAnnotation.Reference(CyanIdentifierExpression("Person"))
+                        ),
+                        name = CyanIdentifierExpression("describe"),
+                        args = emptyList(),
+                        typeAnnotation = CyanTypeAnnotation.Literal(Type.Primitive(CyanType.Void)),
+                        isExtern = false
+                    ),
+                    source = CyanSource(emptyList())
                 )
             )
         )

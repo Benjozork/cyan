@@ -6,10 +6,6 @@ import cyan.compiler.common.types.CyanType
 import cyan.compiler.parser.ast.*
 import cyan.compiler.parser.ast.types.CyanTypeAnnotation
 import cyan.compiler.parser.ast.types.CyanStructDeclaration
-import cyan.compiler.parser.ast.function.CyanFunctionCall
-import cyan.compiler.parser.ast.function.CyanFunctionDeclaration
-import cyan.compiler.parser.ast.function.CyanFunctionSignature
-import cyan.compiler.parser.ast.function.CyanFunctionArgument
 import cyan.compiler.parser.ast.expression.*
 import cyan.compiler.parser.ast.expression.literal.CyanNumericLiteralExpression
 import cyan.compiler.parser.ast.expression.literal.CyanBooleanLiteralExpression
@@ -23,6 +19,7 @@ import com.github.h0tk3y.betterParse.lexer.TokenMatch
 import com.github.h0tk3y.betterParse.lexer.literalToken
 import com.github.h0tk3y.betterParse.lexer.regexToken
 import com.github.h0tk3y.betterParse.parser.Parser
+import cyan.compiler.parser.ast.function.*
 
 @Suppress("MemberVisibilityCanBePrivate")
 class CyanModuleParser : Grammar<CyanModule>() {
@@ -231,16 +228,17 @@ class CyanModuleParser : Grammar<CyanModule>() {
 
     // Functions
 
-    val functionArgument  by (referenceParser * -znws * typeSignature) use { CyanFunctionArgument(t1.value, t2, span(t1, t2)) }
-    val functionSignature by (optional(extern) * -znws * function * -znws * referenceParser * -znws * -leap * separatedTerms(functionArgument, commaParser, true) * reap * -znws * optional(typeSignature))
+    val functionReceiver  by (leap * (litType or refType) * -reap * dot) use { CyanFunctionReceiver(t2, span(t1, t3)) }
+    val functionArgument  by (referenceParser * -znws * typeSignature)   use { CyanFunctionArgument(t1.value, t2, span(t1, t2)) }
+    val functionSignature by (optional(extern) * -znws * function * -znws * optional(functionReceiver) * referenceParser * -znws * -leap * separatedTerms(functionArgument, commaParser, true) * reap * -znws * optional(typeSignature))
             .use {
                 val spanStart = t1 ?: t2
-                val spanEnd = t6?.span?.fromTokenMatches?.first() ?: t5
+                val spanEnd = t7?.span?.fromTokenMatches?.first() ?: t6
 
-                if (t6 != null)
-                    CyanFunctionSignature(t3, t4, t6!!, isExtern = t1 != null, span = span(spanStart, spanEnd))
+                if (t7 != null)
+                    CyanFunctionSignature(t3, t4, t5, t7!!, isExtern = t1 != null, span = span(spanStart, spanEnd))
                 else
-                    CyanFunctionSignature(t3, t4, isExtern = t1 != null, span = span(spanStart, spanEnd))
+                    CyanFunctionSignature(t3, t4, t5, isExtern = t1 != null, span = span(spanStart, spanEnd))
             }
 
     val functionDeclaration: Parser<CyanFunctionDeclaration> by (functionSignature * -znws * optional(block))

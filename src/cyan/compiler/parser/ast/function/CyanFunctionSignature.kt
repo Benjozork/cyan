@@ -8,11 +8,12 @@ import cyan.compiler.common.types.CyanType
 import cyan.compiler.parser.ast.types.CyanTypeAnnotation
 
 class CyanFunctionSignature (
+    val receiver: CyanFunctionReceiver? = null,
     val name: CyanIdentifierExpression,
     val args: List<CyanFunctionArgument>,
     val typeAnnotation: CyanTypeAnnotation = CyanTypeAnnotation.Literal(Type.Primitive(CyanType.Void, false), Span(0, 0..0, emptyArray())),
     val isExtern: Boolean,
     override val span: Span? = null
 ): CyanStatement {
-    override fun toString() = "$name(${args.joinToString(", ")})" + ": $typeAnnotation"
+    override fun toString() = "${receiver ?: ""}$name(${args.joinToString(", ")})" + ": $typeAnnotation"
 }

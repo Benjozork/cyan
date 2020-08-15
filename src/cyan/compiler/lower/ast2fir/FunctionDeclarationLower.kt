@@ -21,14 +21,21 @@ object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirNullN
             args = emptyArray()
         )
 
-        firFunctionDeclaration.args = astNode.signature.args // Resolve types for AST arguments and assign them to FIR func declaration
+        // Resolve types for AST arguments and assign them to FIR func declaration
+        firFunctionDeclaration.args = astNode.signature.args
                 .map { FirFunctionArgument(firFunctionDeclaration, it.name, firFunctionDeclaration.resolveType(it.typeAnnotation, astNode)) }
                 .toTypedArray()
+
+        // Resolve type for AST receiver and add a `this` symbol if needed
+        astNode.signature.receiver?.let { receiver ->
+            firFunctionDeclaration.args += FirFunctionArgument(firFunctionDeclaration, "this", firFunctionDeclaration.resolveType(receiver.type))
+        }
 
         // Lower AST function body
         firFunctionDeclaration.block = astNode.source?.let { SourceLower.lower(it, firFunctionDeclaration) } ?: FirSource(firFunctionDeclaration)
 
-        if (!astNode.signature.isExtern && astNode.source == null) { // Check function has body if not extern
+        // Check function has body if not extern
+        if (!astNode.signature.isExtern && astNode.source == null) {
             DiagnosticPipe.report (
                 CompilerDiagnostic (
                     level = CompilerDiagnostic.Level.Error,
@@ -39,7 +46,8 @@ object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirNullN
             )
         }
 
-        if (parentFirNode !is FirScope) { // Check parent is scope
+        // Check parent is scope
+        if (parentFirNode !is FirScope) {
             DiagnosticPipe.report (
                 CompilerDiagnostic (
                     level = CompilerDiagnostic.Level.Internal,
@@ -49,17 +57,8 @@ object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirNullN
             )
         }
 
-//        if (NoNamedFunctionClosures.check(firFunctionDeclaration, parentFirNode)) {
-//            DiagnosticPipe.report (
-//                CompilerDiagnostic (
-//                    level = CompilerDiagnostic.Level.Error,
-//                    message = "Function cannot be a closure (refer to symbols in it's outer scope)",
-//                    astNode = astNode
-//                )
-//            )
-//        }
-
-        if (parentFirNode.findSymbol(FirReference(parentFirNode, firFunctionDeclaration.name, CyanIdentifierExpression(firFunctionDeclaration.name))) != null) { // Check function not already declared
+        // Check function not already declared
+        if (parentFirNode.findSymbol(FirReference(parentFirNode, firFunctionDeclaration.name, CyanIdentifierExpression(firFunctionDeclaration.name))) != null) {
             DiagnosticPipe.report (
                 CompilerDiagnostic (
                     level = CompilerDiagnostic.Level.Error,
