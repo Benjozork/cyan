@@ -9,6 +9,7 @@ import cyan.compiler.fir.extensions.containingScope
 import cyan.compiler.fir.extensions.findSymbol
 import cyan.compiler.fir.functions.FirFunctionDeclaration
 import cyan.compiler.lower.ast2fir.expression.ExpressionLower
+import cyan.compiler.lower.ast2fir.expression.value.ValueInitializationConverter
 import cyan.compiler.parser.ast.function.CyanFunctionCall
 
 object FunctionCallLower : Ast2FirLower<CyanFunctionCall, FirNode> {
@@ -59,37 +60,7 @@ object FunctionCallLower : Ast2FirLower<CyanFunctionCall, FirNode> {
 
         // Check what we are calling
         return when (val symbol = resolvedFunctionReference.resolvedSymbol) {
-            is FirTypeDeclaration -> {
-                val type = symbol.struct
-
-                if (type.properties.size < arguments.size) DiagnosticPipe.report (
-                    CompilerDiagnostic (
-                        level = CompilerDiagnostic.Level.Error,
-                        message = "Not enough arguments for type $type",
-                        astNode = astNode
-                    )
-                ) else if (type.properties.size > arguments.size) DiagnosticPipe.report (
-                    CompilerDiagnostic (
-                        level = CompilerDiagnostic.Level.Error,
-                        message = "Too many arguments for type $type",
-                        astNode = astNode
-                    )
-                )
-
-                val fieldValues = type.properties zip arguments.map { ExpressionLower.lower(it, parentFirNode) }
-
-                fieldValues.forEachIndexed { i, (property, astExpr) ->
-                    if (!(property.type accepts astExpr.type())) DiagnosticPipe.report (
-                        CompilerDiagnostic (
-                            level = CompilerDiagnostic.Level.Error,
-                            message = "Type mismatch for argument #$i (field '${property.name}'): expected '${property.type}', found '${astExpr.type()}'",
-                            astNode = astNode
-                        )
-                    )
-                }
-
-                FirExpression.Literal.Struct(fieldValues.toMap(), type, parentFirNode, astNode)
-            }
+            is FirTypeDeclaration -> ValueInitializationConverter.convert(astNode, parentFirNode)
             is FirFunctionDeclaration -> {
                 val resolvedFunction = resolvedFunctionReference.resolvedSymbol as FirFunctionDeclaration
 
