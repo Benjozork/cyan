@@ -136,7 +136,7 @@ open class FirExpression(override var parent: FirNode, val fromAstNode: CyanExpr
                                  CompilerDiagnostic (
                                      level = CompilerDiagnostic.Level.Error,
                                      message = "Type '${baseType.name}' does not have a member called '$memberName'",
-                                     astNode = fromAstNode,
+                                     astNode = fromAstNode, span = (fromAstNode as CyanMemberAccessExpression).member.span,
                                      note = CompilerDiagnostic.Note("type '${baseType.name}' is defined as follows\n" + "    | ".lightGray() + "$baseType")
                                  )
                              )
