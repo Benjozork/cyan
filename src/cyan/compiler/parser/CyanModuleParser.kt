@@ -259,8 +259,11 @@ class CyanModuleParser : Grammar<CyanModule>() {
         .use { CyanVariableDeclaration(t1.t2, t1.t1.type == vark, t1.t3, t2, span(t1.t1, t2.span!!.fromTokenMatches.last())) }
 
     // Function calls
-    val functionCall by (unambiguousTermForFunctionCall * -znws * -leap * -znws * separatedTerms(expr, commaParser, true) * -znws * reap)
-        .use { CyanFunctionCall(t1, t2.toTypedArray(), span(t1, t3)) }
+
+    val functionCallArgument  by (optional(referenceParser * -colon) * -znws * expr) use { CyanFunctionCall.Argument(t1, t2, t1?.let { span(t1!!, t2) } ?: t2.span ) }
+    val functionCallArguments by separatedTerms(functionCallArgument, commaParser, true)
+    val functionCall          by (unambiguousTermForFunctionCall * -znws * -leap * -znws * functionCallArguments * -znws * reap)
+            .use { CyanFunctionCall(t1, t2.toTypedArray(), span(t1, t3)) }
 
     // If statements
 

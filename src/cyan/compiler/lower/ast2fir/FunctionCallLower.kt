@@ -16,6 +16,9 @@ object FunctionCallLower : Ast2FirLower<CyanFunctionCall, FirNode> {
     override fun lower(astNode: CyanFunctionCall, parentFirNode: FirNode): FirNode {
         val firFunctionCall = FirExpression.FunctionCall(parentFirNode, astNode)
 
+        // Ignore argument labels for now
+        val arguments = astNode.args.map(CyanFunctionCall.Argument::value)
+
         // Find what we are calling
         val resolvedFunctionReference = when (val loweredBase = ExpressionLower.lower(astNode.base, firFunctionCall)) {
             is FirResolvedReference -> loweredBase
@@ -59,13 +62,13 @@ object FunctionCallLower : Ast2FirLower<CyanFunctionCall, FirNode> {
             is FirTypeDeclaration -> {
                 val type = symbol.struct
 
-                if (type.properties.size < astNode.args.size) DiagnosticPipe.report (
+                if (type.properties.size < arguments.size) DiagnosticPipe.report (
                     CompilerDiagnostic (
                         level = CompilerDiagnostic.Level.Error,
                         message = "Not enough arguments for type $type",
                         astNode = astNode
                     )
-                ) else if (type.properties.size > astNode.args.size) DiagnosticPipe.report (
+                ) else if (type.properties.size > arguments.size) DiagnosticPipe.report (
                     CompilerDiagnostic (
                         level = CompilerDiagnostic.Level.Error,
                         message = "Too many arguments for type $type",
@@ -73,7 +76,7 @@ object FunctionCallLower : Ast2FirLower<CyanFunctionCall, FirNode> {
                     )
                 )
 
-                val fieldValues = type.properties zip astNode.args.map { ExpressionLower.lower(it, parentFirNode) }
+                val fieldValues = type.properties zip arguments.map { ExpressionLower.lower(it, parentFirNode) }
 
                 fieldValues.forEachIndexed { i, (property, astExpr) ->
                     if (!(property.type accepts astExpr.type())) DiagnosticPipe.report (
@@ -92,16 +95,16 @@ object FunctionCallLower : Ast2FirLower<CyanFunctionCall, FirNode> {
 
                 firFunctionCall.callee = resolvedFunctionReference
 
-                val functionDeclarationArgsToPassedArgs = ((resolvedFunctionReference.resolvedSymbol as FirFunctionDeclaration).args zip astNode.args).toMap()
+                val functionDeclarationArgsToPassedArgs = ((resolvedFunctionReference.resolvedSymbol as FirFunctionDeclaration).args zip arguments).toMap()
                         .mapValues { (_, astArg) -> ExpressionLower.lower(astArg, firFunctionCall) }
 
-                if (astNode.args.size < resolvedFunction.args.size) DiagnosticPipe.report (
+                if (arguments.size < resolvedFunction.args.size) DiagnosticPipe.report (
                     CompilerDiagnostic (
                         level = CompilerDiagnostic.Level.Error,
                         message = "Not enough arguments for function ${resolvedFunction.name}",
                         astNode = astNode
                     )
-                ) else if (astNode.args.size > resolvedFunction.args.size) DiagnosticPipe.report (
+                ) else if (arguments.size > resolvedFunction.args.size) DiagnosticPipe.report (
                     CompilerDiagnostic (
                         level = CompilerDiagnostic.Level.Error,
                         message = "Too many arguments for type ${resolvedFunction.name}",
