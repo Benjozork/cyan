@@ -19,7 +19,6 @@ fun evaluate(expression: CyanExpression, stackFrame: StackFrame): CyanValue<out 
         is CyanNumericLiteralExpression -> CyanNumberValue(expression.value)
         is CyanStringLiteralExpression  -> CyanStringValue(expression.value)
         is CyanBooleanLiteralExpression -> CyanBooleanValue(expression.value)
-        is CyanStructLiteralExpression  -> CyanStringValue(expression.toString())
         is CyanIdentifierExpression -> Resolver.findByIdentifier(expression, stackFrame)
         is CyanBinaryExpression -> {
             val (lhs, op, rhs) = expression

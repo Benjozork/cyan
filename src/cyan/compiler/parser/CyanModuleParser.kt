@@ -188,11 +188,6 @@ class CyanModuleParser : Grammar<CyanModule>() {
     val numericalValueParser by numericalValue            use { CyanNumericLiteralExpression(text.toInt(), span(this)) }
     val booleanLiteralParser by (trueToken or falseToken) use { CyanBooleanLiteralExpression(type == trueToken, span(this)) }
 
-    // Struct literals
-
-    val structLiteralParser by (optional(refType) * -znws * lcur * -znws * separatedTerms(parser(this::expr), commaParser) * -znws * rcur)
-        .use { CyanStructLiteralExpression(t3.toTypedArray(), t1, t1?.let { span(t1!!, t4) } ?: span(t2, t4)) }
-
     // Members
 
     val memberAccessParser by (referenceParser * -dot * referenceParser)                                   use { CyanMemberAccessExpression(t1, t2, span(t1, t2)) }
@@ -200,7 +195,7 @@ class CyanModuleParser : Grammar<CyanModule>() {
 
     // Expressions
 
-    val literalExpressionParser by (numericalValueParser or stringLiteralParser or booleanLiteralParser or structLiteralParser)
+    val literalExpressionParser by (numericalValueParser or stringLiteralParser or booleanLiteralParser)
 
     val arrayExpressionParser by (lsq * separatedTerms(parser(this::expr), commaParser, true) * rsq) use { CyanArrayExpression(t2.toTypedArray(), span(t1, t3)) }
 
