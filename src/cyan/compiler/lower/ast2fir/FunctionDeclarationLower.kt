@@ -7,6 +7,7 @@ import cyan.compiler.fir.functions.FirFunctionDeclaration
 import cyan.compiler.fir.extensions.findSymbol
 import cyan.compiler.fir.extensions.resolveType
 import cyan.compiler.fir.functions.FirFunctionArgument
+import cyan.compiler.fir.functions.FirFunctionReceiver
 import cyan.compiler.parser.ast.expression.CyanIdentifierExpression
 import cyan.compiler.parser.ast.function.CyanFunctionDeclaration
 
@@ -28,7 +29,7 @@ object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirNullN
 
         // Resolve type for AST receiver and add a `this` symbol if needed
         astNode.signature.receiver?.let { receiver ->
-            firFunctionDeclaration.args += FirFunctionArgument(firFunctionDeclaration, "this", firFunctionDeclaration.resolveType(receiver.type))
+            firFunctionDeclaration.receiver = FirFunctionReceiver(firFunctionDeclaration, firFunctionDeclaration.resolveType(receiver.type))
         }
 
         // Lower AST function body

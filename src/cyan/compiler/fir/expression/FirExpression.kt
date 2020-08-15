@@ -5,18 +5,16 @@ import cyan.compiler.common.diagnostic.DiagnosticPipe
 import cyan.compiler.common.types.Type
 import cyan.compiler.common.types.CyanType
 import cyan.compiler.fir.*
-import cyan.compiler.fir.functions.FirFunctionArgument
 import cyan.compiler.fir.functions.FirFunctionDeclaration
-import cyan.compiler.fir.functions.FirCall
+import cyan.compiler.fir.functions.FirFunctionArgument
+import cyan.compiler.fir.functions.FirFunctionReceiver
 import cyan.compiler.fir.extensions.findSymbol
-import cyan.compiler.fir.extensions.firstAncestorOfType
 import cyan.compiler.fir.extensions.containingScope
 import cyan.compiler.parser.ast.expression.*
 import cyan.compiler.parser.ast.operator.CyanBinaryOperator
 import cyan.compiler.parser.ast.operator.CyanBinaryComparisonOperator
 
 import com.andreapivetta.kolor.lightGray
-import cyan.compiler.parser.ast.types.CyanTypeAnnotation
 
 open class FirExpression(override var parent: FirNode, val fromAstNode: CyanExpression) : FirNode {
 
@@ -49,6 +47,8 @@ open class FirExpression(override var parent: FirNode, val fromAstNode: CyanExpr
     class FunctionCall(parent: FirNode, fromAstNode: CyanExpression) : FirExpression(parent, fromAstNode), FirStatement {
 
         lateinit var callee: FirResolvedReference
+
+        var receiver: FirExpression? = null
 
         val args = mutableListOf<FirExpression>()
 
@@ -114,6 +114,7 @@ open class FirExpression(override var parent: FirNode, val fromAstNode: CyanExpr
                      is FirVariableDeclaration -> referee.initializationExpr.type()
                      is FirFunctionDeclaration -> Type.Primitive(CyanType.Any, false)
                      is FirFunctionArgument -> referee.typeAnnotation
+                     is FirFunctionReceiver -> referee.type
                      null -> error("cannot find symbol '${text}'")
                      else -> error("can't infer type of ${referee::class.simpleName}")
                  }

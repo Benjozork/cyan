@@ -11,11 +11,13 @@ class FirFunctionDeclaration (
     var args: Array<FirFunctionArgument>
 ): FirScope, FirSymbol {
 
+    var receiver: FirFunctionReceiver? = null
+
     lateinit var block: FirSource
 
     override fun allReferredSymbols() = block.allReferredSymbols()
 
-    override val declaredSymbols get() = (args.map { it as FirSymbol } + this).toMutableSet()
+    override val declaredSymbols get() = (args.toList() + this + receiver).filterNotNull().toMutableSet()
 
     override val localFunctions = mutableSetOf<FirFunctionDeclaration>()
 
