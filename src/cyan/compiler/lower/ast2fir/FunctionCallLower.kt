@@ -2,10 +2,8 @@ package cyan.compiler.lower.ast2fir
 
 import cyan.compiler.common.diagnostic.CompilerDiagnostic
 import cyan.compiler.common.diagnostic.DiagnosticPipe
-import cyan.compiler.common.types.Type
 import cyan.compiler.fir.*
 import cyan.compiler.fir.expression.FirExpression
-import cyan.compiler.fir.extensions.containingScope
 import cyan.compiler.fir.extensions.findSymbol
 import cyan.compiler.fir.functions.FirFunctionDeclaration
 import cyan.compiler.lower.ast2fir.expression.ExpressionLower
@@ -17,93 +15,106 @@ object FunctionCallLower : Ast2FirLower<CyanFunctionCall, FirNode> {
     override fun lower(astNode: CyanFunctionCall, parentFirNode: FirNode): FirNode {
         val firFunctionCall = FirExpression.FunctionCall(parentFirNode, astNode)
 
-        // Ignore argument labels for now
-        val arguments = astNode.args.map(CyanFunctionCall.Argument::value)
+        // Are we making a receiver call or not ?
+        return when (val loweredBase = ExpressionLower.lower(astNode.base, firFunctionCall)) {
+            is FirResolvedReference -> { // No
+                return when (val symbol = loweredBase.resolvedSymbol) {
+                    is FirTypeDeclaration     -> ValueInitializationConverter.convert(astNode, parentFirNode)
+                    is FirFunctionDeclaration -> processFunctionCall(firFunctionCall, symbol, astNode)
+                    else -> error("Cannot invoke on symbol of type '${symbol::class.simpleName}'")
+                }
+            }
+            is FirExpression.MemberAccess -> { // Yes
+                val functionReference = FirReference(firFunctionCall, loweredBase.member, astNode.base)
 
-        // Find what we are calling
-        val resolvedFunctionReference = when (val loweredBase = ExpressionLower.lower(astNode.base, firFunctionCall)) {
-            is FirResolvedReference -> loweredBase
-            is FirExpression.MemberAccess -> when (val memberAccessBaseType = loweredBase.base.type()) {
-                is Type.Primitive -> DiagnosticPipe.report (
+                // Find a function with the same name
+                val resolvedReference = parentFirNode.findSymbol(functionReference) ?: DiagnosticPipe.report (
                     CompilerDiagnostic (
-                        level = CompilerDiagnostic.Level.Internal,
-                        message = "Primitives do not have functions",
-                        astNode = astNode
+                        level = CompilerDiagnostic.Level.Error,
+                        message = "Unresolved symbol '${functionReference.text}'",
+                        astNode = astNode, span = loweredBase.fromAstNode.span
                     )
                 )
-                is Type.Struct -> {
-                    val structResolvedReference = parentFirNode.findSymbol(FirReference(parentFirNode, memberAccessBaseType.name, astNode))!!
-                    val structDeclarationScope = structResolvedReference.resolvedSymbol.containingScope()!!
-                    val matchingStructMethod = structDeclarationScope.localFunctions
-                        .singleOrNull { it.args.first().typeAnnotation == memberAccessBaseType && it.name == loweredBase.member }
-                        ?: DiagnosticPipe.report (
-                            CompilerDiagnostic (
-                                level = CompilerDiagnostic.Level.Error,
-                                message = "Could not find a function called '${loweredBase.member}' that accepts '$memberAccessBaseType' as a receiver",
-                                astNode = astNode, span = astNode.base.span
-                            )
-                        )
 
-                    firFunctionCall.args += loweredBase.base
+                require (resolvedReference.resolvedSymbol is FirFunctionDeclaration)
 
-                    FirResolvedReference(loweredBase, matchingStructMethod, matchingStructMethod.name, loweredBase.fromAstNode)
-                }
+                val resolvedFunction = resolvedReference.resolvedSymbol as FirFunctionDeclaration
+
+                // Does the function accept a receiver ?
+                if (resolvedFunction.receiver == null) DiagnosticPipe.report (
+                    CompilerDiagnostic (
+                        level = CompilerDiagnostic.Level.Error,
+                        message = "Function '${resolvedFunction.name}' does not accept a receiver",
+                        astNode = astNode, span = loweredBase.fromAstNode.span
+                    )
+                )
+
+                // Does the function accept a receiver with the good type ?
+                if (!(resolvedFunction.receiver!!.type accepts loweredBase.base.type())) DiagnosticPipe.report (
+                    CompilerDiagnostic (
+                        level = CompilerDiagnostic.Level.Error,
+                        message = "Function '${resolvedFunction.name}' does not accept a receiver of type '${loweredBase.base.type()}'",
+                        astNode = astNode, span = loweredBase.base.fromAstNode.span
+                    )
+                )
+
+                // Set FirFunctionCall receiver
+                firFunctionCall.receiver = loweredBase.base
+
+                processFunctionCall(firFunctionCall, resolvedFunction, astNode)
             }
             else -> DiagnosticPipe.report (
                 CompilerDiagnostic (
                     level = CompilerDiagnostic.Level.Internal,
-                    message = "lowered function call base expr resolved to '${loweredBase::class.simpleName}' but should have been FirResolvedReference",
+                    message = "lowered function call base expr resolved to '${loweredBase::class.simpleName}' but should have been FirResolvedReference or FirExpression.MemberAccess",
                     astNode = astNode
                 )
             )
         }
+    }
 
-        // Check what we are calling
-        return when (val symbol = resolvedFunctionReference.resolvedSymbol) {
-            is FirTypeDeclaration -> ValueInitializationConverter.convert(astNode, parentFirNode)
-            is FirFunctionDeclaration -> {
-                val resolvedFunction = resolvedFunctionReference.resolvedSymbol as FirFunctionDeclaration
+    private fun processFunctionCall(firCall: FirExpression.FunctionCall, functionSymbol: FirFunctionDeclaration, callAstNode: CyanFunctionCall): FirExpression.FunctionCall {
 
-                firFunctionCall.callee = resolvedFunctionReference
+        // Set FirFunctionCall callee to the resolved function
+        firCall.callee = functionSymbol.makeResolvedRef(firCall)
 
-                val functionDeclarationArgsToPassedArgs = ((resolvedFunctionReference.resolvedSymbol as FirFunctionDeclaration).args zip arguments).toMap()
-                        .mapValues { (_, astArg) -> ExpressionLower.lower(astArg, firFunctionCall) }
-
-                if (arguments.size < resolvedFunction.args.size) DiagnosticPipe.report (
-                    CompilerDiagnostic (
-                        level = CompilerDiagnostic.Level.Error,
-                        message = "Not enough arguments for function ${resolvedFunction.name}",
-                        astNode = astNode
-                    )
-                ) else if (arguments.size > resolvedFunction.args.size) DiagnosticPipe.report (
-                    CompilerDiagnostic (
-                        level = CompilerDiagnostic.Level.Error,
-                        message = "Too many arguments for type ${resolvedFunction.name}",
-                        astNode = astNode
-                    )
+        // For each argument in the call, check if it matches with the function's arguments
+        for ((index, astArg) in callAstNode.args.withIndex()) {
+            // Check arg exists
+            if (index !in functionSymbol.args.indices) DiagnosticPipe.report (
+                CompilerDiagnostic (
+                    level = CompilerDiagnostic.Level.Error,
+                    message = "Too many arguments for function '${functionSymbol.name}'",
+                    astNode = callAstNode, span = callAstNode.args[index].span
                 )
+            )
 
-                functionDeclarationArgsToPassedArgs.entries.forEachIndexed { i, (firArg, astArg) -> // Type check args
-                    val astArgType = astArg.type()
+            val loweredArg = ExpressionLower.lower(astArg.value, firCall)
+            val functionArg = functionSymbol.args[index]
 
-                    if (!(firArg.typeAnnotation accepts astArgType)) {
-                        DiagnosticPipe.report (
-                            CompilerDiagnostic (
-                                level = CompilerDiagnostic.Level.Error,
-                                message = "Type mismatch for argument $i: expected '${firArg.typeAnnotation}', found '${astArgType}'",
-                                astNode = astNode,
-                                span = astArg.fromAstNode.span
-                            )
-                        )
-                    }
-                }
+            // Check arg value is accepted by type
+            if (!(functionArg.typeAnnotation accepts loweredArg.type())) DiagnosticPipe.report (
+                CompilerDiagnostic (
+                    level = CompilerDiagnostic.Level.Error,
+                    message = "Type mismatch: expected '${functionArg.typeAnnotation}', found '${loweredArg.type()}''",
+                    astNode = callAstNode, span = astArg.span
+                )
+            )
 
-                firFunctionCall.args += functionDeclarationArgsToPassedArgs.values.toTypedArray()
-
-                firFunctionCall
-            }
-            else -> error("ast2fir: calls to symbols of type '${symbol::class.simpleName}' are not supported yet")
+            // Add to the FirFunctionCall
+            firCall.args += loweredArg
         }
+
+        // Check we have enough arguments
+        if (firCall.args.size < functionSymbol.args.size) DiagnosticPipe.report (
+            CompilerDiagnostic (
+                level = CompilerDiagnostic.Level.Error,
+                message = "Not enough arguments for function '${functionSymbol.name}'",
+                astNode = callAstNode, span = callAstNode.span
+            )
+        )
+
+        return firCall
     }
 
 }
