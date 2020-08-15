@@ -46,7 +46,13 @@ open class FirExpression(override var parent: FirNode, val fromAstNode: CyanExpr
 
     class ArrayIndex(val base: FirExpression, val index: FirExpression, parent: FirNode, fromAstNode: CyanExpression) : FirExpression(parent, fromAstNode)
 
-    class FunctionCall(val call: FirCall, parent: FirNode, fromAstNode: CyanExpression) : FirExpression(parent, fromAstNode), FirStatement
+    class FunctionCall(parent: FirNode, fromAstNode: CyanExpression) : FirExpression(parent, fromAstNode), FirStatement {
+
+        lateinit var callee: FirResolvedReference
+
+        val args = mutableListOf<FirExpression>()
+
+    }
 
     /**
      * Contains the inline expression if an expression was inlined to replace this expression.
@@ -62,9 +68,9 @@ open class FirExpression(override var parent: FirNode, val fromAstNode: CyanExpr
              is Literal.String  -> Type.Primitive(CyanType.Str, false)
              is Literal.Boolean -> Type.Primitive(CyanType.Bool, false)
              is FunctionCall -> {
-                 val firFunctionDeclaration = call.callee.resolvedSymbol as FirFunctionDeclaration
+                 val firFunctionDeclaration = callee.resolvedSymbol as FirFunctionDeclaration
 
-                 val functionDeclarationArgsToPassedArgs = (firFunctionDeclaration.args zip call.args).toMap()
+                 val functionDeclarationArgsToPassedArgs = (firFunctionDeclaration.args zip args).toMap()
 
                  functionDeclarationArgsToPassedArgs.entries.forEachIndexed { i, (firArg, astArg) -> // Type check args
                      val astArgType = astArg.type()
@@ -165,7 +171,7 @@ open class FirExpression(override var parent: FirNode, val fromAstNode: CyanExpr
         is Literal.Number,
         is Literal.String,
         is Literal.Boolean -> emptySet()
-        is FunctionCall -> setOf(call.callee) + call.args.flatMap { it.allReferredSymbols() }
+        is FunctionCall -> setOf(callee) + args.flatMap { it.allReferredSymbols() }
         is Literal.Struct -> elements.flatMap { it.value.allReferredSymbols() }.toSet()
         is Literal.Array -> elements.flatMap { it.allReferredSymbols() }.toSet()
         is Binary -> lhs.allReferredSymbols() + rhs.allReferredSymbols()

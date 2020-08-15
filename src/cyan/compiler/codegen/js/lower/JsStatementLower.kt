@@ -3,8 +3,8 @@ package cyan.compiler.codegen.js.lower
 import cyan.compiler.codegen.FirItemLower
 import cyan.compiler.codegen.js.JsLoweringContext
 import cyan.compiler.fir.*
+import cyan.compiler.fir.expression.FirExpression
 import cyan.compiler.fir.extensions.firstAncestorOfType
-import cyan.compiler.fir.functions.FirFunctionCall
 
 import java.lang.StringBuilder
 
@@ -15,18 +15,7 @@ object JsStatementLower : FirItemLower<JsLoweringContext, FirStatement, String> 
             is FirVariableDeclaration -> {
                 "${if (!item.mutable) "const" else "let"} ${item.name} = ${context.backend.lowerExpression(item.initializationExpr, context)};"
             }
-            is FirFunctionCall -> {
-                val containingDocument = item.firstAncestorOfType<FirModule>()
-                    ?: error("fir2js: no FirDocument as ancestor of node")
-
-                val calleeName = item.callee.resolvedSymbol.name
-
-                val isBuiltin = containingDocument.localFunctions.any { it.isExtern && it.name == calleeName }
-
-                val jsName = if (isBuiltin) "builtins.$calleeName" else calleeName
-
-                "$jsName(${item.args.joinToString(", ") { expr -> context.backend.lowerExpression(expr, context)}});"
-            }
+            is FirExpression -> JsExpressionLower.lower(context, item)
             is FirIfChain -> {
                 val builder = StringBuilder()
 

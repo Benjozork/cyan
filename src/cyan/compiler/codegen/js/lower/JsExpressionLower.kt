@@ -22,13 +22,13 @@ object JsExpressionLower : FirItemLower<JsLoweringContext, FirExpression, String
                 val containingDocument = item.firstAncestorOfType<FirModule>()
                     ?: error("fir2js: no FirDocument as ancestor of node")
 
-                val calleeName = expr.call.callee.resolvedSymbol.name
+                val calleeName = expr.callee.resolvedSymbol.name
 
                 val isBuiltin = containingDocument.localFunctions.any { it.isExtern && it.name == calleeName }
 
                 val jsName = if (isBuiltin) "builtins.$calleeName" else calleeName
 
-                "$jsName(${expr.call.args.joinToString(", ") { fcExpr -> context.backend.lowerExpression(fcExpr, context) }})"
+                "$jsName(${expr.args.joinToString(", ") { fcExpr -> context.backend.lowerExpression(fcExpr, context) }})"
             }
             is FirExpression.Literal.Struct -> {
                 val structType = item.type() as Type.Struct

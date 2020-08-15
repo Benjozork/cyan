@@ -8,14 +8,13 @@ import cyan.compiler.fir.expression.FirExpression
 import cyan.compiler.fir.extensions.containingScope
 import cyan.compiler.fir.extensions.findSymbol
 import cyan.compiler.fir.functions.FirFunctionDeclaration
-import cyan.compiler.fir.functions.FirFunctionCall
 import cyan.compiler.lower.ast2fir.expression.ExpressionLower
 import cyan.compiler.parser.ast.function.CyanFunctionCall
 
 object FunctionCallLower : Ast2FirLower<CyanFunctionCall, FirNode> {
 
     override fun lower(astNode: CyanFunctionCall, parentFirNode: FirNode): FirNode {
-        val firFunctionCall = FirFunctionCall(parentFirNode)
+        val firFunctionCall = FirExpression.FunctionCall(parentFirNode, astNode)
 
         // Find what we are calling
         val resolvedFunctionReference = when (val loweredBase = ExpressionLower.lower(astNode.base, firFunctionCall)) {
@@ -127,7 +126,7 @@ object FunctionCallLower : Ast2FirLower<CyanFunctionCall, FirNode> {
 
                 firFunctionCall.args += functionDeclarationArgsToPassedArgs.values.toTypedArray()
 
-                FirExpression.FunctionCall(firFunctionCall, parentFirNode, astNode)
+                firFunctionCall
             }
             else -> error("ast2fir: calls to symbols of type '${symbol::class.simpleName}' are not supported yet")
         }

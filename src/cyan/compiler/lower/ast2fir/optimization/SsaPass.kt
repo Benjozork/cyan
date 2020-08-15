@@ -8,7 +8,6 @@ import cyan.compiler.fir.analysis.cfg.StatementChainCfgBuilder
 import cyan.compiler.fir.analysis.definitions.DefinitionChainBuilder
 import cyan.compiler.fir.expression.FirExpression
 import cyan.compiler.fir.extensions.containingScope
-import cyan.compiler.fir.functions.FirFunctionCall
 import cyan.compiler.parser.ast.expression.CyanIdentifierExpression
 
 import kotlin.random.Random
@@ -45,7 +44,7 @@ object SsaPass : FirOptimizationPass {
                         .filter { it.resolvedSymbol == originDecl }
                         .forEach {
                             when (val item = it.parent) {
-                                is FirFunctionCall -> item.callee.resolvedSymbol = newDecl
+                                is FirExpression.FunctionCall -> item.callee.resolvedSymbol = newDecl
                                 is FirExpression -> item.inlinedExpr = FirResolvedReference(item.parent, newDecl, newDecl.name, CyanIdentifierExpression(newDecl.name))
                                 else -> error("resolvedSymbol parent was not a FirFunctionCall or a FirExpression")
                             }

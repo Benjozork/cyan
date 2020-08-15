@@ -8,8 +8,6 @@ import cyan.compiler.common.types.CyanType
 import cyan.compiler.common.types.Type
 import cyan.compiler.fir.*
 import cyan.compiler.fir.expression.FirExpression
-import cyan.compiler.fir.functions.FirCall
-import cyan.compiler.fir.functions.FirFunctionCall
 import cyan.compiler.fir.functions.FirFunctionDeclaration
 
 object WasmStatementLower : FirItemLower<WasmLoweringContext, FirStatement, Wasm.OrderedElement> {
@@ -47,26 +45,7 @@ object WasmStatementLower : FirItemLower<WasmLoweringContext, FirStatement, Wasm
                     }
                 }
             }
-            is FirFunctionCall, is FirExpression.FunctionCall -> {
-                val call = when (item) {
-                    is FirFunctionCall -> item
-                    is FirExpression.FunctionCall -> item.call
-                    else -> error("fir2wasm: unknown function call class '${item::class.simpleName}'")
-                }
-
-                val function = call.callee.resolvedSymbol as FirFunctionDeclaration
-                val functionReturnTypeIsVoid = function.returnType == Type.Primitive(CyanType.Void, false)
-
-                instructions {
-                    for (argument in call.args.map { context.backend.lowerExpression(it, context) }) {
-                        +argument
-                    }
-
-                    call(function.name)
-                    if (!functionReturnTypeIsVoid)
-                        drop
-                }
-            }
+            is FirExpression -> context.backend.lowerExpression(item, context)
             is FirIfChain -> {
                 require (item.branches.size == 1) { "fir2wasm: if chains can currently only have one condition" }
                 require (item.elseBranch != null) { "fir2wasm: if chains currently must have an else branch" }
