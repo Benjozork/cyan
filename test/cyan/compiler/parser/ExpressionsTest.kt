@@ -3,15 +3,18 @@ package cyan.compiler.parser
 import com.github.h0tk3y.betterParse.grammar.Grammar
 import com.github.h0tk3y.betterParse.grammar.parseToEnd
 
+import cyan.compiler.parser.ast.expression.CyanArrayExpression
 import cyan.compiler.parser.ast.expression.CyanExpression
-import cyan.compiler.parser.ast.expression.CyanStructLiteralExpression
+import cyan.compiler.parser.ast.expression.CyanIdentifierExpression
 import cyan.compiler.parser.ast.expression.literal.CyanBooleanLiteralExpression
 import cyan.compiler.parser.ast.expression.literal.CyanNumericLiteralExpression
 import cyan.compiler.parser.ast.expression.literal.CyanStringLiteralExpression
+import cyan.compiler.parser.ast.function.CyanFunctionCall
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Disabled
 
 class ExpressionsTest {
 
@@ -62,28 +65,94 @@ class ExpressionsTest {
     }
 
     @Nested
-    inner class StructLiterals {
+    inner class Arrays {
 
-        @Test fun `inferred type`() = doTest (
+        @Disabled @Test fun `no elements`() = doTest (
             """
-                { "a", 18 }
+                []
             """.trimIndent(),
-            CyanStructLiteralExpression (
+            CyanArrayExpression (
+                emptyArray()
+            )
+        )
+
+        @Test fun `one element`() = doTest (
+            """
+                ["hi"]
+            """.trimIndent(),
+            CyanArrayExpression (
                 arrayOf (
-                    CyanStringLiteralExpression("a"),
-                    CyanNumericLiteralExpression(18)
+                    CyanStringLiteralExpression("hi")
                 )
             )
         )
 
-        @Test fun `explicit type`() = doTest (
+        @Test fun `multiple elements`() = doTest (
             """
-                Person { "a", 18 }
+                ["hi", "hello"]
             """.trimIndent(),
-            CyanStructLiteralExpression (
+            CyanArrayExpression (
                 arrayOf (
-                    CyanStringLiteralExpression("a"),
-                    CyanNumericLiteralExpression(18)
+                    CyanStringLiteralExpression("hi"),
+                    CyanStringLiteralExpression("hello")
+                )
+            )
+        )
+
+        @Test fun nested() = doTest (
+            """
+                ["hi", ["hello", "world"]]
+            """.trimIndent(),
+            CyanArrayExpression (
+                arrayOf (
+                    CyanStringLiteralExpression("hi"),
+                    CyanArrayExpression (
+                        arrayOf (
+                            CyanStringLiteralExpression("hello"),
+                            CyanStringLiteralExpression("world")
+                        )
+                    )
+                )
+            )
+        )
+
+    }
+
+    @Nested
+    inner class FunctionCalls {
+
+        @Test fun `no arguments`() = doTest (
+            """
+                Person()
+            """.trimIndent(),
+            CyanFunctionCall (
+                CyanIdentifierExpression("Person"),
+                emptyArray()
+            )
+        )
+
+        @Test fun `positional arguments`() = doTest (
+            """
+                Person("a", 18)
+            """.trimIndent(),
+            CyanFunctionCall (
+                CyanIdentifierExpression("Person"),
+                arrayOf (
+                    CyanFunctionCall.Argument(null, CyanStringLiteralExpression("a")),
+                    CyanFunctionCall.Argument(null, CyanNumericLiteralExpression(18))
+                )
+            )
+        )
+
+        @Test fun `named arguments`() = doTest (
+            """
+                Person(name: "a", age: 18)
+            """.trimIndent(),
+            CyanFunctionCall (
+                CyanIdentifierExpression("Person"),
+                arrayOf (
+                    CyanFunctionCall.Argument(CyanIdentifierExpression("name"), CyanStringLiteralExpression("a")),
+                    CyanFunctionCall.Argument(CyanIdentifierExpression("age"), CyanNumericLiteralExpression(18))
                 )
             )
         )
