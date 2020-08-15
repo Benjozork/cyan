@@ -5,10 +5,7 @@ import com.github.h0tk3y.betterParse.grammar.parseToEnd
 import cyan.compiler.common.diagnostic.CompilerDiagnostic
 import cyan.compiler.common.diagnostic.DiagnosticPipe
 import cyan.compiler.common.types.Type
-import cyan.compiler.fir.FirNode
-import cyan.compiler.fir.FirReference
-import cyan.compiler.fir.FirResolvedReference
-import cyan.compiler.fir.FirVariableDeclaration
+import cyan.compiler.fir.*
 import cyan.compiler.fir.expression.FirExpression
 import cyan.compiler.fir.extensions.findSymbol
 import cyan.compiler.fir.extensions.firstAncestorOfType
@@ -34,7 +31,17 @@ object ExpressionLower : Ast2FirLower<CyanExpression, FirExpression> {
                 FirExpression.Literal.String(content, parentFirNode, astNode)
             }
             is CyanBooleanLiteralExpression -> FirExpression.Literal.Boolean(astNode.value, parentFirNode, astNode)
-            is CyanFunctionCall -> FirExpression.FunctionCall(FunctionCallLower.lower(astNode, parentFirNode), parentFirNode, astNode)
+            is CyanFunctionCall -> when (val node = FunctionCallLower.lower(astNode, parentFirNode)) {
+                is FirExpression.FunctionCall   -> node
+                is FirExpression.Literal.Struct -> node
+                else -> DiagnosticPipe.report (
+                    CompilerDiagnostic (
+                        level = CompilerDiagnostic.Level.Internal,
+                        message = "CyanFunctionCall was lowered into something unexpected: ${node::class.simpleName}",
+                        astNode = astNode, span = astNode.span
+                    )
+                )
+            }
             is CyanIdentifierExpression -> {
                 val reference = FirReference(parentFirNode, astNode.value, astNode)
                 val resolvedReference = parentFirNode.findSymbol(reference) ?: DiagnosticPipe.report (
@@ -56,37 +63,50 @@ object ExpressionLower : Ast2FirLower<CyanExpression, FirExpression> {
                     )
                 )
 
-                val declarationType = containingVariableDeclaration.typeAnnotation ?: DiagnosticPipe.report (
+                val type = if (astNode.typeAnnotation != null) {
+                    val reference = FirReference(parentFirNode, astNode.typeAnnotation.identifierExpression.value, astNode)
+                    val typeSymbol = parentFirNode.findSymbol(reference) ?: DiagnosticPipe.report (
+                        CompilerDiagnostic (
+                            level = CompilerDiagnostic.Level.Error,
+                            message = "Unresolved type '${astNode.typeAnnotation.identifierExpression.value}'",
+                            astNode = astNode, span = astNode.typeAnnotation.span
+                        )
+                    )
+
+                    (typeSymbol.resolvedSymbol as FirTypeDeclaration).struct
+                } else {
+                    containingVariableDeclaration.typeAnnotation ?: DiagnosticPipe.report (
+                        CompilerDiagnostic (
+                            level = CompilerDiagnostic.Level.Error,
+                            message = "cannot infer type for struct literal",
+                            astNode = astNode
+                        )
+                    )
+                }
+
+                if (type !is Type.Struct) DiagnosticPipe.report (
                     CompilerDiagnostic (
                         level = CompilerDiagnostic.Level.Error,
-                        message = "struct literals are only allowed in variable declarations with a type annotation",
+                        message = "Type mismatch: expected '$type', found <struct literal>",
                         astNode = astNode
                     )
                 )
 
-                if (declarationType !is Type.Struct) DiagnosticPipe.report (
+                if (type.properties.size < astNode.exprs.size) DiagnosticPipe.report (
                     CompilerDiagnostic (
                         level = CompilerDiagnostic.Level.Error,
-                        message = "Type mismatch: expected '$declarationType', found <struct literal>",
+                        message = "Not enough arguments for type $type",
+                        astNode = astNode
+                    )
+                ) else if (type.properties.size > astNode.exprs.size) DiagnosticPipe.report (
+                    CompilerDiagnostic (
+                        level = CompilerDiagnostic.Level.Error,
+                        message = "Too many arguments for type $type",
                         astNode = astNode
                     )
                 )
 
-                if (declarationType.properties.size < astNode.exprs.size) DiagnosticPipe.report (
-                    CompilerDiagnostic (
-                        level = CompilerDiagnostic.Level.Error,
-                        message = "Not enough arguments for type $declarationType",
-                        astNode = astNode
-                    )
-                ) else if (declarationType.properties.size > astNode.exprs.size) DiagnosticPipe.report (
-                    CompilerDiagnostic (
-                        level = CompilerDiagnostic.Level.Error,
-                        message = "Too many arguments for type $declarationType",
-                        astNode = astNode
-                    )
-                )
-
-                val fieldValues = declarationType.properties zip astNode.exprs.map { lower(it, parentFirNode) }
+                val fieldValues = type.properties zip astNode.exprs.map { lower(it, parentFirNode) }
 
                 fieldValues.forEachIndexed { i, (property, astExpr) ->
                     if (!(property.type accepts astExpr.type())) DiagnosticPipe.report (
@@ -98,7 +118,7 @@ object ExpressionLower : Ast2FirLower<CyanExpression, FirExpression> {
                     )
                 }
 
-                val firStructLiteral = FirExpression.Literal.Struct(fieldValues.toMap(), parentFirNode, astNode)
+                val firStructLiteral = FirExpression.Literal.Struct(fieldValues.toMap(), type, parentFirNode, astNode)
 
                 firStructLiteral
             }

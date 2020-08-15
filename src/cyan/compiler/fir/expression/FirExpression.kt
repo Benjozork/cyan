@@ -16,6 +16,7 @@ import cyan.compiler.parser.ast.operator.CyanBinaryOperator
 import cyan.compiler.parser.ast.operator.CyanBinaryComparisonOperator
 
 import com.andreapivetta.kolor.lightGray
+import cyan.compiler.parser.ast.types.CyanTypeAnnotation
 
 open class FirExpression(override var parent: FirNode, val fromAstNode: CyanExpression) : FirNode {
 
@@ -33,7 +34,7 @@ open class FirExpression(override var parent: FirNode, val fromAstNode: CyanExpr
 
         class Array(val elements: List<FirExpression>, parent: FirNode, fromAstNode: CyanExpression) : Literal(parent, fromAstNode)
 
-        class Struct(val elements: Map<Type.Struct.Property, FirExpression>, parent: FirNode, fromAstNode: CyanExpression) : Literal(parent, fromAstNode)
+        class Struct(val elements: Map<Type.Struct.Property, FirExpression>, val type: Type.Struct, parent: FirNode, fromAstNode: CyanExpression) : Literal(parent, fromAstNode)
 
     }
 
@@ -45,7 +46,7 @@ open class FirExpression(override var parent: FirNode, val fromAstNode: CyanExpr
 
     class ArrayIndex(val base: FirExpression, val index: FirExpression, parent: FirNode, fromAstNode: CyanExpression) : FirExpression(parent, fromAstNode)
 
-    class FunctionCall(val call: FirCall, parent: FirNode, fromAstNode: CyanExpression) : FirExpression(parent, fromAstNode)
+    class FunctionCall(val call: FirCall, parent: FirNode, fromAstNode: CyanExpression) : FirExpression(parent, fromAstNode), FirStatement
 
     /**
      * Contains the inline expression if an expression was inlined to replace this expression.
@@ -81,27 +82,7 @@ open class FirExpression(override var parent: FirNode, val fromAstNode: CyanExpr
 
                  firFunctionDeclaration.returnType
              }
-             is Literal.Struct -> {
-                 val containingDecl = firstAncestorOfType<FirVariableDeclaration>()
-                     ?: DiagnosticPipe.report (
-                         CompilerDiagnostic (
-                             level = CompilerDiagnostic.Level.Error,
-                             message = "struct literal must be part of a variable initialization",
-                             astNode = fromAstNode
-                         )
-                     )
-
-                 val type = containingDecl.typeAnnotation
-                     ?: DiagnosticPipe.report (
-                         CompilerDiagnostic (
-                             level = CompilerDiagnostic.Level.Error,
-                             message = "variable initialized with a struct literal must have a type annotation",
-                             astNode = fromAstNode
-                         )
-                     )
-
-                 type
-             }
+             is Literal.Struct -> type
              is Literal.Array -> elements.first().type().asArrayType()
              is Binary -> {
                  val (lhsType, rhsType) = lhs.type() to rhs.type()
