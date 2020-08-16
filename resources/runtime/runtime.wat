@@ -243,23 +243,6 @@
     (call $print (i32.const 0))
 )
 
-(func $print (param $str i32)
-    (local $iov i32)
-
-    local.get $str
-    call $cy_str_to_iov
-    local.set $iov
-
-    (call $fd_write
-        (i32.const 1)
-        (local.get $iov)
-        (i32.const 1)
-        (i32.const 20)
-    )
-
-    drop
-)
-
 ;; cyanc_insert_here
 
 ;; cyanc_insert_prealloc_here

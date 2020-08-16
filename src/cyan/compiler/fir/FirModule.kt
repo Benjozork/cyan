@@ -1,11 +1,12 @@
 package cyan.compiler.fir
 
-import com.andreapivetta.kolor.lightGreen
 import cyan.compiler.fir.functions.FirFunctionDeclaration
 import cyan.compiler.lower.ast2fir.SourceLower
 import cyan.compiler.parser.CyanModuleParser
 
 import com.github.h0tk3y.betterParse.grammar.parseToEnd
+
+import com.andreapivetta.kolor.lightGreen
 
 import java.io.File
 
@@ -42,7 +43,7 @@ class FirModule (
 
         private val cachedModules = mutableMapOf<String, FirModule>()
 
-        private val runtimeModule get() = cachedModules["__runtime__"] ?: error("fatal: runtime module not in module cache")
+        private val runtimeModule get() = cachedModules["__runtime__"]
 
         fun compileModuleFromFile(it: File): FirModule {
             println("Compiling".lightGreen() + "\t\t'${it.name}'")
@@ -55,7 +56,7 @@ class FirModule (
             val compiledModule = FirModule(name = moduleName)
 
             if (moduleName != "__runtime__")
-                compiledModule.declaredSymbols += runtimeModule.declaredSymbols
+                compiledModule.declaredSymbols += runtimeModule?.declaredSymbols ?: emptySet()
 
             compiledModule.source = SourceLower.lower(parsedModule.source, compiledModule)
 
