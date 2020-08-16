@@ -8,6 +8,8 @@ import cyan.compiler.codegen.wasm.utils.size
 import cyan.compiler.common.types.CyanType
 import cyan.compiler.common.types.Type
 import cyan.compiler.fir.FirResolvedReference
+import cyan.compiler.fir.FirSource
+import cyan.compiler.fir.FirStatement
 import cyan.compiler.fir.FirVariableDeclaration
 import cyan.compiler.fir.expression.FirExpression
 import cyan.compiler.fir.functions.FirFunctionArgument
@@ -79,6 +81,8 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
                     }
 
                     call(function.name)
+                    if ((expr.callee.resolvedSymbol as FirFunctionDeclaration).returnType != Type.Primitive(CyanType.Void) && expr.parent is FirSource)
+                        drop
                 }
             }
             is FirExpression.MemberAccess -> instructions {
