@@ -10,3 +10,11 @@ function print(content: str): void {
 function println(content: str): void {
     print(content + "\n")
 }
+
+function read(len: i32): i32 {
+    let iov_ptr = cy_alloc_buf_iov(len)
+
+    fd_read(0, iov_ptr, 1, 24)
+
+    return iov_ptr
+}
