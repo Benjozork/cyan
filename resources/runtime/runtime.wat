@@ -240,7 +240,13 @@
     i32.const 4
     i32.const 512
     i32.store
-    (call $print (i32.const 0))
+
+    i32.const 1
+    i32.const 0
+    i32.const 1
+    i32.const 24
+    call $fd_write
+    drop
 )
 
 ;; cyanc_insert_here
