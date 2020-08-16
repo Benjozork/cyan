@@ -275,6 +275,32 @@
     local.get $iov_ptr
 )
 
+(func $cy_iov_get_buf (param $iov_ptr i32) (result i32)
+    local.get $iov_ptr
+    i32.load
+)
+
+(func $cy_iov_set_buf (param $iov_ptr i32) (param $new_buf_ptr i32)
+    local.get $iov_ptr
+    local.get $new_buf_ptr
+    i32.store
+)
+
+(func $cy_iov_get_len (param $iov_ptr i32) (result i32)
+    local.get $iov_ptr
+    i32.const 4
+    i32.add
+    i32.load
+)
+
+(func $cy_iov_set_len (param $iov_ptr i32) (param $new_len i32)
+    local.get $iov_ptr
+    i32.const 4
+    i32.add
+    local.get $new_len
+    i32.store
+)
+
 (func $cy_dump_mem
     i32.const 0
     i32.const 0
