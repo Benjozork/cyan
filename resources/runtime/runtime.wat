@@ -53,7 +53,7 @@
          i32.store
 
          ;; if we are not at end, do again
-         i32.const 1024
+         i32.const 4096
          local.get $curr_block_ptr
          i32.gt_u
          if $continue
