@@ -1,4 +1,5 @@
 (import "wasi_unstable" "fd_write" (func $fd_write (param i32 i32 i32 i32) (result i32)))
+(import "wasi_unstable" "fd_read" (func $fd_read (param i32 i32 i32 i32) (result i32)))
 
 (memory 1)
 
@@ -231,6 +232,31 @@
     i32.store
 
     local.get $addr
+)
+
+(func $cy_alloc_buf_iov (param $size i32) (result i32)
+    (local $buf_ptr i32)
+    (local $iov_ptr i32)
+
+    ;; local.get $size
+    call $cy_malloc
+    local.set $buf_ptr
+    call $cy_malloc
+    i32.const 3
+    i32.add
+    local.set $iov_ptr
+
+    local.get $iov_ptr
+    local.get $buf_ptr
+    i32.store
+
+    local.get $iov_ptr
+    i32.const 4
+    i32.add
+    local.get $size
+    i32.store
+
+    local.get $iov_ptr
 )
 
 (func $cy_dump_mem
