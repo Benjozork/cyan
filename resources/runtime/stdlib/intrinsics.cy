@@ -6,6 +6,8 @@ extern function cy_str_len(string: str): i32
 
 extern function cy_str_to_iov(string: str): i32
 
+extern function cy_iov_to_str(iov_ptr: i32): str
+
 extern function cy_alloc_buf_iov(size: i32): i32
 
 extern function cy_iov_get_buf(iov_ptr: i32): i32

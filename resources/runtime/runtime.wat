@@ -250,6 +250,11 @@
     local.get $addr
 )
 
+(func $cy_iov_to_str (param $iov_ptr i32) (result i32)
+    local.get $iov_ptr
+    i32.load
+)
+
 (func $cy_alloc_buf_iov (param $size i32) (result i32)
     (local $buf_ptr i32)
     (local $iov_ptr i32)
