@@ -102,6 +102,22 @@
     end
 )
 
+(func $cy_str_char_at (param $str i32) (param $idx i32) (result i32)
+    (block $B0
+        local.get $idx
+        local.get $str
+        call $cy_str_len
+        i32.lt_u
+        br_if $B0
+        unreachable
+    )
+
+    local.get $str
+    local.get $idx
+    i32.add
+    i32.load8_u
+)
+
 (func $cy_str_len (param $str i32) (result i32)
     (local $curr_idx i32)
 
