@@ -163,7 +163,8 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
                 when (val symbol = expr.resolvedSymbol) {
                     is FirVariableDeclaration -> local.get(context.locals[symbol] ?: error("no local was set for variable '${symbol.name}'"))
                     is FirFunctionArgument    -> local.get(symbol.name)
-                    else -> error("")
+                    is FirFunctionReceiver    -> local.get("_r")
+                    else -> error("fir2wasm: cannot lower reference to symbol of type '${symbol::class.simpleName}'")
                 }
             }
             else -> error("fir2wasm: cannot lower expression of type '${expr::class.simpleName}'")
