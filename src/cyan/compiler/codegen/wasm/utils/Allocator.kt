@@ -57,6 +57,7 @@ class Allocator {
         is FirExpression.Literal.Scalar<*> -> AllocationResult.Stack (
             when(val value = expression.value) {
                 is Int -> value
+                is Boolean -> if (value) 1 else 0
                 else -> error("fir2wasm-allocator: cannot allocate scalar value of type '${expression::class.simpleName}'")
             }
         )
