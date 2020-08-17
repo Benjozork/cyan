@@ -34,29 +34,36 @@
     local.set $curr_block_ptr
 
     loop $init_blocks
-         ;; set block free
-         local.get $curr_block_ptr
-         i32.const 0
-         i32.store8
+        ;; set block free
+        local.get $curr_block_ptr
+        i32.const 0
+        i32.store8
 
-         ;; calculate next block addr
-         local.get $curr_block_ptr
-         i32.const 64
-         i32.add
-         local.set $next_block_ptr
+        ;; calculate next block addr
+        local.get $curr_block_ptr
+        i32.const 64
+        i32.add
+        local.set $next_block_ptr
 
-         ;; set next block addr in curr block
-         local.get $curr_block_ptr
-         i32.const 1
-         i32.add
-         local.get $next_block_ptr
-         i32.store
+        ;; set next block addr in curr block
+        local.get $curr_block_ptr
+        i32.const 1
+        i32.add
+        local.get $next_block_ptr
+        i32.store
 
-         ;; if we are not at end, do again
-         i32.const 4096
-         local.get $curr_block_ptr
-         i32.gt_u
-         if $continue
+        ;; if we are not at end, do again
+
+        memory.size
+        i32.const 65536
+        i32.mul
+
+        global.get $heap_start
+        i32.sub
+
+        local.get $curr_block_ptr
+        i32.gt_u
+        if $continue
             local.get $next_block_ptr
             local.set $curr_block_ptr
             br $init_blocks
