@@ -17,3 +17,5 @@ extern function cy_iov_set_buf(iov_ptr: i32, new_buf_ptr: i32): void
 extern function cy_iov_get_len(iov_ptr: i32): i32
 
 extern function cy_iov_set_len(iov_ptr: i32, new_len: i32): void
+
+extern function cy_dump_mem(): void
