@@ -22,9 +22,11 @@ object WhileStatementLower : Ast2FirLower<CyanWhileStatement, FirWhileStatement>
             )
         )
 
-        val loweredSource = InheritingSourceLower.lower(astNode.source, parentFirNode)
+        val firWhileStatement = FirWhileStatement(parentFirNode, loweredExpr)
 
-        val firWhileStatement = FirWhileStatement(parentFirNode, loweredExpr, loweredSource)
+        val loweredSource = InheritingSourceLower.lower(astNode.source, firWhileStatement)
+
+        firWhileStatement.block = loweredSource
 
         loweredExpr.parent = firWhileStatement
         loweredSource.parent = firWhileStatement

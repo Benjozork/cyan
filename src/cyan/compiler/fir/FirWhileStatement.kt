@@ -5,9 +5,9 @@ import cyan.compiler.fir.expression.FirExpression
 class FirWhileStatement (
     override val parent: FirNode,
     val conditionExpr: FirExpression,
-    val block: FirSource.Inheriting
-) : FirStatement, FirScope by block {
+    var block: FirSource? = null
+) : FirStatement {
 
-    override fun allReferredSymbols() = conditionExpr.allReferredSymbols() + block.allReferredSymbols()
+    override fun allReferredSymbols() = conditionExpr.allReferredSymbols() + (block?.allReferredSymbols() ?: emptySet())
 
 }

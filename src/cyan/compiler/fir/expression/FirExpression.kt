@@ -64,9 +64,9 @@ open class FirExpression(override var parent: FirNode, val fromAstNode: CyanExpr
      */
     fun type(): Type {
          return when (this) {
-             is Literal.Number  -> Type.Primitive(CyanType.I32, false)
-             is Literal.String  -> Type.Primitive(CyanType.Str, false)
-             is Literal.Boolean -> Type.Primitive(CyanType.Bool, false)
+             is Literal.Number  -> Type.Primitive(CyanType.I32)
+             is Literal.String  -> Type.Primitive(CyanType.Str)
+             is Literal.Boolean -> Type.Primitive(CyanType.Bool)
              is FunctionCall -> {
                  val firFunctionDeclaration = callee.resolvedSymbol as FirFunctionDeclaration
 

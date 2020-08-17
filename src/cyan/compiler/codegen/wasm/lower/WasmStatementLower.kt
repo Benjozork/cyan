@@ -4,11 +4,8 @@ import cyan.compiler.codegen.FirItemLower
 import cyan.compiler.codegen.wasm.WasmLoweringContext
 import cyan.compiler.codegen.wasm.dsl.*
 import cyan.compiler.codegen.wasm.utils.AllocationResult
-import cyan.compiler.common.types.CyanType
-import cyan.compiler.common.types.Type
 import cyan.compiler.fir.*
 import cyan.compiler.fir.expression.FirExpression
-import cyan.compiler.fir.functions.FirFunctionDeclaration
 
 object WasmStatementLower : FirItemLower<WasmLoweringContext, FirStatement, Wasm.OrderedElement> {
 
@@ -63,7 +60,7 @@ object WasmStatementLower : FirItemLower<WasmLoweringContext, FirStatement, Wasm
             is FirWhileStatement -> block(0) {
                 val loweredExpression = context.backend.lowerExpression(item.conditionExpr, context)
                 val loweredBody = instructions {
-                    item.block.statements.map { +context.backend.lowerStatement(it, context) }
+                    item.block!!.statements.map { +context.backend.lowerStatement(it, context) }
                 }
 
                 +loweredExpression

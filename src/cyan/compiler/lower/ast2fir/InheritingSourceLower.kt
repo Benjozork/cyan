@@ -6,10 +6,10 @@ import cyan.compiler.fir.FirTypeDeclaration
 import cyan.compiler.fir.FirSource
 import cyan.compiler.parser.ast.CyanSource
 
-object InheritingSourceLower : Ast2FirLower<CyanSource, FirSource.Inheriting> {
+object InheritingSourceLower : Ast2FirLower<CyanSource, FirSource> {
 
-    override fun lower(astNode: CyanSource, parentFirNode: FirNode): FirSource.Inheriting {
-        val source = FirSource.Inheriting(parentFirNode)
+    override fun lower(astNode: CyanSource, parentFirNode: FirNode): FirSource {
+        val source = FirSource(parentFirNode, isInheriting = true)
 
         for (node in astNode.statements) {
             val loweredNode = StatementLower.lower(node, source)

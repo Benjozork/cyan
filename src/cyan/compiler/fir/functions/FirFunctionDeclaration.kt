@@ -11,6 +11,8 @@ class FirFunctionDeclaration (
     var args: Array<FirFunctionArgument>
 ): FirScope, FirSymbol {
 
+    override val isInheriting = false
+
     var receiver: FirFunctionReceiver? = null
 
     lateinit var block: FirSource

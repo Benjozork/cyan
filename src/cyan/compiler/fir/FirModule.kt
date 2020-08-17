@@ -15,6 +15,8 @@ class FirModule (
     val name: String
 ) : FirScope {
 
+    override val isInheriting = false
+
     lateinit var source: FirSource
 
     override val localFunctions get() = declaredSymbols.filterIsInstance<FirFunctionDeclaration>().toMutableSet()
