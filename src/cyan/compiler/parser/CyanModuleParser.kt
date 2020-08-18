@@ -19,6 +19,7 @@ import com.github.h0tk3y.betterParse.lexer.TokenMatch
 import com.github.h0tk3y.betterParse.lexer.literalToken
 import com.github.h0tk3y.betterParse.lexer.regexToken
 import com.github.h0tk3y.betterParse.parser.Parser
+
 import cyan.compiler.parser.ast.function.*
 
 @Suppress("MemberVisibilityCanBePrivate")
@@ -187,7 +188,7 @@ class CyanModuleParser : Grammar<CyanModule>() {
 
     // Members
 
-    val memberAccessParser by (referenceParser * -dot * referenceParser)                                   use { CyanMemberAccessExpression(t1, t2, span(t1, t2)) }
+    val memberAccessParser by (referenceParser * -dot * referenceParser)                                             use { CyanMemberAccessExpression(t1, t2, span(t1, t2)) }
     val arrayIndexParser   by (parser(this::unambiguousTermForArrayIndex) * -znws * -lsq * parser(this::expr) * rsq) use { CyanArrayIndexExpression(t1, t2, span(t1, t3)) }
 
     // Expressions
@@ -208,13 +209,16 @@ class CyanModuleParser : Grammar<CyanModule>() {
             by (parenTerm or arrayExpressionParser or literalExpressionParser or parser(this::functionCall) or memberAccessParser or arrayIndexParser or referenceParser)
 
     val mulDivModOp by (times or div or mod) use { tokenToOp[this.type]!! }
-    val mulDivModOrTerm: Parser<CyanExpression> by leftAssociative(term, -optional(ws) * mulDivModOp * -optional(ws)) { l, o, r -> CyanBinaryExpression(l, o, r, span(l, r)) }
+    val mulDivModOrTerm: Parser<CyanExpression>
+            by leftAssociative(term, -optional(ws) * mulDivModOp * -optional(ws)) { l, o, r -> CyanBinaryExpression(l, o, r, span(l, r)) }
 
     val plusMinusOp by (plus or minus) use { tokenToOp[this.type]!! }
-    val arithmetic: Parser<CyanExpression> by leftAssociative(mulDivModOrTerm, -optional(ws) * plusMinusOp * -optional(ws)) { l, o, r -> CyanBinaryExpression(l, o, r, span(l, r)) }
+    val arithmetic: Parser<CyanExpression>
+            by leftAssociative(mulDivModOrTerm, -optional(ws) * plusMinusOp * -optional(ws)) { l, o, r -> CyanBinaryExpression(l, o, r, span(l, r)) }
 
     val comparisonOp by deq or neq or lt or leq or gt or geq
-    val comparisonOrMath: Parser<CyanExpression> by (arithmetic * optional(-znws * comparisonOp * -znws * arithmetic))
+    val comparisonOrMath: Parser<CyanExpression>
+            by (arithmetic * optional(-znws * comparisonOp * -znws * arithmetic))
             .map { (left, tail) -> tail?.let { (op, r) -> CyanBinaryExpression(left, tokenToOp[op.type]!!, r, span(left, r)) } ?: left }
 
     val andChain by leftAssociative(comparisonOrMath, -optional(ws) * and * -optional(ws)) { l, _, r -> CyanBinaryExpression(l, CyanBinaryAndOperator, r, span(l, r)) }
@@ -228,17 +232,19 @@ class CyanModuleParser : Grammar<CyanModule>() {
 
     // Functions
 
-    val functionReceiver  by (leap * (litType or refType) * -reap * dot) use { CyanFunctionReceiver(t2, span(t1, t3)) }
-    val functionArgument  by (referenceParser * -znws * typeSignature)   use { CyanFunctionArgument(t1.value, t2, span(t1, t2)) }
-    val functionSignature by (optional(extern) * -znws * function * -znws * optional(functionReceiver) * referenceParser * -znws * -leap * separatedTerms(functionArgument, commaParser, true) * reap * -znws * optional(typeSignature))
+    val functionAttributes by (lsq * separatedTerms(referenceParser, commaParser, false) * rsq) use { t2.map { CyanFunctionAttribute(it) } }
+    val functionReceiver   by (leap * (litType or refType) * -reap * dot)                 use { CyanFunctionReceiver(t2, span(t1, t3)) }
+    val functionArgument   by (referenceParser * -znws * typeSignature)                   use { CyanFunctionArgument(t1.value, t2, span(t1, t2)) }
+    val functionArguments  by (-leap * separatedTerms(functionArgument, commaParser, true) * reap)
+    val functionSignature  by (optional(functionAttributes) * optional(extern) * -znws * function * -znws * optional(functionReceiver) * referenceParser * -znws * functionArguments * -znws * optional(typeSignature))
             .use {
-                val spanStart = t1 ?: t2
-                val spanEnd = t7?.span?.fromTokenMatches?.first() ?: t6
+                val spanStart = t1?.first()?.span?.fromTokenMatches?.first() ?: t2 ?: t3
+                val spanEnd = t7?.span?.fromTokenMatches?.first() ?: t6.t2
 
                 if (t7 != null)
-                    CyanFunctionSignature(t3, t4, t5, t7!!, isExtern = t1 != null, span = span(spanStart, spanEnd))
+                    CyanFunctionSignature(t1 ?: emptyList(), t4, t5, t6.t1, t7!!, isExtern = t2 != null, span = span(spanStart, spanEnd))
                 else
-                    CyanFunctionSignature(t3, t4, t5, isExtern = t1 != null, span = span(spanStart, spanEnd))
+                    CyanFunctionSignature(t1 ?: emptyList(), t4, t5, t6.t1, isExtern = t2 != null, span = span(spanStart, spanEnd))
             }
 
     val functionDeclaration: Parser<CyanFunctionDeclaration> by (functionSignature * -znws * optional(block))
