@@ -1,6 +1,7 @@
 package cyan.compiler.parser.grammar
 
 import com.github.h0tk3y.betterParse.grammar.parseToEnd
+import com.github.h0tk3y.betterParse.lexer.literalToken
 
 import cyan.compiler.parser.grammars.NumericLiteralParser
 
@@ -11,7 +12,7 @@ import org.junit.jupiter.api.Assertions.*
 @Suppress("RemoveRedundantBackticks")
 class NumericLiteralsTest {
 
-    private val parser = NumericLiteralParser()
+    private val parser = NumericLiteralParser(literalToken("-"))
 
     private fun doTest(source: String, expected: Int) =
             assertEquals(expected, parser.parseToEnd(source).value)
@@ -20,6 +21,8 @@ class NumericLiteralsTest {
     inner class Decimal {
 
         @Test fun `46`() = doTest("46", 46)
+
+        @Test fun `-5`() = doTest("-5", -5)
 
         @Test fun `0d46`() = doTest("0d46", 46)
 

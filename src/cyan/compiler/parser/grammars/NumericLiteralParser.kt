@@ -2,6 +2,7 @@ package cyan.compiler.parser.grammars
 
 import com.github.h0tk3y.betterParse.combinators.*
 import com.github.h0tk3y.betterParse.grammar.Grammar
+import com.github.h0tk3y.betterParse.lexer.Token
 import com.github.h0tk3y.betterParse.lexer.TokenMatch
 import com.github.h0tk3y.betterParse.lexer.literalToken
 import com.github.h0tk3y.betterParse.lexer.regexToken
@@ -11,11 +12,9 @@ import cyan.compiler.common.Span
 import cyan.compiler.parser.ast.expression.literal.CyanNumericLiteralExpression
 import cyan.compiler.parser.util.span
 
-class NumericLiteralParser : Grammar<CyanNumericLiteralExpression>() {
+class NumericLiteralParser(val minusToken: Token) : Grammar<CyanNumericLiteralExpression>() {
 
     private fun Iterable<String>.squish() = joinToString("")
-
-    val minus by literalToken("-")
 
     val separator by literalToken("_")
 
@@ -35,18 +34,22 @@ class NumericLiteralParser : Grammar<CyanNumericLiteralExpression>() {
     val decimalSequence by oneOrMore(decimalDigit) use { this.map { it.text }.squish() to span(this) }
     val hexSequence     by oneOrMore(hexDigit)     use { this.map { it.text }.squish() to span(this) }
 
-    private fun Tuple2<TokenMatch?, List<Pair<String, Span>>>.makeNumberSpan() =
-            t1?.let { span(t1!!, t2.last().second) } ?: span(t2.first().second, t2.last().second)
+    private fun Tuple2<TokenMatch?, List<Pair<String, Span>>>.processDigitTokens(base: Int) =
+            (listOfNotNull(t1?.let { "-" }, *t2.map { it.first }.toTypedArray()).squish().toInt(base) to (t1?.let { span(t1!!, t2.last().second) } ?: span(t2.first().second, t2.last().second)))
+                    .let { CyanNumericLiteralExpression(it.first, it.second) }
 
-    val binaryNumber by (optional(minus) * -binaryBase * separatedTerms(binarySequence, separator, false))
-            .use { listOfNotNull(t1?.let { "-" }, *t2.map { it.first }.toTypedArray()).squish().toInt(2) to makeNumberSpan() }
+    val binaryNumber by (optional(minusToken) * -binaryBase * separatedTerms(binarySequence, separator, false))
+            .use { processDigitTokens(base = 2) }
 
-    val decimalNumber by (optional(minus) * -optional(decimalBase) * separatedTerms(decimalSequence, separator, false))
-            .use { listOfNotNull(t1?.let { "-" }, *t2.map { it.first }.toTypedArray()).squish().toInt(10) to makeNumberSpan() }
+    val decimalNumber by (optional(minusToken) * -optional(decimalBase) * separatedTerms(decimalSequence, separator, false))
+            .use { processDigitTokens(base = 10) }
 
-    val hexNumber by (optional(minus) * -hexBase * separatedTerms(hexSequence, separator, false))
-            .use { listOfNotNull(t1?.let { "-" }, *t2.map { it.first }.toTypedArray()).squish().toInt(16) to makeNumberSpan() }
+    val hexNumber by (optional(minusToken) * -hexBase * separatedTerms(hexSequence, separator, false))
+            .use { processDigitTokens(base = 16) }
 
-    override val rootParser = (binaryNumber or decimalNumber or hexNumber).use { CyanNumericLiteralExpression(first, second) }
+    override val rootParser = (binaryNumber or decimalNumber or hexNumber)
+
+    override val tokens: List<Token>
+        get() = super.tokens + minusToken
 
 }

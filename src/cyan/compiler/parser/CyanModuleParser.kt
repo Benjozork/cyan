@@ -25,10 +25,6 @@ import cyan.compiler.parser.util.span
 @Suppress("MemberVisibilityCanBePrivate")
 class CyanModuleParser : Grammar<CyanModule>() {
 
-    // Sub-grammars
-
-    val numericLiteralParser = NumericLiteralParser()
-
     // Tokens
 
     val newLine         by regexToken("\n|\r\n")
@@ -156,12 +152,14 @@ class CyanModuleParser : Grammar<CyanModule>() {
 
     // Boolean
 
-    val and             by literalToken("&&")
-    val or              by literalToken("||")
+    val and by literalToken("&&")
+    val or  by literalToken("||")
 
     // Values
 
-    val ident                by regexToken("[a-zA-Z_]+")
+    val ident by regexToken("[a-zA-Z_]+")
+
+    val numericLiteralParser = NumericLiteralParser(minus)
     val numericalValueParser by numericLiteralParser
 
     val stringLiteral   by regexToken("\".*?\"")
