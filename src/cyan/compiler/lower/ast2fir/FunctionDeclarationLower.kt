@@ -22,6 +22,11 @@ object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirNullN
             args = emptyArray()
         )
 
+        // Add attributes
+        firFunctionDeclaration.attributes += astNode.signature.attributes
+                .map { FirReference(firFunctionDeclaration, it.ident.value, it.ident) }
+                .map { FirFunctionDeclaration.Attribute(it) }
+
         // Resolve types for AST arguments and assign them to FIR func declaration
         firFunctionDeclaration.args = astNode.signature.args
                 .map { FirFunctionArgument(firFunctionDeclaration, it.name, firFunctionDeclaration.resolveType(it.typeAnnotation, astNode)) }

@@ -11,7 +11,11 @@ class FirFunctionDeclaration (
     var args: Array<FirFunctionArgument>
 ): FirScope, FirSymbol {
 
+    class Attribute(val ident: FirReference)
+
     override val isInheriting = false
+
+    val attributes = mutableListOf<Attribute>()
 
     var receiver: FirFunctionReceiver? = null
 
