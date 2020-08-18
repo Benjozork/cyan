@@ -1,13 +1,11 @@
 package cyan.compiler.parser
 
-import cyan.compiler.common.Span
 import cyan.compiler.common.types.Type
 import cyan.compiler.common.types.CyanType
 import cyan.compiler.parser.ast.*
 import cyan.compiler.parser.ast.types.CyanTypeAnnotation
 import cyan.compiler.parser.ast.types.CyanStructDeclaration
 import cyan.compiler.parser.ast.expression.*
-import cyan.compiler.parser.ast.expression.literal.CyanNumericLiteralExpression
 import cyan.compiler.parser.ast.expression.literal.CyanBooleanLiteralExpression
 import cyan.compiler.parser.ast.expression.literal.CyanStringLiteralExpression
 import cyan.compiler.parser.ast.operator.*
@@ -15,32 +13,21 @@ import cyan.compiler.parser.ast.operator.*
 import com.github.h0tk3y.betterParse.combinators.*
 import com.github.h0tk3y.betterParse.grammar.Grammar
 import com.github.h0tk3y.betterParse.grammar.parser
-import com.github.h0tk3y.betterParse.lexer.TokenMatch
+import com.github.h0tk3y.betterParse.lexer.Token
 import com.github.h0tk3y.betterParse.lexer.literalToken
 import com.github.h0tk3y.betterParse.lexer.regexToken
 import com.github.h0tk3y.betterParse.parser.Parser
 
 import cyan.compiler.parser.ast.function.*
+import cyan.compiler.parser.grammars.NumericLiteralParser
+import cyan.compiler.parser.util.span
 
 @Suppress("MemberVisibilityCanBePrivate")
 class CyanModuleParser : Grammar<CyanModule>() {
 
-    fun span(begin: TokenMatch, end: TokenMatch) = Span(begin.row, begin.column..(end.column + end.length), arrayOf(begin, end))
+    // Sub-grammars
 
-    fun span(whole: TokenMatch) = Span(whole.row, whole.column..(whole.column + whole.length), arrayOf(whole))
-
-    fun span(expression: CyanExpression) = span(expression.span!!.fromTokenMatches.first(), expression.span!!.fromTokenMatches.last())
-
-    fun span(firstExpression: CyanItem, secondExpression: CyanItem) =
-        span(firstExpression.span!!.fromTokenMatches.first(), secondExpression.span!!.fromTokenMatches.last())
-
-    fun span(firstExpression: CyanItem, secondTokenMatch: TokenMatch) =
-        span(firstExpression.span!!.fromTokenMatches.first(), secondTokenMatch)
-
-    fun span(firstExpression: TokenMatch, secondTokenMatch: CyanItem) =
-            span(firstExpression, secondTokenMatch.span!!.fromTokenMatches.first())
-
-    fun span(firstSpan: Span, secondSpan: Span) = span(firstSpan.fromTokenMatches.first(), secondSpan.fromTokenMatches.last())
+    val numericLiteralParser = NumericLiteralParser()
 
     // Tokens
 
@@ -174,8 +161,8 @@ class CyanModuleParser : Grammar<CyanModule>() {
 
     // Values
 
-    val ident           by regexToken("[a-zA-Z_]+")
-    val numericalValue  by regexToken("\\d+")
+    val ident                by regexToken("[a-zA-Z_]+")
+    val numericalValueParser by numericLiteralParser
 
     val stringLiteral   by regexToken("\".*?\"")
 
@@ -183,7 +170,6 @@ class CyanModuleParser : Grammar<CyanModule>() {
 
     val referenceParser      by ident                     use { CyanIdentifierExpression(text, span(this)) }
     val stringLiteralParser  by stringLiteral             use { CyanStringLiteralExpression(text.removeSurrounding("\""), span(this)) }
-    val numericalValueParser by numericalValue            use { CyanNumericLiteralExpression(text.toInt(), span(this)) }
     val booleanLiteralParser by (trueToken or falseToken) use { CyanBooleanLiteralExpression(type == trueToken, span(this)) }
 
     // Members
@@ -306,5 +292,8 @@ class CyanModuleParser : Grammar<CyanModule>() {
     val moduleParser by (moduleDeclaration * -znws * sourceParser) use { CyanModule(t1, t2, span(t1, t2)) }
 
     override val rootParser = moduleParser
+
+    override val tokens: List<Token>
+        get() = super.tokens + numericLiteralParser.tokens
 
 }
