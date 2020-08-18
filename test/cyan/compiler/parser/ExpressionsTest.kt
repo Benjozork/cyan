@@ -4,12 +4,14 @@ import com.github.h0tk3y.betterParse.grammar.Grammar
 import com.github.h0tk3y.betterParse.grammar.parseToEnd
 
 import cyan.compiler.parser.ast.expression.CyanArrayExpression
+import cyan.compiler.parser.ast.expression.CyanBinaryExpression
 import cyan.compiler.parser.ast.expression.CyanExpression
 import cyan.compiler.parser.ast.expression.CyanIdentifierExpression
 import cyan.compiler.parser.ast.expression.literal.CyanBooleanLiteralExpression
 import cyan.compiler.parser.ast.expression.literal.CyanNumericLiteralExpression
 import cyan.compiler.parser.ast.expression.literal.CyanStringLiteralExpression
 import cyan.compiler.parser.ast.function.CyanFunctionCall
+import cyan.compiler.parser.ast.operator.*
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Nested
@@ -60,6 +62,99 @@ class ExpressionsTest {
                 false
             """.trimIndent(),
             CyanBooleanLiteralExpression(false)
+        )
+
+    }
+
+    @Nested
+    inner class Binary {
+
+        @Test fun `simple addition`() = doTest (
+            """
+                2 + 5
+            """.trimIndent(),
+            CyanBinaryExpression (
+                CyanNumericLiteralExpression(2),
+                CyanBinaryPlusOperator,
+                CyanNumericLiteralExpression(5)
+            )
+        )
+
+        @Test fun `simple subtraction`() = doTest (
+            """
+                2 - 5
+            """.trimIndent(),
+            CyanBinaryExpression (
+                CyanNumericLiteralExpression(2),
+                CyanBinaryMinusOperator,
+                CyanNumericLiteralExpression(5)
+            )
+        )
+
+        @Test fun `subtraction with negative operands #1`() = doTest (
+            """
+                -2 - 5
+            """.trimIndent(),
+            CyanBinaryExpression (
+                CyanNumericLiteralExpression(-2),
+                CyanBinaryMinusOperator,
+                CyanNumericLiteralExpression(5)
+            )
+        )
+
+        @Test fun `subtraction with negative operands #2`() = doTest (
+            """
+                -2 - -5
+            """.trimIndent(),
+            CyanBinaryExpression (
+                CyanNumericLiteralExpression(-2),
+                CyanBinaryMinusOperator,
+                CyanNumericLiteralExpression(-5)
+            )
+        )
+
+        @Test fun `subtraction with negative operands #3`() = doTest (
+            """
+                2 - -5
+            """.trimIndent(),
+            CyanBinaryExpression (
+                CyanNumericLiteralExpression(2),
+                CyanBinaryMinusOperator,
+                CyanNumericLiteralExpression(-5)
+            )
+        )
+
+        @Test fun `simple multiplication`() = doTest (
+            """
+                2 * 5
+            """.trimIndent(),
+            CyanBinaryExpression (
+                CyanNumericLiteralExpression(2),
+                CyanBinaryTimesOperator,
+                CyanNumericLiteralExpression(5)
+            )
+        )
+
+        @Test fun `simple division`() = doTest (
+            """
+                2 / 5
+            """.trimIndent(),
+            CyanBinaryExpression (
+                CyanNumericLiteralExpression(2),
+                CyanBinaryDivOperator,
+                CyanNumericLiteralExpression(5)
+            )
+        )
+
+        @Disabled @Test fun `simple exponentiation`() = doTest (
+            """
+                2 ^ 5
+            """.trimIndent(),
+            CyanBinaryExpression (
+                CyanNumericLiteralExpression(2),
+                CyanBinaryExpOperator,
+                CyanNumericLiteralExpression(5)
+            )
         )
 
     }
