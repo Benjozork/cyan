@@ -44,18 +44,28 @@ object WasmStatementLower : FirItemLower<WasmLoweringContext, FirStatement, Wasm
             }
             is FirExpression -> context.backend.lowerExpression(item, context)
             is FirIfChain -> {
-                require (item.branches.size == 1) { "fir2wasm: if chains can currently only have one condition" }
-                require (item.elseBranch != null) { "fir2wasm: if chains currently must have an else branch" }
+                var branchCount = 0
 
-                val loweredExpression = instructions {
-                    +context.backend.lowerExpression(item.branches.first().first, context)
+                fun branchToElementPair(branch: Pair<FirExpression, FirSource>): Pair<WasmInstructionSequence, WasmInstructionSequence> = branch.let {
+                    instructions { +context.backend.lowerExpression(it.first, context) } to
+                            instructions { it.second.statements.forEach { +context.backend.lowerStatement(it, context) } }
                 }
 
-                condition(0, loweredExpression, {
-                    item.branches.first().second.statements.forEach { this.ifElements += context.backend.lowerStatement(it, context) }
-                }, otherwise = {
-                    item.elseBranch!!.statements.forEach { this.elseElements += context.backend.lowerStatement(it, context) }
-                })
+                block(branchCount) {
+                    for (branch in item.branches) {
+                        val elementPair = branchToElementPair(branch)
+                        block(++branchCount) {
+                            +elementPair.first
+                            i32.eqz
+                            br_if(branchCount)
+                            +elementPair.second
+                            br(0)
+                        }
+                    }
+                    if (item.elseBranch != null) +instructions {
+                        item.elseBranch!!.statements.forEach { +context.backend.lowerStatement(it, context) }
+                    }
+                }
             }
             is FirWhileStatement -> block(0) {
                 val loweredExpression = context.backend.lowerExpression(item.conditionExpr, context)
