@@ -29,8 +29,8 @@ class FirModule (
         val moduleInCache = cachedModules[reference.text]
 
         return if (moduleInCache != null) moduleInCache else {
-            val moduleFileInCompilerResources = File("runtime/${reference.text}.cy").takeIf { it.exists() }
-                ?: File("runtime/stdlib/${reference.text}.cy").takeIf { it.exists() }
+            val moduleFileInCompilerResources = File("resources/runtime/${reference.text}.cy").takeIf { it.exists() }
+                ?: File("resources/runtime/stdlib/${reference.text}.cy").takeIf { it.exists() }
 
             val loadedModule = moduleFileInCompilerResources?.let { compileModuleFromFile(it) }
 
@@ -66,7 +66,7 @@ class FirModule (
         }
 
         init {
-            val runtimeModuleFile = File("runtime/stdlib/runtime.cy").takeIf { it.exists() } ?: error("fatal: could not find runtime.cy module")
+            val runtimeModuleFile = File("resources/runtime/stdlib/runtime.cy").takeIf { it.exists() } ?: error("fatal: could not find runtime.cy module")
 
             cachedModules["__runtime__"] = compileModuleFromFile(runtimeModuleFile)
         }

@@ -25,7 +25,7 @@ fun main() {
 //
 //    mainModule.source.statements.removeAll { it is FirNullNode }
 
-    val file = File("runtime/simple.cy")
+    val file = File("resources/runtime/simple.cy")
 
     val simpleModule = FirModule.compileModuleFromFile(file)
 
@@ -34,7 +34,7 @@ fun main() {
     println("Emitting ".lightMagenta() + "(wasm)".lightGray() + "\t'${file.name}'")
     val wasmSource = WasmCompilerBackend().let { it.translateSource(simpleModule.source, WasmLoweringContext(it), true) }
 
-    val outputfile = File("runtime/test.wat")
+    val outputfile = File("resources/runtime/test.wat")
 
     println("\n\t+ " + outputfile.path.lightGray())
 
