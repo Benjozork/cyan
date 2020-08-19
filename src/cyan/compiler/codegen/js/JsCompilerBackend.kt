@@ -11,7 +11,7 @@ import java.io.File
 
 class JsCompilerBackend : FirCompilerBackend<String>() {
 
-    val prelude get() = File("runtime/runtime.js").readText()
+    val prelude get() = File("resources/runtime/runtime.js").readText()
 
     val postlude = ""
 

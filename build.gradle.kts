@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm") version "1.4.0"
+    application
 }
 
 group = "org.example"
@@ -44,4 +45,8 @@ tasks.withType<Test> {
     testLogging {
         events("passed", "skipped", "failed")
     }
+}
+
+application {
+    mainClassName = "cyan.EntrypointKt"
 }
