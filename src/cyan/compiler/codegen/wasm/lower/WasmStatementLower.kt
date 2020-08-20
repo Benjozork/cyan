@@ -7,6 +7,8 @@ import cyan.compiler.codegen.wasm.utils.AllocationResult
 import cyan.compiler.fir.*
 import cyan.compiler.fir.expression.FirExpression
 
+import kotlin.math.absoluteValue
+
 object WasmStatementLower : FirItemLower<WasmLoweringContext, FirStatement, Wasm.OrderedElement> {
 
     override fun lower(context: WasmLoweringContext, item: FirStatement): Wasm.OrderedElement {
@@ -80,6 +82,46 @@ object WasmStatementLower : FirItemLower<WasmLoweringContext, FirStatement, Wasm
                     +loweredBody
                     +loweredExpression
                     br_if(0)
+                }
+            }
+            is FirForStatement -> instructions {
+                val forLoopNum = item.hashCode().absoluteValue
+
+                local.new("_fl_i_$forLoopNum", Wasm.Type.i32)
+                local.new("_fl_a_$forLoopNum", Wasm.Type.i32)
+
+                val iteratorVariableLocal = context.addLocal(item.declaredSymbols.first { it is FirForStatement.IteratorVariable } as FirForStatement.IteratorVariable)
+                val loweredIteratorExpression = context.backend.lowerExpression(item.iteratorExpr, context)
+                val loweredBody = instructions {
+                    item.block.statements.map { +context.backend.lowerStatement(it, context) }
+                }
+
+                block(0) {
+                    +loweredIteratorExpression
+                    local.set("_fl_i_$forLoopNum")
+                    i32.const(0)
+                    local.set("_fl_a_$forLoopNum")
+
+                    loop(0) {
+                        local.get("_fl_i_$forLoopNum")
+                        local.get("_fl_a_$forLoopNum")
+                        cy.array_get
+                        local.set(iteratorVariableLocal)
+                        +loweredBody
+
+                        local.get("_fl_a_$forLoopNum")
+                        i32.const(1)
+                        i32.add
+                        local.set("_fl_a_$forLoopNum")
+
+                        local.get("_fl_i_$forLoopNum")
+                        i32.load
+                        local.get("_fl_a_$forLoopNum")
+                        i32.le_u
+                        br_if(0, true)
+
+                        br(0)
+                    }
                 }
             }
             is FirAssignment -> {
