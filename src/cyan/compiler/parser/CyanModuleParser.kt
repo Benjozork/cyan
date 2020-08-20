@@ -40,6 +40,8 @@ class CyanModuleParser : Grammar<CyanModule>() {
     val ifToken         by regexToken("if\\b")
     val elseToken       by regexToken("else\\b")
     val whileToken      by regexToken("while\\b")
+    val forToken        by regexToken("for\\b")
+    val ofToken         by regexToken("of\\b")
 
     val trueToken       by regexToken("true\\b")
     val falseToken      by regexToken("false\\b")
@@ -260,9 +262,14 @@ class CyanModuleParser : Grammar<CyanModule>() {
 
     val whileStatement: Parser<CyanStatement> by (whileToken * -znws * expr * -znws * block) use { CyanWhileStatement(t2, t3, span(t1, t3)) }
 
+    // For statements
+
+    val forStatementIterator by (referenceParser * -znws * -ofToken * -znws * expr)
+    val forStatement: Parser<CyanStatement> by (forToken * -znws * forStatementIterator * -znws * block) use { CyanForStatement(t2.t1, t2.t2, t3, span(t1, t3)) }
+
     // Assignment
 
-    val assignStatement: Parser<CyanStatement>  by (referenceParser * -znws * -assign * -znws * expr) use { CyanAssignment(t1, t2, span(t1, t2)) }
+    val assignStatement: Parser<CyanStatement> by (referenceParser * -znws * -assign * -znws * expr) use { CyanAssignment(t1, t2, span(t1, t2)) }
 
     // Return
 
@@ -279,7 +286,7 @@ class CyanModuleParser : Grammar<CyanModule>() {
     // Statements
 
     val anyStatement
-            by -znws * (importStatement or variableDeclaration or functionDeclaration or typeDeclaration or ifStatementChain or whileStatement or functionCall or assignStatement or returnStatement) * -znws
+            by -znws * (importStatement or variableDeclaration or functionDeclaration or typeDeclaration or ifStatementChain or whileStatement or forStatement or functionCall or assignStatement or returnStatement) * -znws
 
     // Source parser
 

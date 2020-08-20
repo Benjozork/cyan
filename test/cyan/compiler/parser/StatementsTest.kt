@@ -4,13 +4,16 @@ import com.github.h0tk3y.betterParse.grammar.parseToEnd
 
 import cyan.compiler.common.types.CyanType
 import cyan.compiler.common.types.Type
+import cyan.compiler.parser.ast.CyanForStatement
 import cyan.compiler.parser.ast.CyanSource
 import cyan.compiler.parser.ast.CyanStatement
 import cyan.compiler.parser.ast.CyanVariableDeclaration
 import cyan.compiler.parser.ast.expression.CyanArrayExpression
+import cyan.compiler.parser.ast.expression.CyanBinaryExpression
 import cyan.compiler.parser.ast.expression.CyanIdentifierExpression
 import cyan.compiler.parser.ast.expression.literal.CyanNumericLiteralExpression
 import cyan.compiler.parser.ast.function.*
+import cyan.compiler.parser.ast.operator.CyanBinaryPlusOperator
 import cyan.compiler.parser.ast.types.CyanTypeAnnotation
 
 import org.junit.jupiter.api.Test
@@ -258,6 +261,53 @@ class StatementsTest {
                         isExtern = false
                     ),
                     source = null
+                )
+            )
+        )
+
+    }
+
+    @Nested
+    inner class ForLoops {
+
+        @Test fun `with simple expression`() = doTest (
+            """
+                for n of numbers {
+                    nop()
+                }
+            """.trimIndent(),
+            listOf (
+                CyanForStatement (
+                    CyanIdentifierExpression("n"),
+                    CyanIdentifierExpression("numbers"),
+                    CyanSource (
+                        listOf (
+                            CyanFunctionCall(CyanIdentifierExpression("nop"), emptyArray())
+                        )
+                    )
+                )
+            )
+        )
+
+        @Test fun `with complex expression`() = doTest (
+            """
+                for element of numbers + letters {
+                    nop()
+                }
+            """.trimIndent(),
+            listOf (
+                CyanForStatement (
+                    CyanIdentifierExpression("element"),
+                    CyanBinaryExpression (
+                        CyanIdentifierExpression("numbers"),
+                        CyanBinaryPlusOperator,
+                        CyanIdentifierExpression("letters")
+                    ),
+                    CyanSource (
+                        listOf (
+                            CyanFunctionCall(CyanIdentifierExpression("nop"), emptyArray())
+                        )
+                    )
                 )
             )
         )
