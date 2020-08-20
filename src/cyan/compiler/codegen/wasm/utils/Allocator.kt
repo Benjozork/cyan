@@ -83,7 +83,7 @@ class Allocator {
 
     var heap = ByteArray(64)
 
-    var heapEndPtr = 0x00
+    var heapEndPtr = 0x10
 
     private fun prealloc(bytes: ByteArray, alignment: Byte? = null): Int {
         val baseAddr = heapEndPtr.let {
