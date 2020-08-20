@@ -17,9 +17,6 @@ import kotlin.math.abs
 @Suppress("UNCHECKED_CAST")
 class WasmCompilerBackend : FirCompilerBackend<Wasm.OrderedElement>() {
 
-    private val d = "$"
-    private val n = "\n"
-
     private val templateText = File("resources/runtime/runtime.wat").readText()
 
     override fun makeLoweringContext() = WasmLoweringContext(this)
