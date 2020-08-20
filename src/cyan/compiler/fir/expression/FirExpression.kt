@@ -111,6 +111,7 @@ open class FirExpression(override var parent: FirNode, val fromAstNode: CyanExpr
                  val containingScope = this.containingScope()
 
                  when (val referee = containingScope?.findSymbol(this.reference())?.resolvedSymbol) {
+                     is FirForStatement.IteratorVariable -> referee.typeAnnotation!!
                      is FirVariableDeclaration -> referee.initializationExpr.type()
                      is FirFunctionDeclaration -> Type.Primitive(CyanType.Any, false)
                      is FirFunctionArgument -> referee.typeAnnotation

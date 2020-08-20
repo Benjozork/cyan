@@ -17,6 +17,7 @@ object StatementLower : Ast2FirLower<CyanStatement, FirNode> {
             is CyanFunctionCall        -> FunctionCallLower.lower(astNode, parentFirNode)
             is CyanIfChain             -> IfChainLower.lower(astNode, parentFirNode)
             is CyanWhileStatement      -> WhileStatementLower.lower(astNode, parentFirNode)
+            is CyanForStatement        -> ForStatementLower.lower(astNode, parentFirNode)
             is CyanAssignment          -> AssignLower.lower(astNode, parentFirNode)
             is CyanReturn              -> ReturnLower.lower(astNode, parentFirNode)
             else -> error("ast2ir: cannot lower AST statement of type ${astNode::class.simpleName}")
