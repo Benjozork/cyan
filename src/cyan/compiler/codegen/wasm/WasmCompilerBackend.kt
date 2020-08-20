@@ -33,20 +33,12 @@ class WasmCompilerBackend : FirCompilerBackend<Wasm.OrderedElement>() {
     override fun translateSource(source: FirSource, context: LoweringContext, isRoot: Boolean): String {
         val newSource = StringBuilder()
 
-        // Here, for now we include all functions in the `declaredSymbols` of the parent module if the parent of this
-        // FirSource is a module. That way, we inline functions imported from other modules. However, we need to not
-        // do this if we are not the direct child of a FirModule, because then we would inline all imported functions into
-        // all FirSources.
         if (source.parent is FirModule) source.parent.let { module ->
             for (function in (module as FirModule).localFunctions.filter { !it.isExtern }) {
-                newSource.appendln(lowerFunctionDeclaration(function))
+                newSource.appendLine(lowerFunctionDeclaration(function))
             }
         } else for (function in source.localFunctions) {
-            newSource.appendln(lowerFunctionDeclaration(function))
-        }
-
-        for (statement in source.statements) {
-            newSource.appendln(lowerStatement(statement, context))
+            newSource.appendLine(lowerFunctionDeclaration(function))
         }
 
         val newSourceText = newSource.toString().removeSuffix("\n")
