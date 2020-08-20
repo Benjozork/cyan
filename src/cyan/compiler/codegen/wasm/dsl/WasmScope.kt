@@ -117,14 +117,14 @@ interface WasmScope : Wasm.OrderedElement {
 
 
     @WasmInstructionsBuilderDsl
-    fun br(blockNum: Int): Boolean {
-        val prefix = if (this is WasmLoop) "L" else "B"
+    fun br(blockNum: Int, block: Boolean = false): Boolean {
+        val prefix = if (this is WasmLoop && !block) "L" else "B"
         return pushElement(Wasm.Instruction("br \$$prefix$blockNum"))
     }
 
     @WasmInstructionsBuilderDsl
-    fun br_if(blockNum: Int): Boolean {
-        val prefix = if (this is WasmLoop) "L" else "B"
+    fun br_if(blockNum: Int, block: Boolean = false): Boolean {
+        val prefix = if (this is WasmLoop && !block) "L" else "B"
         return pushElement(Wasm.Instruction("br_if \$$prefix$blockNum"))
     }
 
