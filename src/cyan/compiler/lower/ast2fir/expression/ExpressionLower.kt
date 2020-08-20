@@ -58,6 +58,14 @@ object ExpressionLower : Ast2FirLower<CyanExpression, FirExpression> {
                 val loweredElements = astNode.exprs.map { lower(it, parentFirNode) }
                 val firArray = FirExpression.Literal.Array(loweredElements, parentFirNode, astNode)
 
+                loweredElements.map(FirExpression::type).toSet().takeIf { it.size == 1 } ?: DiagnosticPipe.report (
+                    CompilerDiagnostic (
+                        level = CompilerDiagnostic.Level.Error,
+                        message = "Arrays can only contain elements of the same type",
+                        astNode = astNode
+                    )
+                )
+
                 loweredElements.forEach { it.parent = firArray }
 
                 firArray
