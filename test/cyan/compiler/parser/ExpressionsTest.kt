@@ -3,14 +3,11 @@ package cyan.compiler.parser
 import com.github.h0tk3y.betterParse.grammar.Grammar
 import com.github.h0tk3y.betterParse.grammar.parseToEnd
 
-import cyan.compiler.parser.ast.expression.CyanArrayExpression
-import cyan.compiler.parser.ast.expression.CyanBinaryExpression
-import cyan.compiler.parser.ast.expression.CyanExpression
-import cyan.compiler.parser.ast.expression.CyanIdentifierExpression
 import cyan.compiler.parser.ast.expression.literal.CyanBooleanLiteralExpression
 import cyan.compiler.parser.ast.expression.literal.CyanNumericLiteralExpression
 import cyan.compiler.parser.ast.expression.literal.CyanStringLiteralExpression
 import cyan.compiler.parser.ast.function.CyanFunctionCall
+import cyan.compiler.parser.ast.expression.*
 import cyan.compiler.parser.ast.operator.*
 
 import org.junit.jupiter.api.Test
@@ -18,6 +15,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Disabled
 
+@Suppress("RemoveRedundantBackticks")
 class ExpressionsTest {
 
     private val parser = object : Grammar<CyanExpression>() {
@@ -214,6 +212,145 @@ class ExpressionsTest {
     }
 
     @Nested
+    inner class Members {
+
+        @Test fun `reference and reference`() = doTest (
+            """
+                parent.child
+            """.trimIndent(),
+            CyanMemberAccessExpression (
+                CyanIdentifierExpression("parent"),
+                CyanIdentifierExpression("child")
+            )
+        )
+
+        @Test fun `three references`() = doTest (
+            """
+                parent.child.grandChild
+            """.trimIndent(),
+            CyanMemberAccessExpression (
+                CyanMemberAccessExpression (
+                    CyanIdentifierExpression("parent"),
+                    CyanIdentifierExpression("child")
+                ),
+                CyanIdentifierExpression("grandChild")
+            )
+        )
+
+        @Test fun `base is function call`() = doTest (
+            """
+                doSomething(something).member
+            """.trimIndent(),
+            CyanMemberAccessExpression (
+                CyanFunctionCall (
+                    CyanIdentifierExpression("doSomething"),
+                    arrayOf (
+                        CyanFunctionCall.Argument(null, CyanIdentifierExpression("something"))
+                    )
+                ),
+                CyanIdentifierExpression("member")
+            )
+        )
+
+        @Test fun `base is double function call`() = doTest (
+            """
+                other().doSomething(something).member
+            """.trimIndent(),
+            CyanMemberAccessExpression (
+                CyanFunctionCall (
+                    CyanMemberAccessExpression (
+                        CyanFunctionCall (
+                            CyanIdentifierExpression("other"),
+                            emptyArray()
+                        ),
+                        CyanIdentifierExpression("doSomething")
+                    ),
+                    arrayOf (
+                        CyanFunctionCall.Argument (
+                            null, CyanIdentifierExpression("something")
+                        )
+                    )
+                ),
+                CyanIdentifierExpression("member")
+            )
+        )
+
+        @Test fun `middle function call`() = doTest (
+            """
+                thing.doSomething(something).member
+            """.trimIndent(),
+            CyanMemberAccessExpression (
+                CyanFunctionCall (
+                    CyanMemberAccessExpression (
+                        CyanIdentifierExpression("thing"),
+                        CyanIdentifierExpression("doSomething")
+                    ),
+                    arrayOf (
+                        CyanFunctionCall.Argument (
+                            null, CyanIdentifierExpression("something")
+                        )
+                    )
+                ),
+                CyanIdentifierExpression("member")
+            )
+        )
+
+        @Test fun `base is array index`() = doTest (
+            """
+                array[0].member
+            """.trimIndent(),
+            CyanMemberAccessExpression (
+                CyanArrayIndexExpression (
+                    CyanIdentifierExpression("array"),
+                    CyanNumericLiteralExpression(0)
+                ),
+                CyanIdentifierExpression("member")
+            )
+        )
+
+    }
+
+    @Nested
+    inner class Indexes {
+
+        @Test fun `simple`() = doTest (
+            """
+                array[0]
+            """.trimIndent(),
+            CyanArrayIndexExpression (
+                CyanIdentifierExpression("array"),
+                CyanNumericLiteralExpression(0)
+            )
+        )
+
+        @Test fun `on member access`() = doTest (
+            """
+                array.subArray[0]
+            """.trimIndent(),
+            CyanArrayIndexExpression (
+                CyanMemberAccessExpression (
+                    CyanIdentifierExpression("array"),
+                    CyanIdentifierExpression("subArray")
+                ),
+                CyanNumericLiteralExpression(0)
+            )
+        )
+
+        @Disabled @Test fun `index of index`() = doTest (
+            """
+                array[0][1]
+            """.trimIndent(),
+            CyanArrayIndexExpression (
+                CyanArrayIndexExpression (
+                    CyanIdentifierExpression("array"),
+                    CyanNumericLiteralExpression(0)
+                ),
+                CyanNumericLiteralExpression(1)
+            )
+        )
+    }
+
+    @Nested
     inner class FunctionCalls {
 
         @Test fun `no arguments`() = doTest (
@@ -248,6 +385,28 @@ class ExpressionsTest {
                 arrayOf (
                     CyanFunctionCall.Argument(CyanIdentifierExpression("name"), CyanStringLiteralExpression("a")),
                     CyanFunctionCall.Argument(CyanIdentifierExpression("age"), CyanNumericLiteralExpression(18))
+                )
+            )
+        )
+
+        @Test fun `nested calls`() = doTest (
+            """
+                a(1, b(x), 2)
+            """.trimIndent(),
+            CyanFunctionCall (
+                CyanIdentifierExpression("a"),
+                arrayOf (
+                    CyanFunctionCall.Argument(null, CyanNumericLiteralExpression(1)),
+                    CyanFunctionCall.Argument (
+                        null,
+                        CyanFunctionCall (
+                            CyanIdentifierExpression("b"),
+                            arrayOf (
+                                CyanFunctionCall.Argument(null, CyanIdentifierExpression("x"))
+                            )
+                        )
+                    ),
+                    CyanFunctionCall.Argument(null, CyanNumericLiteralExpression(2))
                 )
             )
         )

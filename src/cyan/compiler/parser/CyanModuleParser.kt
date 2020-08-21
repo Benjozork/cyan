@@ -20,6 +20,7 @@ import com.github.h0tk3y.betterParse.parser.Parser
 
 import cyan.compiler.parser.ast.function.*
 import cyan.compiler.parser.grammars.NumericLiteralParser
+import cyan.compiler.parser.util.DotChainAssociator
 import cyan.compiler.parser.util.span
 
 @Suppress("MemberVisibilityCanBePrivate")
@@ -172,11 +173,6 @@ class CyanModuleParser : Grammar<CyanModule>() {
     val stringLiteralParser  by stringLiteral             use { CyanStringLiteralExpression(text.removeSurrounding("\""), span(this)) }
     val booleanLiteralParser by (trueToken or falseToken) use { CyanBooleanLiteralExpression(type == trueToken, span(this)) }
 
-    // Members
-
-    val memberAccessParser by (referenceParser * -dot * referenceParser)                                             use { CyanMemberAccessExpression(t1, t2, span(t1, t2)) }
-    val arrayIndexParser   by (parser(this::unambiguousTermForArrayIndex) * -znws * -lsq * parser(this::expr) * rsq) use { CyanArrayIndexExpression(t1, t2, span(t1, t3)) }
-
     // Expressions
 
     val literalExpressionParser by (numericalValueParser or stringLiteralParser or booleanLiteralParser)
@@ -186,17 +182,26 @@ class CyanModuleParser : Grammar<CyanModule>() {
     val parenTerm = (-leap * parser(this::expr) * -reap)
 
     val unambiguousTermForFunctionCall: Parser<CyanExpression>
-            by (parenTerm or memberAccessParser or referenceParser)
-
-    val unambiguousTermForArrayIndex: Parser<CyanExpression>
-            by (parenTerm or memberAccessParser or parser(this::functionCall) or referenceParser)
+            by (parenTerm or referenceParser)
 
     val term: Parser<CyanExpression>
-            by (parenTerm or arrayExpressionParser or literalExpressionParser or parser(this::functionCall) or memberAccessParser or arrayIndexParser or referenceParser)
+            by (parenTerm or arrayExpressionParser or literalExpressionParser or referenceParser)
+
+    val indexedTerm: Parser<CyanExpression>
+            by (term * -znws * lsq * parser(this::expr) * -znws * rsq) use { CyanArrayIndexExpression(t1, t3, span(t1, t4)) }
+
+    val callArgument        by (optional(referenceParser * -colon) * -znws * parser(this::expr))
+    val calledTermArguments by separatedTerms(callArgument, commaParser, acceptZero = true) map { l -> l.map { CyanFunctionCall.Argument(it.t1, it.t2) } }
+    val calledTerm: Parser<CyanExpression>
+            by (term * -znws * -leap * calledTermArguments * reap) use { CyanFunctionCall(t1, t2.toTypedArray(), span(t1, t3)) }
+
+    val atom by (indexedTerm or calledTerm or term)
+
+    val termDotChain: Parser<CyanExpression> by separatedTerms(atom, (-znws * dot * -znws), acceptZero = false) use { DotChainAssociator.associate(this) }
 
     val mulDivModOp by (times or div or mod) use { tokenToOp[this.type]!! }
     val mulDivModOrTerm: Parser<CyanExpression>
-            by leftAssociative(term, -optional(ws) * mulDivModOp * -optional(ws)) { l, o, r -> CyanBinaryExpression(l, o, r, span(l, r)) }
+            by leftAssociative(termDotChain, -optional(ws) * mulDivModOp * -optional(ws)) { l, o, r -> CyanBinaryExpression(l, o, r, span(l, r)) }
 
     val plusMinusOp by (plus or minus) use { tokenToOp[this.type]!! }
     val arithmetic: Parser<CyanExpression>
