@@ -23,6 +23,8 @@ sealed class Type(val array: Boolean) {
 
         override fun asArrayType() = Primitive(base, true)
 
+        override fun asNonArrayType() = Primitive(base, false)
+
         override fun hashCode() = base.hashCode() + array.hashCode()
 
     }
@@ -43,6 +45,8 @@ sealed class Type(val array: Boolean) {
 
         override fun asArrayType() = Struct(name, properties, true)
 
+        override fun asNonArrayType() = Struct(name, properties, false)
+
         override fun hashCode() = name.hashCode() + properties.hashCode() + array.hashCode()
 
     }
@@ -50,6 +54,8 @@ sealed class Type(val array: Boolean) {
     abstract infix fun accepts(other: Type): Boolean
 
     abstract fun asArrayType(): Type
+
+    abstract fun asNonArrayType(): Type
 
     override fun equals(other: Any?) = other.hashCode() == hashCode()
 

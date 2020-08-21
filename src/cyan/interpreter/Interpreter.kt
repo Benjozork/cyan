@@ -4,11 +4,9 @@ import cyan.compiler.parser.ast.*
 import cyan.compiler.parser.ast.function.CyanFunctionCall
 import cyan.compiler.parser.ast.function.CyanFunctionDeclaration
 import cyan.compiler.parser.ast.types.CyanStructDeclaration
-import cyan.interpreter.evaluator.values.CyanCallable
 import cyan.interpreter.evaluator.values.CyanFunction
 import cyan.interpreter.evaluator.values.CyanValue
 import cyan.interpreter.evaluator.evaluate
-import cyan.interpreter.resolver.Resolver
 import cyan.interpreter.stack.StackFrame
 
 var indent = -1
@@ -74,11 +72,7 @@ class Interpreter {
 //                }
             }
             is CyanAssignment -> {
-                stackFrame.findByIdentifier(statement.reference)?.let {
-                    val newValue = evaluate(statement.newExpr, stackFrame)
-
-                    stackFrame.localVariables[statement.reference.value] = newValue
-                }
+                error("")
             }
             else -> error("can't evaluate statement of type ${statement::class.simpleName}")
         }

@@ -51,6 +51,10 @@ interface WasmScope : Wasm.OrderedElement {
         pushElement(Wasm.Instruction("i32.ge_u"))
 
     @WasmInstructionsBuilderDsl
+    val Int32Instructions.eq get() =
+        pushElement(Wasm.Instruction("i32.eq"))
+
+    @WasmInstructionsBuilderDsl
     val Int32Instructions.eqz get() =
         pushElement(Wasm.Instruction("i32.eqz"))
 
@@ -98,6 +102,10 @@ interface WasmScope : Wasm.OrderedElement {
     @WasmInstructionsBuilderDsl
     val CyanIntrinsics.array_get get() =
         pushElement(Wasm.Instruction("call \$cy_array_get"))
+
+    @WasmInstructionsBuilderDsl
+    val CyanIntrinsics.array_set get() =
+        pushElement(Wasm.Instruction("call \$cy_array_set"))
 
     @WasmInstructionsBuilderDsl
     val CyanIntrinsics.strlen get() =

@@ -150,6 +150,7 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
                         CyanBinaryLesserEqualsOperator  -> i32.le_u
                         CyanBinaryGreaterOperator       -> i32.gt_u
                         CyanBinaryGreaterEqualsOperator -> i32.ge_u
+                        CyanBinaryEqualsOperator        -> i32.eq
                         else -> error("fir2wasm: cannot lower binary expression with operator '${expr.operator::class.simpleName}'")
                     }
                 }

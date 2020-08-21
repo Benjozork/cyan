@@ -125,10 +125,17 @@ object WasmStatementLower : FirItemLower<WasmLoweringContext, FirStatement, Wasm
                 }
             }
             is FirAssignment -> {
-                val symbol = item.targetVariable!!
-                val loweredNewExpr = context.backend.lowerExpression(item.newExpr!!, context)
+                val symbol = item.targetVariable
+                val loweredNewExpr = context.backend.lowerExpression(item.newExpr, context)
 
-                instructions {
+                if (item is FirAssignment.ToArrayIndex) instructions {
+                    val loweredIndexExpr = context.backend.lowerExpression(item.indexExpr, context)
+
+                    local.get(context.locals[symbol] ?: error("no local was set for symbol '${symbol.name}'"))
+                    +loweredIndexExpr
+                    +loweredNewExpr
+                    cy.array_set
+                } else instructions {
                     +loweredNewExpr
                     local.set(context.locals[symbol] ?: error("no local was set for symbol '${symbol.name}'"))
                 }

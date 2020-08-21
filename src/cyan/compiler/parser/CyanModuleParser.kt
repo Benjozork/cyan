@@ -274,7 +274,8 @@ class CyanModuleParser : Grammar<CyanModule>() {
 
     // Assignment
 
-    val assignStatement: Parser<CyanStatement> by (referenceParser * -znws * -assign * -znws * expr) use { CyanAssignment(t1, t2, span(t1, t2)) }
+    val assignmentBase by (indexedTerm or referenceParser)
+    val assignStatement: Parser<CyanStatement> by (assignmentBase * -znws * -assign * -znws * expr) use { CyanAssignment(t1, t2, span(t1, t2)) }
 
     // Return
 

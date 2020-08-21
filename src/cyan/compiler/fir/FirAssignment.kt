@@ -2,14 +2,16 @@ package cyan.compiler.fir
 
 import cyan.compiler.fir.expression.FirExpression
 
-class FirAssignment (
-    override val parent: FirNode,
-    var targetVariable: FirVariableDeclaration? = null,
-    var newExpr: FirExpression? = null
+open class FirAssignment (
+    override val parent: FirNode
 ) : FirStatement {
 
-    override fun allReferredSymbols() = if (targetVariable != null && newExpr != null) {
-        setOf(targetVariable!!.makeResolvedRef(this)) + newExpr!!.allReferredSymbols()
-    } else error("FirSymbol::allReferredSymbols should not be accessed during node initialization")
+    lateinit var targetVariable: FirVariableDeclaration
+
+    lateinit var newExpr: FirExpression
+
+    class ToArrayIndex(parent: FirNode, val indexExpr: FirExpression) : FirAssignment(parent)
+
+    override fun allReferredSymbols() = setOf(targetVariable.makeResolvedRef(this)) + newExpr.allReferredSymbols()
 
 }
