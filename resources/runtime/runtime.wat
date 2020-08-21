@@ -26,6 +26,26 @@
     i32.load
 )
 
+(func $cy_array_set (param $arr_ptr i32) (param $arr_idx i32) (param $new_value i32)
+    (block $B0
+        get_local $arr_idx
+        get_local $arr_ptr
+        i32.load
+        i32.lt_u
+        br_if $B0
+        unreachable
+    )
+    local.get $arr_idx
+    i32.const 1
+    i32.add
+    i32.const 4
+    i32.mul
+    local.get $arr_ptr
+    i32.add
+    local.get $new_value
+    i32.store
+)
+
 (func $cy_init_heap
     (local $curr_block_ptr i32)
     (local $next_block_ptr i32)
@@ -318,7 +338,7 @@
     i32.const 0
     i32.store
     i32.const 4
-    i32.const 512
+    i32.const 2048
     i32.store
 
     i32.const 1
