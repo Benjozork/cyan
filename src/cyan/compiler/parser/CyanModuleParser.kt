@@ -78,6 +78,17 @@ class CyanModuleParser : Grammar<CyanModule>() {
         charPrim    to CyanType.Char
     )
 
+    // Comparison
+
+    val deq             by literalToken("==")
+    val neq             by literalToken("!=")
+    val leq             by literalToken("<=")
+    val lt              by literalToken("<")
+    val geq             by literalToken(">=")
+    val gt              by literalToken(">")
+
+    // Misc. syntax
+
     val arraySuffix     by literalToken("[]")
 
     val assign          by literalToken("=")
@@ -128,15 +139,6 @@ class CyanModuleParser : Grammar<CyanModule>() {
     val div             by literalToken("/")
     val mod             by literalToken("%")
     val exp             by literalToken("^")
-
-    // Comparison
-
-    val deq             by literalToken("==")
-    val neq             by literalToken("!=")
-    val leq             by literalToken("<=")
-    val lt              by literalToken("<")
-    val geq             by literalToken(">=")
-    val gt              by literalToken(">")
 
     val tokenToOp = mapOf (
         plus  to CyanBinaryPlusOperator,
