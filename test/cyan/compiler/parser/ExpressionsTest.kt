@@ -160,7 +160,7 @@ class ExpressionsTest {
     @Nested
     inner class Arrays {
 
-        @Disabled @Test fun `no elements`() = doTest (
+        @Test fun `no elements`() = doTest (
             """
                 []
             """.trimIndent(),
