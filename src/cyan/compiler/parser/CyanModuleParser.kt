@@ -179,7 +179,9 @@ class CyanModuleParser : Grammar<CyanModule>() {
 
     val literalExpressionParser by (numericalValueParser or stringLiteralParser or booleanLiteralParser)
 
-    val arrayExpressionParser by (lsq * separatedTerms(parser(this::expr), commaParser, true) * rsq) use { CyanArrayExpression(t2.toTypedArray(), span(t1, t3)) }
+    val emptyArray            by (arraySuffix)                                                       use { CyanArrayExpression(emptyArray(), span(this)) }
+    val nonEmptyArray         by (lsq * separatedTerms(parser(this::expr), commaParser, true) * rsq) use { CyanArrayExpression(t2.toTypedArray(), span(t1, t3)) }
+    val arrayExpressionParser by (emptyArray or nonEmptyArray)
 
     val parenTerm = (-leap * parser(this::expr) * -reap)
 
