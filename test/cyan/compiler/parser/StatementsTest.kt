@@ -4,16 +4,14 @@ import com.github.h0tk3y.betterParse.grammar.parseToEnd
 
 import cyan.compiler.common.types.CyanType
 import cyan.compiler.common.types.Type
-import cyan.compiler.parser.ast.CyanForStatement
-import cyan.compiler.parser.ast.CyanSource
-import cyan.compiler.parser.ast.CyanStatement
-import cyan.compiler.parser.ast.CyanVariableDeclaration
+import cyan.compiler.parser.ast.*
 import cyan.compiler.parser.ast.expression.CyanArrayExpression
 import cyan.compiler.parser.ast.expression.CyanBinaryExpression
 import cyan.compiler.parser.ast.expression.CyanIdentifierExpression
 import cyan.compiler.parser.ast.expression.literal.CyanNumericLiteralExpression
 import cyan.compiler.parser.ast.function.*
 import cyan.compiler.parser.ast.operator.CyanBinaryPlusOperator
+import cyan.compiler.parser.ast.types.CyanStructDeclaration
 import cyan.compiler.parser.ast.types.CyanTraitDeclaration
 import cyan.compiler.parser.ast.types.CyanTypeAnnotation
 
@@ -172,6 +170,50 @@ class StatementsTest {
                         CyanTraitDeclaration.Element.Property (
                             CyanIdentifierExpression("name"),
                             CyanTypeAnnotation.Literal(Type.Primitive(CyanType.Str))
+                        )
+                    )
+                )
+            )
+        )
+
+    }
+
+    @Nested
+    inner class Derives {
+
+        @Test fun `with one function impl`() = doTest (
+            """
+                type Greeting = struct {
+                    text: str
+                
+                    derive Printable {
+                        print(): str {
+                            return text
+                        }
+                    }
+                }
+            """.trimIndent(),
+            listOf (
+                CyanStructDeclaration (
+                    CyanIdentifierExpression("Greeting"),
+                    arrayOf (
+                        CyanStructDeclaration.Property(CyanIdentifierExpression("text"), CyanTypeAnnotation.Literal(Type.Primitive(CyanType.Str)))
+                    ),
+                    arrayOf (
+                        CyanDerive (
+                            CyanTypeAnnotation.Reference(CyanIdentifierExpression("Printable")),
+                            arrayOf (
+                                CyanDerive.Item.Function (
+                                    CyanIdentifierExpression("print"),
+                                    emptyArray(),
+                                    CyanTypeAnnotation.Literal(Type.Primitive(CyanType.Str)),
+                                    CyanSource (
+                                        listOf (
+                                            CyanReturn(CyanIdentifierExpression("text"))
+                                        )
+                                    )
+                                )
+                            )
                         )
                     )
                 )

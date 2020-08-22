@@ -17,6 +17,7 @@ import com.github.h0tk3y.betterParse.lexer.Token
 import com.github.h0tk3y.betterParse.lexer.literalToken
 import com.github.h0tk3y.betterParse.lexer.regexToken
 import com.github.h0tk3y.betterParse.parser.Parser
+import cyan.compiler.codegen.wasm.dsl.block
 
 import cyan.compiler.parser.ast.function.*
 import cyan.compiler.parser.ast.types.CyanTraitDeclaration
@@ -44,6 +45,7 @@ class CyanModuleParser : Grammar<CyanModule>() {
     val whileToken      by regexToken("while\\b")
     val forToken        by regexToken("for\\b")
     val ofToken         by regexToken("of\\b")
+    val deriveToken     by regexToken("derive\\b")
 
     val trueToken       by regexToken("true\\b")
     val falseToken      by regexToken("false\\b")
@@ -121,7 +123,7 @@ class CyanModuleParser : Grammar<CyanModule>() {
     val primTypeName  by (anyPrim or voidPrim or int8Prim or int32Prim or int64Prim or float32Prim or float64Prim or boolPrim or strPrim or charPrim)
     val litType       by (primTypeName * optional(arraySuffix)) use { CyanTypeAnnotation.Literal(Type.Primitive(tokenToType[t1.type]!!, t2 != null), t2?.let { span(t1, t2!!) } ?: span(t1)) }
     val refType       by (parser(this::referenceParser))        use { CyanTypeAnnotation.Reference(this, this.span) }
-    val typeSignature by (-optional(colon) * -znws * (litType or refType))
+    val typeSignature by (-colon * -znws * (litType or refType))
 
     // Complex type parsers
 
@@ -129,11 +131,11 @@ class CyanModuleParser : Grammar<CyanModule>() {
 
     // structs
 
-    val structProperty    by (parser(this::referenceParser) * typeSignature) use { CyanStructDeclaration.Property(t1, t2, span(t1, t2)) }
-    val structProperties  by separatedTerms(structProperty, commaParser)     use { toTypedArray() }
-    val structBody        by (-lcur * -znws * structProperties * -znws * -rcur)
-    val structDeclaration by (typePrefix * -znws * -struct * -znws * structBody)
-        .use { CyanStructDeclaration(t1, t2, span(t1, t2.last())) }
+    val structProperty    by (parser(this::referenceParser) * typeSignature)              use { CyanStructDeclaration.Property(t1, t2, span(t1, t2)) }
+    val structProperties  by separatedTerms(structProperty, commaParser)                  use { toTypedArray() }
+    val structDerives     by separatedTerms(parser(this::derive), nws, acceptZero = true) use { toTypedArray() }
+    val structDeclaration by (typePrefix * -znws * -struct * -znws * -lcur * -znws * structProperties * -nws * structDerives * -znws * -rcur)
+        .use { CyanStructDeclaration(t1, t2, t3, span(t1, t3.lastOrNull() ?: t2.last())) }
 
     // traits
 
@@ -144,6 +146,15 @@ class CyanModuleParser : Grammar<CyanModule>() {
         .use { CyanTraitDeclaration(t1, t2, span(t1, t2.last())) }
 
     val complexType by (structDeclaration or traitDeclaration)
+
+    // Derives
+
+    val deriveFunctionImpl: Parser<CyanDerive.Item.Function> by (parser(this::referenceParser) * -znws * parser(this::functionArguments) * typeSignature * -znws * parser(this::block))
+        .use { CyanDerive.Item.Function(t1, t2.t1.toTypedArray(), t3, t4, span(t1, t4)) }
+
+    val deriveImpl: Parser<CyanDerive.Item> by (deriveFunctionImpl)
+    val deriveBody                          by (-lcur * -znws * (separatedTerms(deriveImpl, nws) use { toTypedArray() }) * -znws * -rcur)
+    val derive                              by (deriveToken * -znws * refType * -znws * deriveBody) use { CyanDerive(t2, t3, span(t1, t3.last())) }
 
     // Arithmetic
 
