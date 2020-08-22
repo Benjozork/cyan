@@ -22,7 +22,12 @@ fun FirNode.resolveType(typeAnnotation: CyanTypeAnnotation, inAstNode: CyanItem?
     return when (typeAnnotation) {
         is CyanTypeAnnotation.Literal -> typeAnnotation.literalType
         is CyanTypeAnnotation.Reference -> {
-            val typeSymbol = findSymbol(FirReference(this, typeAnnotation.identifierExpression.value, typeAnnotation.identifierExpression), this)
+            val typeReference = FirReference(this, typeAnnotation.identifierExpression.value, typeAnnotation.identifierExpression)
+
+            if (typeReference.text.startsWith("self"))
+                return Type.Self(typeReference.text.endsWith("[]"))
+
+            val typeSymbol = findSymbol(typeReference, this)
                 ?: DiagnosticPipe.report (
                     CompilerDiagnostic (
                         level = CompilerDiagnostic.Level.Error,

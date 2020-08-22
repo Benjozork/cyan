@@ -2,12 +2,14 @@ package cyan.compiler.lower.ast2fir
 
 import cyan.compiler.common.diagnostic.CompilerDiagnostic
 import cyan.compiler.common.diagnostic.DiagnosticPipe
+import cyan.compiler.common.types.Type
 import cyan.compiler.fir.*
 import cyan.compiler.fir.expression.FirExpression
 import cyan.compiler.fir.extensions.findSymbol
 import cyan.compiler.fir.functions.FirFunctionDeclaration
 import cyan.compiler.lower.ast2fir.expression.ExpressionLower
 import cyan.compiler.lower.ast2fir.expression.value.ValueInitializationConverter
+import cyan.compiler.lower.ast2fir.resolve.TypeMemberResolver
 import cyan.compiler.parser.ast.function.CyanFunctionCall
 
 object FunctionCallLower : Ast2FirLower<CyanFunctionCall, FirNode> {
@@ -26,9 +28,10 @@ object FunctionCallLower : Ast2FirLower<CyanFunctionCall, FirNode> {
             }
             is FirExpression.MemberAccess -> { // Yes
                 val functionReference = FirReference(firFunctionCall, loweredBase.member, astNode.base)
+                val baseType = loweredBase.base.type() as? Type.Struct
 
-                // Find a function with the same name
-                val resolvedReference = parentFirNode.findSymbol(functionReference) ?: DiagnosticPipe.report (
+                // Find a member function or a function with the same name
+                val resolvedReference = baseType?.let { TypeMemberResolver.resolve(baseType, functionReference) } ?: parentFirNode.findSymbol(functionReference) ?: DiagnosticPipe.report (
                     CompilerDiagnostic (
                         level = CompilerDiagnostic.Level.Error,
                         message = "Unresolved symbol '${functionReference.text}'",
@@ -50,7 +53,12 @@ object FunctionCallLower : Ast2FirLower<CyanFunctionCall, FirNode> {
                 )
 
                 // Does the function accept a receiver with the good type ?
-                if (!(resolvedFunction.receiver!!.type accepts loweredBase.base.type())) DiagnosticPipe.report (
+
+                // - is the type of the function "self" ?
+
+                if (resolvedFunction.receiver!!.type is Type.Self) {
+
+                } else if (!(resolvedFunction.receiver!!.type accepts loweredBase.base.type())) DiagnosticPipe.report (
                     CompilerDiagnostic (
                         level = CompilerDiagnostic.Level.Error,
                         message = "Function '${resolvedFunction.name}' does not accept a receiver of type '${loweredBase.base.type()}'",

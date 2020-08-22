@@ -411,6 +411,19 @@ class ExpressionsTest {
             )
         )
 
+        @Test fun `member access`() = doTest (
+            """
+                greeting.show()
+            """.trimIndent(),
+            CyanFunctionCall (
+                CyanMemberAccessExpression (
+                    CyanIdentifierExpression("greeting"),
+                    CyanIdentifierExpression("show")
+                ),
+                emptyArray()
+            )
+        )
+
     }
 
 }

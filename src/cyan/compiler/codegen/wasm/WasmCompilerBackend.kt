@@ -9,6 +9,7 @@ import cyan.compiler.codegen.wasm.lower.WasmStatementLower
 import cyan.compiler.codegen.wasm.utils.Allocator
 import cyan.compiler.fir.FirModule
 import cyan.compiler.fir.FirSource
+import cyan.compiler.fir.FirTypeDeclaration
 
 import java.io.File
 
@@ -31,7 +32,15 @@ class WasmCompilerBackend : FirCompilerBackend<Wasm.OrderedElement>() {
         val newSource = StringBuilder()
 
         if (source.parent is FirModule) source.parent.let { module ->
-            for (function in (module as FirModule).localFunctions.filter { !it.isExtern }) {
+            val functionsToEmit = (module as FirModule).localFunctions.filter { !it.isExtern }.toMutableList()
+
+            // Add derives from declared structs
+            functionsToEmit += module.declaredSymbols
+                .filterIsInstance<FirTypeDeclaration.Struct>()
+                .flatMap { it.derives.toSet() }
+                .flatMap { it.functionImpls.values }
+
+            for (function in functionsToEmit) {
                 newSource.appendLine(lowerFunctionDeclaration(function))
             }
         } else for (function in source.localFunctions) {

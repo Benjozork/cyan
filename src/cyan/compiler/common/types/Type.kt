@@ -1,7 +1,6 @@
 package cyan.compiler.common.types
 
 import cyan.compiler.fir.functions.FirFunctionArgument
-import cyan.compiler.fir.functions.FirFunctionDeclaration
 
 @Suppress("EqualsOrHashCode")
 sealed class Type(val array: Boolean) {
@@ -32,7 +31,7 @@ sealed class Type(val array: Boolean) {
 
     }
 
-    class Struct(val name: String, val properties: Array<Property>, array: Boolean = false) : Type(array) {
+    class Struct(val name: String, val properties: Array<Property>, val derives: MutableList<Derive>, array: Boolean = false) : Type(array) {
 
         data class Property(val name: String, val type: Type) {
             override fun toString() = "$name: $type"
@@ -46,9 +45,9 @@ sealed class Type(val array: Boolean) {
                 else -> false
             }
 
-        override fun asArrayType() = Struct(name, properties, true)
+        override fun asArrayType() = Struct(name, properties, derives, true)
 
-        override fun asNonArrayType() = Struct(name, properties, false)
+        override fun asNonArrayType() = Struct(name, properties, derives, false)
 
         override fun hashCode() = name.hashCode() + properties.hashCode() + array.hashCode()
 
@@ -68,8 +67,9 @@ sealed class Type(val array: Boolean) {
 
         override fun accepts(other: Type): Boolean =
             when (other) {
-                is Struct -> false
+                is Struct -> this in other.derives.map { it.trait }
                 is Trait -> false
+                is Self -> false
                 is Primitive -> false
             }
 
@@ -78,6 +78,22 @@ sealed class Type(val array: Boolean) {
         override fun asNonArrayType() = Trait(name, elements, false)
 
         override fun hashCode() = name.hashCode() + elements.hashCode() + array.hashCode()
+
+    }
+
+    class Self(array: Boolean = false) : Type(array) {
+
+        override fun toString() = "self"
+
+        override fun accepts(other: Type): Boolean {
+            error("cannot statically check 'self' type")
+        }
+
+        override fun asArrayType() = Self(true)
+
+        override fun asNonArrayType() = Self(false)
+
+        override fun hashCode() = array.hashCode()
 
     }
 

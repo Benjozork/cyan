@@ -160,6 +160,7 @@ open class FirExpression(override var parent: FirNode, val fromAstNode: CyanExpr
 
                          matchingTraitElement.returnType
                      }
+                     is Type.Self -> error("member access on self type is not supported yet")
                  }
              }
              is ArrayIndex -> {

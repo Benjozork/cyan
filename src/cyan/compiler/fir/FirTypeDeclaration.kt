@@ -1,5 +1,6 @@
 package cyan.compiler.fir
 
+import cyan.compiler.common.types.Derive
 import cyan.compiler.common.types.Type
 import cyan.compiler.fir.functions.FirFunctionDeclaration
 
@@ -17,7 +18,7 @@ sealed class FirTypeDeclaration<TType : Type> (
             else -> error("invalid state")
         }
 
-    class Struct(parent: FirNode, override val type: Type.Struct) : FirTypeDeclaration<Type.Struct>(parent)
+    class Struct(parent: FirNode, override val type: Type.Struct, val derives: Array<Derive>) : FirTypeDeclaration<Type.Struct>(parent)
 
     class Trait(parent: FirNode) : FirTypeDeclaration<Type.Trait>(parent), FirScope {
 

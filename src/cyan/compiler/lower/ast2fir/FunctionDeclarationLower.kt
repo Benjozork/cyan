@@ -2,6 +2,8 @@ package cyan.compiler.lower.ast2fir
 
 import cyan.compiler.common.diagnostic.CompilerDiagnostic
 import cyan.compiler.common.diagnostic.DiagnosticPipe
+import cyan.compiler.common.types.Derive
+import cyan.compiler.common.types.Type
 import cyan.compiler.fir.*
 import cyan.compiler.fir.functions.FirFunctionDeclaration
 import cyan.compiler.fir.extensions.findSymbol
@@ -14,9 +16,12 @@ import cyan.compiler.parser.ast.function.CyanFunctionDeclaration
 object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirFunctionDeclaration> {
 
     override fun lower(astNode: CyanFunctionDeclaration, parentFirNode: FirNode): FirFunctionDeclaration {
+        val functionDeclarationName =
+            (if (parentFirNode is Derive) "__traitimpl__${parentFirNode.trait.name}_${(parentFirNode.onType as Type.Struct).name}_" else "") + astNode.signature.name.value
+
         val firFunctionDeclaration = FirFunctionDeclaration (
             parent = parentFirNode,
-            name = astNode.signature.name.value,
+            name = functionDeclarationName,
             returnType = parentFirNode.resolveType(astNode.signature.typeAnnotation),
             isExtern = astNode.signature.isExtern,
             args = emptyArray()
@@ -53,7 +58,7 @@ object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirFunct
         }
 
         // Check parent is scope
-        if (parentFirNode !is FirScope) {
+        if (parentFirNode !is FirScope && parentFirNode !is Derive) {
             DiagnosticPipe.report (
                 CompilerDiagnostic (
                     level = CompilerDiagnostic.Level.Internal,
@@ -76,7 +81,8 @@ object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirFunct
 
         // Register function in parent FIR node
 
-        parentFirNode.declaredSymbols += firFunctionDeclaration
+        if (parentFirNode is FirScope)
+            parentFirNode.declaredSymbols += firFunctionDeclaration
 
         return firFunctionDeclaration
     }
