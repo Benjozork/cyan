@@ -25,7 +25,7 @@ object ValueInitializationConverter {
             )
         )
 
-        require (resolvedTypeSymbol is FirTypeDeclaration)
+        require (resolvedTypeSymbol is FirTypeDeclaration.Struct)
 
         // First, check there are no mixes of named and positional arguments
 
@@ -40,10 +40,12 @@ object ValueInitializationConverter {
 
         val positional = astInitializer.args.first().label == null
 
-        val resolvedFields = if (positional) {
-            val values = (resolvedTypeSymbol.struct.properties zip astInitializer.args).toMap()
+        val structTypeProperties = resolvedTypeSymbol.type.properties
 
-            if (values.size < resolvedTypeSymbol.struct.properties.size) DiagnosticPipe.report (
+        val resolvedFields = if (positional) {
+            val values = (structTypeProperties zip astInitializer.args).toMap()
+
+            if (values.size < structTypeProperties.size) DiagnosticPipe.report (
                 CompilerDiagnostic (
                     level = CompilerDiagnostic.Level.Error,
                     message = "Not enough arguments for initialization of struct",
@@ -51,7 +53,7 @@ object ValueInitializationConverter {
                 )
             )
 
-            if (values.size > resolvedTypeSymbol.struct.properties.size) DiagnosticPipe.report (
+            if (values.size > structTypeProperties.size) DiagnosticPipe.report (
                 CompilerDiagnostic (
                     level = CompilerDiagnostic.Level.Error,
                     message = "Too many arguments for initialization of struct",
@@ -61,7 +63,7 @@ object ValueInitializationConverter {
 
             values
         } else {
-            val values = resolvedTypeSymbol.struct.properties.toList().associateWith { property ->
+            val values = structTypeProperties.toList().associateWith { property ->
                 astInitializer.args.firstOrNull { argument -> argument.label!!.value == property.name }
                         ?: DiagnosticPipe.report (
                             CompilerDiagnostic (
@@ -85,7 +87,7 @@ object ValueInitializationConverter {
 
         return FirExpression.Literal.Struct (
             elements = resolvedFields.mapValues { ExpressionLower.lower(it.value.value, parentFirNode) },
-            type = resolvedTypeSymbol.struct,
+            type = resolvedTypeSymbol.type,
             parent = parentFirNode,
             fromAstNode = astInitializer
         ).also { e -> e.elements.values.forEach { it.parent = e } }

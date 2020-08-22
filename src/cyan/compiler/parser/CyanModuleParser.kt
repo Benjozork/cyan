@@ -19,6 +19,7 @@ import com.github.h0tk3y.betterParse.lexer.regexToken
 import com.github.h0tk3y.betterParse.parser.Parser
 
 import cyan.compiler.parser.ast.function.*
+import cyan.compiler.parser.ast.types.CyanTraitDeclaration
 import cyan.compiler.parser.grammars.NumericLiteralParser
 import cyan.compiler.parser.util.DotChainAssociator
 import cyan.compiler.parser.util.span
@@ -51,6 +52,7 @@ class CyanModuleParser : Grammar<CyanModule>() {
 
     val type            by regexToken("type\\b")
     val struct          by regexToken("struct\\b")
+    val trait           by regexToken("trait")
 
     // Primitive types
 
@@ -110,6 +112,7 @@ class CyanModuleParser : Grammar<CyanModule>() {
 
     // Misc. base parsers
 
+    val nws                by oneOrMore(newLine or ws)
     val znws               by zeroOrMore(newLine or ws) // Zero or more Newlines or WhiteSpaces
     val commaParser        by comma and znws
 
@@ -122,14 +125,25 @@ class CyanModuleParser : Grammar<CyanModule>() {
 
     // Complex type parsers
 
+    val typePrefix by (-type * -znws * parser(this::referenceParser) * -znws * -assign)
+
+    // structs
+
     val structProperty    by (parser(this::referenceParser) * typeSignature) use { CyanStructDeclaration.Property(t1, t2, span(t1, t2)) }
-    val structProperties  by separatedTerms(structProperty, commaParser)     use { this.toTypedArray() }
+    val structProperties  by separatedTerms(structProperty, commaParser)     use { toTypedArray() }
     val structBody        by (-lcur * -znws * structProperties * -znws * -rcur)
-    val structDeclaration by (-struct * -znws * structBody)
+    val structDeclaration by (typePrefix * -znws * -struct * -znws * structBody)
+        .use { CyanStructDeclaration(t1, t2, span(t1, t2.last())) }
 
-    val complexType by (structDeclaration)
+    // traits
 
-    val typeDeclaration by (type * -znws * parser(this::referenceParser) * -znws * -assign * -znws * complexType) use { CyanStructDeclaration(t2, t3, span(t1, t3.last().span!!.fromTokenMatches.last())) }
+    val traitFunction    by parser(this::functionSignature) use { CyanTraitDeclaration.Element.Function(CyanFunctionDeclaration(this, null), span) }
+    val traitProperty    by structProperty                  use { CyanTraitDeclaration.Element.Property(ident, type, span) }
+    val traitElement     by (traitFunction or traitProperty)
+    val traitDeclaration by (typePrefix * -znws * -trait * -znws * -lcur * -znws * (separatedTerms(traitElement, nws) use { toTypedArray() }) * -znws * -rcur)
+        .use { CyanTraitDeclaration(t1, t2, span(t1, t2.last())) }
+
+    val complexType by (structDeclaration or traitDeclaration)
 
     // Arithmetic
 
@@ -179,7 +193,9 @@ class CyanModuleParser : Grammar<CyanModule>() {
 
     val literalExpressionParser by (numericalValueParser or stringLiteralParser or booleanLiteralParser)
 
-    val emptyArray            by (arraySuffix)                                                       use { CyanArrayExpression(emptyArray(), span(this)) }
+    val emptyArray            by (arraySuffix)                                                       use { CyanArrayExpression(
+        emptyArray(), span(this)
+    ) }
     val nonEmptyArray         by (lsq * separatedTerms(parser(this::expr), commaParser, true) * rsq) use { CyanArrayExpression(t2.toTypedArray(), span(t1, t3)) }
     val arrayExpressionParser by (emptyArray or nonEmptyArray)
 
@@ -293,10 +309,10 @@ class CyanModuleParser : Grammar<CyanModule>() {
 
     val moduleDeclaration by (module * -znws * referenceParser) use { CyanModuleDeclaration(t2, span(t1, t2.span!!.fromTokenMatches.last())) }
 
-    // Statements
+    // StatementscomplexType
 
     val anyStatement
-            by -znws * (importStatement or variableDeclaration or functionDeclaration or typeDeclaration or ifStatementChain or whileStatement or forStatement or functionCall or assignStatement or returnStatement) * -znws
+            by -znws * (importStatement or variableDeclaration or functionDeclaration or complexType or ifStatementChain or whileStatement or forStatement or functionCall or assignStatement or returnStatement) * -znws
 
     // Source parser
 

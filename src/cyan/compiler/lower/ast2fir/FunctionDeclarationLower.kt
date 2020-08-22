@@ -11,9 +11,9 @@ import cyan.compiler.fir.functions.FirFunctionReceiver
 import cyan.compiler.parser.ast.expression.CyanIdentifierExpression
 import cyan.compiler.parser.ast.function.CyanFunctionDeclaration
 
-object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirNullNode> {
+object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirFunctionDeclaration> {
 
-    override fun lower(astNode: CyanFunctionDeclaration, parentFirNode: FirNode): FirNullNode {
+    override fun lower(astNode: CyanFunctionDeclaration, parentFirNode: FirNode): FirFunctionDeclaration {
         val firFunctionDeclaration = FirFunctionDeclaration (
             parent = parentFirNode,
             name = astNode.signature.name.value,
@@ -41,7 +41,7 @@ object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirNullN
         firFunctionDeclaration.block = astNode.source?.let { SourceLower.lower(it, firFunctionDeclaration) } ?: FirSource(firFunctionDeclaration, isInheriting = false)
 
         // Check function has body if not extern
-        if (!astNode.signature.isExtern && astNode.source == null) {
+        if (!astNode.signature.isExtern && parentFirNode !is FirTypeDeclaration.Trait && astNode.source == null) {
             DiagnosticPipe.report (
                 CompilerDiagnostic (
                     level = CompilerDiagnostic.Level.Error,
@@ -78,7 +78,7 @@ object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirNullN
 
         parentFirNode.declaredSymbols += firFunctionDeclaration
 
-        return FirNullNode
+        return firFunctionDeclaration
     }
 
 }

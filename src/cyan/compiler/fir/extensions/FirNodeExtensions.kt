@@ -27,22 +27,21 @@ fun FirNode.resolveType(typeAnnotation: CyanTypeAnnotation, inAstNode: CyanItem?
                     CompilerDiagnostic (
                         level = CompilerDiagnostic.Level.Error,
                         message = "Unresolved symbol '${typeAnnotation.identifierExpression.value}'",
-                        astNode = inAstNode ?: typeAnnotation,
-                        span = typeAnnotation.span
+                        astNode = inAstNode ?: typeAnnotation, span = typeAnnotation.span
                     )
                 )
 
-            if (typeSymbol.resolvedSymbol !is FirTypeDeclaration) {
+            if (typeSymbol.resolvedSymbol !is FirTypeDeclaration.Struct) {
                 DiagnosticPipe.report (
                     CompilerDiagnostic (
                         level = CompilerDiagnostic.Level.Error,
-                        message = "Symbol '${typeSymbol.resolvedSymbol.name}' is not a type",
-                        astNode = inAstNode ?: typeAnnotation
+                        message = "Symbol '${typeSymbol.resolvedSymbol.name}' is not a struct type",
+                        astNode = inAstNode ?: typeAnnotation, span = typeAnnotation.span
                     )
                 )
             }
 
-            (typeSymbol.resolvedSymbol as FirTypeDeclaration).struct
+            (typeSymbol.resolvedSymbol as FirTypeDeclaration<*>).type
         }
     }
 }

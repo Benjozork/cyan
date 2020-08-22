@@ -58,6 +58,14 @@ object ExpressionLower : Ast2FirLower<CyanExpression, FirExpression> {
                 val loweredElements = astNode.exprs.map { lower(it, parentFirNode) }
                 val firArray = FirExpression.Literal.Array(loweredElements, parentFirNode, astNode)
 
+                if (loweredElements.isEmpty() && (parentFirNode is FirVariableDeclaration && parentFirNode.typeAnnotation == null)) DiagnosticPipe.report (
+                    CompilerDiagnostic (
+                        level = CompilerDiagnostic.Level.Error,
+                        message = "Empty arrays can only be assigned to variables with explicitly specified types",
+                        astNode = astNode
+                    )
+                )
+
                 loweredElements.map(FirExpression::type).toSet().takeIf { it.size == 1 } ?: DiagnosticPipe.report (
                     CompilerDiagnostic (
                         level = CompilerDiagnostic.Level.Error,

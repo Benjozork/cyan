@@ -13,10 +13,7 @@ class FirForStatement (
         override val parent: FirNode,
         name: String,
         iteratorType: Type
-    ) : FirVariableDeclaration(parent, name, false, when (iteratorType) {
-        is Type.Primitive -> Type.Primitive(iteratorType.base, false)
-        is Type.Struct -> Type.Struct(iteratorType.name, iteratorType.properties, false)
-    })
+    ) : FirVariableDeclaration(parent, name, false, iteratorType.asNonArrayType())
 
     override val isInheriting = true
 

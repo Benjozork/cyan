@@ -10,9 +10,9 @@ import cyan.compiler.fir.FirTypeDeclaration
 import cyan.compiler.parser.ast.types.CyanStructDeclaration
 import cyan.compiler.parser.ast.types.CyanTypeAnnotation
 
-object StructDeclarationLower : Ast2FirLower<CyanStructDeclaration, FirTypeDeclaration> {
+object StructDeclarationLower : Ast2FirLower<CyanStructDeclaration, FirTypeDeclaration.Struct> {
 
-    override fun lower(astNode: CyanStructDeclaration, parentFirNode: FirNode): FirTypeDeclaration {
+    override fun lower(astNode: CyanStructDeclaration, parentFirNode: FirNode): FirTypeDeclaration.Struct {
         if (astNode.properties.map { it.ident.value }.toSet().size != astNode.properties.size) { // Check for duplicate properties
             DiagnosticPipe.report (
                 CompilerDiagnostic (
@@ -58,7 +58,7 @@ object StructDeclarationLower : Ast2FirLower<CyanStructDeclaration, FirTypeDecla
             Type.Struct.Property(it.ident.value, it.type.literalType)
         }.toTypedArray())
 
-        val firStructDeclaration = FirTypeDeclaration(parentFirNode, astNode.ident.value, structType)
+        val firStructDeclaration = FirTypeDeclaration.Struct(parentFirNode, structType)
 
         parentFirNode.declaredSymbols += firStructDeclaration
 

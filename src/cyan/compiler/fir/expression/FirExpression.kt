@@ -125,8 +125,8 @@ open class FirExpression(override var parent: FirNode, val fromAstNode: CyanExpr
                  val memberName = member
 
                  when (baseType) {
-                     is Type.Primitive -> DiagnosticPipe.report (
-                         CompilerDiagnostic (
+                     is Type.Primitive -> DiagnosticPipe.report(
+                         CompilerDiagnostic(
                              level = CompilerDiagnostic.Level.Error,
                              message = "Primitives do not have members",
                              astNode = fromAstNode
@@ -134,16 +134,31 @@ open class FirExpression(override var parent: FirNode, val fromAstNode: CyanExpr
                      )
                      is Type.Struct -> {
                          val matchingStructProperty = baseType.properties.firstOrNull { it.name == memberName }
-                             ?: DiagnosticPipe.report (
-                                 CompilerDiagnostic (
+                             ?: DiagnosticPipe.report(
+                                 CompilerDiagnostic(
                                      level = CompilerDiagnostic.Level.Error,
                                      message = "Type '${baseType.name}' does not have a member called '$memberName'",
-                                     astNode = fromAstNode, span = (fromAstNode as CyanMemberAccessExpression).member.span,
+                                     astNode = fromAstNode,
+                                     span = (fromAstNode as CyanMemberAccessExpression).member.span,
                                      note = CompilerDiagnostic.Note("type '${baseType.name}' is defined as follows\n" + "    | ".lightGray() + "$baseType")
                                  )
                              )
 
                          matchingStructProperty.type
+                     }
+                     is Type.Trait -> {
+                         val matchingTraitElement = baseType.elements.firstOrNull { it.name == memberName }
+                             ?: DiagnosticPipe.report (
+                                 CompilerDiagnostic(
+                                     level = CompilerDiagnostic.Level.Error,
+                                     message = "Type '${baseType.name}' does not have a member called '$memberName'",
+                                     astNode = fromAstNode,
+                                     span = (fromAstNode as CyanMemberAccessExpression).member.span,
+                                     note = CompilerDiagnostic.Note("type '${baseType.name}' is defined as follows\n" + "    | ".lightGray() + "$baseType")
+                                 )
+                             )
+
+                         matchingTraitElement.returnType
                      }
                  }
              }
@@ -160,10 +175,7 @@ open class FirExpression(override var parent: FirNode, val fromAstNode: CyanExpr
                      )
                  }
 
-                 when (baseExprType) {
-                     is Type.Primitive -> Type.Primitive(baseExprType.base, false)
-                     is Type.Struct    -> Type.Struct(baseExprType.name, baseExprType.properties, false)
-                 }
+                 baseExprType.asNonArrayType()
              }
              else -> error("can't infer type of ${this::class.simpleName}")
         }

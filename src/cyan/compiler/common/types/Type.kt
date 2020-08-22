@@ -1,5 +1,8 @@
 package cyan.compiler.common.types
 
+import cyan.compiler.fir.functions.FirFunctionArgument
+import cyan.compiler.fir.functions.FirFunctionDeclaration
+
 @Suppress("EqualsOrHashCode")
 sealed class Type(val array: Boolean) {
 
@@ -48,6 +51,33 @@ sealed class Type(val array: Boolean) {
         override fun asNonArrayType() = Struct(name, properties, false)
 
         override fun hashCode() = name.hashCode() + properties.hashCode() + array.hashCode()
+
+    }
+
+    class Trait(val name: String, val elements: Array<Element>, array: Boolean = false) : Type(array) {
+
+        sealed class Element(val name: String, val returnType: Type) {
+
+            class Function(name: String, val args: Array<FirFunctionArgument>, returnType: Type) : Element(name, returnType)
+
+            class Property(name: String, returnType: Type) : Element(name, returnType)
+
+        }
+
+        override fun toString() = "trait $name"
+
+        override fun accepts(other: Type): Boolean =
+            when (other) {
+                is Struct -> false
+                is Trait -> false
+                is Primitive -> false
+            }
+
+        override fun asArrayType() = Trait(name, elements, true)
+
+        override fun asNonArrayType() = Trait(name, elements, false)
+
+        override fun hashCode() = name.hashCode() + elements.hashCode() + array.hashCode()
 
     }
 

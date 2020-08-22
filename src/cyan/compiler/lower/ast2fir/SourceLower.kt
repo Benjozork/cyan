@@ -14,7 +14,7 @@ object SourceLower : Ast2FirLower<CyanSource, FirSource> {
         for (node in astNode.statements) {
             val loweredNode = StatementLower.lower(node, source)
 
-            if (loweredNode is FirStatement && loweredNode !is FirTypeDeclaration)
+            if (loweredNode is FirStatement && loweredNode !is FirTypeDeclaration<*>)
                 source.statements.add(loweredNode)
         }
 

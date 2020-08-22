@@ -14,6 +14,7 @@ import cyan.compiler.parser.ast.expression.CyanIdentifierExpression
 import cyan.compiler.parser.ast.expression.literal.CyanNumericLiteralExpression
 import cyan.compiler.parser.ast.function.*
 import cyan.compiler.parser.ast.operator.CyanBinaryPlusOperator
+import cyan.compiler.parser.ast.types.CyanTraitDeclaration
 import cyan.compiler.parser.ast.types.CyanTypeAnnotation
 
 import org.junit.jupiter.api.Test
@@ -26,6 +27,158 @@ class StatementsTest {
 
     private fun doTest(source: String, expectedSource: List<CyanStatement>) =
         assertIterableEquals(expectedSource.map { it.toString() }, parser.parseToEnd("module test\n$source").source.statements.map { it.toString() })
+
+    @Nested
+    inner class TypeDeclarations {
+
+        @Test fun `trait with one function`() = doTest (
+            """
+                type Printable = trait {
+                    function print(): void
+                }
+            """.trimIndent(),
+            listOf (
+                CyanTraitDeclaration (
+                    CyanIdentifierExpression("Printable"),
+                    arrayOf (
+                        CyanTraitDeclaration.Element.Function (
+                            CyanFunctionDeclaration (
+                                CyanFunctionSignature (
+                                    attributes = emptyList(),
+                                    receiver = null,
+                                    name = CyanIdentifierExpression("print"),
+                                    args = emptyList(),
+                                    typeAnnotation = CyanTypeAnnotation.Literal(Type.Primitive(CyanType.Void)),
+                                    isExtern = false
+                                ),
+                                source = null
+                            )
+                        )
+                    )
+                )
+            )
+        )
+
+        @Test fun `trait with two functions`() = doTest (
+            """
+                type Serialize = trait {
+                    function in(): str
+                    
+                    function out(): str
+                }
+            """.trimIndent(),
+            listOf (
+                CyanTraitDeclaration (
+                    CyanIdentifierExpression("Serialize"),
+                    arrayOf (
+                        CyanTraitDeclaration.Element.Function (
+                            CyanFunctionDeclaration (
+                                CyanFunctionSignature (
+                                    attributes = emptyList(),
+                                    receiver = null,
+                                    name = CyanIdentifierExpression("in"),
+                                    args = emptyList(),
+                                    typeAnnotation = CyanTypeAnnotation.Literal(Type.Primitive(CyanType.Str)),
+                                    isExtern = false
+                                ),
+                                source = null
+                            )
+                        ),
+                        CyanTraitDeclaration.Element.Function (
+                            CyanFunctionDeclaration (
+                                CyanFunctionSignature (
+                                    attributes = emptyList(),
+                                    receiver = null,
+                                    name = CyanIdentifierExpression("out"),
+                                    args = emptyList(),
+                                    typeAnnotation = CyanTypeAnnotation.Literal(Type.Primitive(CyanType.Str)),
+                                    isExtern = false
+                                ),
+                                source = null
+                            )
+                        )
+                    )
+                )
+            )
+        )
+
+        @Test fun `trait with one property`() = doTest (
+            """
+                type Named = trait {
+                    name: str
+                }
+            """.trimIndent(),
+            listOf (
+                CyanTraitDeclaration (
+                    CyanIdentifierExpression("Named"),
+                    arrayOf (
+                        CyanTraitDeclaration.Element.Property (
+                            CyanIdentifierExpression("name"),
+                            CyanTypeAnnotation.Literal(Type.Primitive(CyanType.Str))
+                        )
+                    )
+                )
+            )
+        )
+
+        @Test fun `trait with two properties`() = doTest (
+            """
+                type Being = trait {
+                    name: str
+                    age: i32
+                }
+            """.trimIndent(),
+            listOf (
+                CyanTraitDeclaration (
+                    CyanIdentifierExpression("Being"),
+                    arrayOf (
+                        CyanTraitDeclaration.Element.Property (
+                            CyanIdentifierExpression("name"),
+                            CyanTypeAnnotation.Literal(Type.Primitive(CyanType.Str))
+                        ),
+                        CyanTraitDeclaration.Element.Property (
+                            CyanIdentifierExpression("age"),
+                            CyanTypeAnnotation.Literal(Type.Primitive(CyanType.I32))
+                        )
+                    )
+                )
+            )
+        )
+
+        @Test fun `trait with one function and one property`() = doTest (
+            """
+                type Person = trait {
+                    function speak(): void
+                    name: str
+                }
+            """.trimIndent(),
+            listOf (
+                CyanTraitDeclaration (
+                    CyanIdentifierExpression("Person"),
+                    arrayOf (
+                        CyanTraitDeclaration.Element.Function (
+                            CyanFunctionDeclaration (
+                                CyanFunctionSignature (
+                                    attributes = emptyList(),
+                                    receiver = null,
+                                    name = CyanIdentifierExpression("speak"),
+                                    args = emptyList(),
+                                    typeAnnotation = CyanTypeAnnotation.Literal(Type.Primitive(CyanType.Void)),
+                                    isExtern = false
+                                ),
+                                source = null
+                            )
+                        ),
+                        CyanTraitDeclaration.Element.Property (
+                            CyanIdentifierExpression("name"),
+                            CyanTypeAnnotation.Literal(Type.Primitive(CyanType.Str))
+                        )
+                    )
+                )
+            )
+        )
+
+    }
 
     @Nested
     inner class VariableDeclarations {

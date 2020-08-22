@@ -19,8 +19,8 @@ object FunctionCallLower : Ast2FirLower<CyanFunctionCall, FirNode> {
         return when (val loweredBase = ExpressionLower.lower(astNode.base, firFunctionCall)) {
             is FirResolvedReference -> { // No
                 return when (val symbol = loweredBase.resolvedSymbol) {
-                    is FirTypeDeclaration     -> ValueInitializationConverter.convert(astNode, parentFirNode)
-                    is FirFunctionDeclaration -> processFunctionCall(firFunctionCall, symbol, astNode)
+                    is FirTypeDeclaration.Struct -> ValueInitializationConverter.convert(astNode, parentFirNode)
+                    is FirFunctionDeclaration    -> processFunctionCall(firFunctionCall, symbol, astNode)
                     else -> error("Cannot invoke on symbol of type '${symbol::class.simpleName}'")
                 }
             }
