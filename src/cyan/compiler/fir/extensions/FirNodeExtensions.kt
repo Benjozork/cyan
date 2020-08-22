@@ -31,11 +31,11 @@ fun FirNode.resolveType(typeAnnotation: CyanTypeAnnotation, inAstNode: CyanItem?
                     )
                 )
 
-            if (typeSymbol.resolvedSymbol !is FirTypeDeclaration.Struct) {
+            if (typeSymbol.resolvedSymbol !is FirTypeDeclaration.Struct && typeSymbol.resolvedSymbol !is FirTypeDeclaration.Trait) {
                 DiagnosticPipe.report (
                     CompilerDiagnostic (
                         level = CompilerDiagnostic.Level.Error,
-                        message = "Symbol '${typeSymbol.resolvedSymbol.name}' is not a struct type",
+                        message = "Symbol '${typeSymbol.resolvedSymbol.name}' is not a struct or trait type",
                         astNode = inAstNode ?: typeAnnotation, span = typeAnnotation.span
                     )
                 )
