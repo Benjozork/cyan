@@ -18,7 +18,11 @@ sealed class FirTypeDeclaration<TType : Type> (
             else -> error("invalid state")
         }
 
-    class Struct(parent: FirNode, override val type: Type.Struct, val derives: Array<Derive>) : FirTypeDeclaration<Type.Struct>(parent)
+    class Struct(parent: FirNode, override val type: Type.Struct) : FirTypeDeclaration<Type.Struct>(parent) {
+
+        lateinit var derives: Set<Derive>
+
+    }
 
     class Trait(parent: FirNode) : FirTypeDeclaration<Type.Trait>(parent), FirScope {
 

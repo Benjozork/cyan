@@ -69,6 +69,8 @@ object StructDeclarationLower : Ast2FirLower<CyanStructDeclaration, FirTypeDecla
 
         val structType = Type.Struct(astNode.ident.value, loweredStructProperties, mutableListOf())
 
+        val firStructDeclaration = FirTypeDeclaration.Struct(parentFirNode, structType)
+
         val loweredSelfDerives = astNode.derives.map { derive ->
             val traitReference = FirReference(parentFirNode, derive.traitAnnotation.identifierExpression.value, derive.traitAnnotation.identifierExpression)
             val resolvedTraitSymbol = parentFirNode.findSymbol(traitReference)
@@ -100,7 +102,7 @@ object StructDeclarationLower : Ast2FirLower<CyanStructDeclaration, FirTypeDecla
 
             val traitSymbol = symbol.type as Type.Trait
 
-            val firDeriveNode = Derive(parentFirNode, traitSymbol)
+            val firDeriveNode = Derive(firStructDeclaration, traitSymbol)
             firDeriveNode.onType = structType
 
             val loweredFunctionImpls = traitSymbol.elements.filterIsInstance<Type.Trait.Element.Function>().map { traitFunction ->
@@ -153,11 +155,9 @@ object StructDeclarationLower : Ast2FirLower<CyanStructDeclaration, FirTypeDecla
             firDeriveNode
         }.toTypedArray()
 
-        val firStructDeclaration = FirTypeDeclaration.Struct(parentFirNode, structType, loweredSelfDerives)
-
-        loweredSelfDerives.forEach { it.parent = firStructDeclaration }
         loweredSelfDerives.forEach { it.onType = structType }
 
+        firStructDeclaration.derives = loweredSelfDerives.toSet()
         structType.derives += loweredSelfDerives
 
         parentFirNode.declaredSymbols += firStructDeclaration
