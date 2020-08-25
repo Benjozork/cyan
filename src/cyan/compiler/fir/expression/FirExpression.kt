@@ -125,7 +125,7 @@ open class FirExpression(override var parent: FirNode, val fromAstNode: CyanExpr
                  val memberName = member
 
                  when (baseType) {
-                     is Type.Primitive -> DiagnosticPipe.report(
+                     is Type.Primitive -> DiagnosticPipe.report (
                          CompilerDiagnostic(
                              level = CompilerDiagnostic.Level.Error,
                              message = "Primitives do not have members",
@@ -134,8 +134,8 @@ open class FirExpression(override var parent: FirNode, val fromAstNode: CyanExpr
                      )
                      is Type.Struct -> {
                          val matchingStructProperty = baseType.properties.firstOrNull { it.name == memberName }
-                             ?: DiagnosticPipe.report(
-                                 CompilerDiagnostic(
+                             ?: DiagnosticPipe.report (
+                                 CompilerDiagnostic (
                                      level = CompilerDiagnostic.Level.Error,
                                      message = "Type '${baseType.name}' does not have a member called '$memberName'",
                                      astNode = fromAstNode,
@@ -149,7 +149,7 @@ open class FirExpression(override var parent: FirNode, val fromAstNode: CyanExpr
                      is Type.Trait -> {
                          val matchingTraitElement = baseType.elements.firstOrNull { it.name == memberName }
                              ?: DiagnosticPipe.report (
-                                 CompilerDiagnostic(
+                                 CompilerDiagnostic (
                                      level = CompilerDiagnostic.Level.Error,
                                      message = "Type '${baseType.name}' does not have a member called '$memberName'",
                                      astNode = fromAstNode,
