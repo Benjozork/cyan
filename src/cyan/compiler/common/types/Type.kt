@@ -34,7 +34,9 @@ sealed class Type(val array: Boolean) {
 
     }
 
-    class Struct(val name: String, val properties: Array<Property>, val derives: MutableList<Derive>, array: Boolean = false) : Type(array) {
+    interface Complex
+
+    class Struct(val name: String, val properties: Array<Property>, val derives: MutableList<Derive>, array: Boolean = false) : Type(array), Complex {
 
         data class Property(val name: String, val type: Type) {
             override fun toString() = "$name: $type"
@@ -56,7 +58,7 @@ sealed class Type(val array: Boolean) {
 
     }
 
-    class Trait(val name: String, val elements: Array<Element>, array: Boolean = false) : Type(array) {
+    class Trait(val name: String, val elements: Array<Element>, array: Boolean = false) : Type(array), Complex {
 
         sealed class Element(val name: String, val returnType: Type) {
 
