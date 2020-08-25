@@ -126,7 +126,7 @@ open class FirExpression(override var parent: FirNode, val fromAstNode: CyanExpr
 
                  when (baseType) {
                      is Type.Primitive -> DiagnosticPipe.report (
-                         CompilerDiagnostic(
+                         CompilerDiagnostic (
                              level = CompilerDiagnostic.Level.Error,
                              message = "Primitives do not have members",
                              astNode = fromAstNode
@@ -160,7 +160,22 @@ open class FirExpression(override var parent: FirNode, val fromAstNode: CyanExpr
 
                          matchingTraitElement.returnType
                      }
-                     is Type.Self -> error("member access on self type is not supported yet")
+                     is Type.Self -> {
+                         val resolvedStructType = baseType.resolveIn(this)
+
+                         val matchingStructMember = resolvedStructType.properties.firstOrNull { it.name == memberName }
+                             ?: DiagnosticPipe.report (
+                                 CompilerDiagnostic (
+                                     level = CompilerDiagnostic.Level.Error,
+                                     message = "Type '${resolvedStructType.name}' does not have a member called '$memberName'",
+                                     astNode = fromAstNode,
+                                     span = (fromAstNode as CyanMemberAccessExpression).member.span,
+                                     note = CompilerDiagnostic.Note("type '${resolvedStructType.name}' is defined as follows\n" + "    | ".lightGray() + "$resolvedStructType")
+                                 )
+                             )
+
+                         matchingStructMember.type
+                     }
                  }
              }
              is ArrayIndex -> {

@@ -1,5 +1,8 @@
 package cyan.compiler.common.types
 
+import cyan.compiler.fir.FirNode
+import cyan.compiler.fir.FirTypeDeclaration
+import cyan.compiler.fir.extensions.firstAncestorOfType
 import cyan.compiler.fir.functions.FirFunctionArgument
 
 @Suppress("EqualsOrHashCode")
@@ -82,6 +85,20 @@ sealed class Type(val array: Boolean) {
     }
 
     class Self(array: Boolean = false) : Type(array) {
+
+        /**
+         * Resolves what type this `self` type refers to when present in a certain FIR node
+         *
+         * The type can only be resolves if this node has a [FirTypeDeclaration.Struct] as ancestor.
+         *
+         * @param firNode the [FirNode] that has this type
+         */
+        fun resolveIn(firNode: FirNode): Struct {
+            val containingStructDeclaration = firNode.firstAncestorOfType<FirTypeDeclaration.Struct>()
+                ?: error("cannot resolve 'self' type outside of a struct declaration")
+
+            return containingStructDeclaration.type
+        }
 
         override fun toString() = "self"
 

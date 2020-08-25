@@ -7,10 +7,7 @@ import cyan.compiler.codegen.wasm.utils.AllocationResult
 import cyan.compiler.codegen.wasm.utils.size
 import cyan.compiler.common.types.CyanType
 import cyan.compiler.common.types.Type
-import cyan.compiler.fir.FirResolvedReference
-import cyan.compiler.fir.FirSource
-import cyan.compiler.fir.FirStatement
-import cyan.compiler.fir.FirVariableDeclaration
+import cyan.compiler.fir.*
 import cyan.compiler.fir.expression.FirExpression
 import cyan.compiler.fir.functions.FirFunctionArgument
 import cyan.compiler.fir.functions.FirFunctionDeclaration
@@ -86,7 +83,12 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
                 }
             }
             is FirExpression.MemberAccess -> instructions {
-                val baseStruct = expr.base.type() as Type.Struct
+                val baseStruct = when (val type = expr.base.type()) {
+                    is Type.Struct -> type
+                    is Type.Self   -> type.resolveIn(expr)
+                    else -> error("fir2wasm: cannot lower member access with base of type '$type'")
+                }
+
                 val baseStructField = baseStruct.properties.first { it.name == expr.member }
 
                 val fieldIndex = baseStruct.properties.indexOfFirst { it == baseStructField }.takeIf { it >= 0 }
