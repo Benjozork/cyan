@@ -4,11 +4,9 @@ import com.github.h0tk3y.betterParse.grammar.parseToEnd
 
 import cyan.compiler.common.diagnostic.CompilerDiagnostic
 import cyan.compiler.common.diagnostic.DiagnosticPipe
-import cyan.compiler.common.types.Type
 import cyan.compiler.fir.*
 import cyan.compiler.fir.expression.FirExpression
 import cyan.compiler.fir.extensions.findSymbol
-import cyan.compiler.fir.extensions.firstAncestorOfType
 import cyan.compiler.lower.ast2fir.Ast2FirLower
 import cyan.compiler.lower.ast2fir.FunctionCallLower
 import cyan.compiler.lower.ast2fir.expression.string.StringContentParser

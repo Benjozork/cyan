@@ -66,6 +66,18 @@ inline fun <reified TAncestor : FirNode> FirNode.firstAncestorOfType(): TAncesto
 }
 
 /**
+ * Find the containing [FirModuleRoot]
+ */
+fun FirNode.moduleRoot(): FirModuleRoot =
+    firstAncestorOfType()!!
+
+/**
+ * Finds the containing [cyan.compiler.mir.Module]
+ */
+fun FirNode.module() =
+    moduleRoot().mirModule
+
+/**
  * Find the first [FirScope] in the ancestors of [this]
  */
 fun FirNode.containingScope() = this.firstAncestorOfType<FirScope>()

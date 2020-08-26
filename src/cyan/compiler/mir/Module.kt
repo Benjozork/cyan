@@ -2,18 +2,18 @@ package cyan.compiler.mir
 
 import cyan.compiler.mir.containers.*
 
-class Module (
+class Module(val name: String) {
 
-    val infoContainer: ModuleInfoContainer,
+    val infoContainer = ModuleInfoContainer(this)
 
-    val imports: ImportsContainer,
+    val imports = ImportsContainer(this)
 
-    val exports: ExportsContainer,
+    var exports = ExportsContainer(this)
 
-    val types: TypeDeclarationsContainer,
+    var types = TypeDeclarationsContainer(this)
 
-    val functions: FunctionsContainer,
+    var functions = FunctionsContainer(this)
 
-    val derives: DerivesContainer
+    var derives = DerivesContainer(this)
 
-)
+}

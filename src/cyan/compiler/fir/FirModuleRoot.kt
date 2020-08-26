@@ -1,8 +1,10 @@
 package cyan.compiler.fir
 
-class FirModuleRoot(val name: String) : FirScope {
+import cyan.compiler.mir.Module
 
-    override val declaredSymbols = mutableSetOf<FirSymbol>()
+class FirModuleRoot(val mirModule: Module) : FirScope {
+
+    override val declaredSymbols get() = mirModule.imports.importedSymbols
 
     override val isInheriting = false
 

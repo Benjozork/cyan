@@ -8,6 +8,8 @@ import cyan.compiler.parser.CyanModuleParser
 import com.github.h0tk3y.betterParse.grammar.parseToEnd
 
 import com.andreapivetta.kolor.lightGreen
+import cyan.compiler.fir.FirNullNode
+import cyan.compiler.mir.Module
 
 import java.io.File
 
@@ -42,7 +44,13 @@ object ModuleLoader {
 
         val moduleName = parsedModule.declaration.name.value
 
-        val compiledModule = FirModuleRoot(name = moduleName)
+        // Create the MIR container
+
+        val mirContainer = Module(name = moduleName)
+
+        // Compile the actual source
+
+        val compiledModule = FirModuleRoot(mirContainer)
 
         if (moduleName != "__runtime__")
             compiledModule.declaredSymbols += runtimeModule?.declaredSymbols ?: emptySet()
