@@ -33,13 +33,14 @@ class WasmCompilerBackend : FirCompilerBackend<Wasm.OrderedElement>() {
         val newSource = StringBuilder()
 
         if (source.parent is FirModuleRoot) source.parent.let { module ->
-            val functionsToEmit = (module as FirModuleRoot).declaredSymbols.filterIsInstance<FirFunctionDeclaration>().filter { !it.isExtern }.toMutableList()
+            // Add declared functions
+            val functionsToEmit = (module as FirModuleRoot).mirModule.functions.functionDeclarations.filter { !it.isExtern }.toMutableList()
 
-            // Add derives from declared structs
-            functionsToEmit += module.declaredSymbols
-                .filterIsInstance<FirTypeDeclaration.Struct>()
-                .flatMap { it.derives.toSet() }
-                .flatMap { it.functionImpls.values }
+            // Add imported functions
+            functionsToEmit += module.mirModule.imports.importedSymbols.filterIsInstance<FirFunctionDeclaration>().filter { !it.isExtern }
+
+            // Add derive function impls from declared structs
+            functionsToEmit += module.mirModule.derives.deriveItems.flatMap { it.functionImpls.values }
 
             for (function in functionsToEmit) {
                 newSource.appendLine(lowerFunctionDeclaration(function))

@@ -53,11 +53,13 @@ object ModuleLoader {
         val compiledModule = FirModuleRoot(mirContainer)
 
         if (moduleName != "__runtime__")
-            compiledModule.declaredSymbols += runtimeModule?.declaredSymbols ?: emptySet()
+            compiledModule.mirModule.imports.importedSymbols += runtimeModule?.declaredSymbols ?: emptySet()
 
         compiledModule.source = SourceLower.lower(parsedModule.source, compiledModule)
 
-        return compiledModule.also { it.declaredSymbols += compiledModule.source.declaredSymbols }
+        return compiledModule.also {
+            it.mirModule.exports.exportedSymbols += it.mirModule.imports.importedSymbols
+        }
     }
 
     init {

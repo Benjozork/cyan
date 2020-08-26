@@ -10,6 +10,7 @@ import cyan.compiler.fir.FirReference
 import cyan.compiler.fir.FirScope
 import cyan.compiler.fir.FirTypeDeclaration
 import cyan.compiler.fir.extensions.findSymbol
+import cyan.compiler.fir.extensions.module
 import cyan.compiler.fir.extensions.resolveType
 import cyan.compiler.parser.ast.CyanDerive
 import cyan.compiler.parser.ast.expression.CyanIdentifierExpression
@@ -160,7 +161,13 @@ object StructDeclarationLower : Ast2FirLower<CyanStructDeclaration, FirTypeDecla
         firStructDeclaration.derives = loweredSelfDerives.toSet()
         structType.derives += loweredSelfDerives
 
-        parentFirNode.declaredSymbols += firStructDeclaration
+        // Add type declaration to module container
+
+        parentFirNode.module().types.typeDeclarations += firStructDeclaration
+
+        // Add derives to module container
+
+        parentFirNode.module().derives.deriveItems += structType.derives
 
         return firStructDeclaration
     }

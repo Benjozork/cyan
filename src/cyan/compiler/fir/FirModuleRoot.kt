@@ -4,7 +4,11 @@ import cyan.compiler.mir.Module
 
 class FirModuleRoot(val mirModule: Module) : FirScope {
 
-    override val declaredSymbols get() = mirModule.imports.importedSymbols
+    override val declaredSymbols get() = (
+        mirModule.types.typeDeclarations +
+        mirModule.imports.importedSymbols +
+        mirModule.functions.functionDeclarations
+    ).toMutableSet()
 
     override val isInheriting = false
 

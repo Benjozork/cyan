@@ -7,6 +7,7 @@ import cyan.compiler.common.types.Type
 import cyan.compiler.fir.*
 import cyan.compiler.fir.functions.FirFunctionDeclaration
 import cyan.compiler.fir.extensions.findSymbol
+import cyan.compiler.fir.extensions.module
 import cyan.compiler.fir.extensions.resolveType
 import cyan.compiler.fir.functions.FirFunctionArgument
 import cyan.compiler.fir.functions.FirFunctionReceiver
@@ -79,10 +80,12 @@ object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirFunct
             )
         }
 
-        // Register function in parent FIR node
+        // Register function in module container
 
-        if (parentFirNode is FirScope)
-            parentFirNode.declaredSymbols += firFunctionDeclaration
+        if (parentFirNode is FirScope && parentFirNode !is FirTypeDeclaration<*>) {
+            parentFirNode.module().functions.functionDeclarations += firFunctionDeclaration
+            parentFirNode.module().exports.exportedSymbols += firFunctionDeclaration
+        }
 
         return firFunctionDeclaration
     }

@@ -6,7 +6,7 @@ import cyan.compiler.mir.Module
 
 class FunctionsContainer(override val container: Module) : MirSection {
 
-    val functions = mutableSetOf<FirFunctionDeclaration>()
+    val functionDeclarations = mutableSetOf<FirFunctionDeclaration>()
 
     override val name = "functions"
 
