@@ -84,7 +84,6 @@ object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirFunct
 
         if (parentFirNode is FirScope && parentFirNode !is FirTypeDeclaration<*>) {
             parentFirNode.module().functions.functionDeclarations += firFunctionDeclaration
-            parentFirNode.module().exports.exportedSymbols += firFunctionDeclaration
         }
 
         return firFunctionDeclaration
