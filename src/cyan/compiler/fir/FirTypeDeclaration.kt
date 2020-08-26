@@ -2,7 +2,6 @@ package cyan.compiler.fir
 
 import cyan.compiler.common.types.Derive
 import cyan.compiler.common.types.Type
-import cyan.compiler.fir.functions.FirFunctionDeclaration
 
 sealed class FirTypeDeclaration<TType : Type> (
     override val parent: FirNode
@@ -31,9 +30,6 @@ sealed class FirTypeDeclaration<TType : Type> (
         override val isInheriting = false
 
         override val declaredSymbols = mutableSetOf<FirSymbol>()
-
-        override val localFunctions: MutableSet<FirFunctionDeclaration>
-            get() = TODO("Not yet implemented")
 
     }
 

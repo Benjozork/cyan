@@ -2,18 +2,19 @@ package cyan.compiler.lower.ast2fir
 
 import cyan.compiler.common.diagnostic.CompilerDiagnostic
 import cyan.compiler.common.diagnostic.DiagnosticPipe
-import cyan.compiler.fir.FirModule
+import cyan.compiler.fir.FirModuleRoot
 import cyan.compiler.fir.FirNode
 import cyan.compiler.fir.FirNullNode
 import cyan.compiler.fir.FirReference
 import cyan.compiler.fir.extensions.firstAncestorOfType
+import cyan.compiler.lower.ModuleLoader
 import cyan.compiler.parser.ast.CyanImportStatement
 
 object ImportStatementLower : Ast2FirLower<CyanImportStatement, FirNullNode> {
 
     override fun lower(astNode: CyanImportStatement, parentFirNode: FirNode): FirNullNode {
         val moduleRef = FirReference(parentFirNode, astNode.moduleIdentifier.value, astNode.moduleIdentifier)
-        val containingModule = parentFirNode.firstAncestorOfType<FirModule>()
+        val containingModule = parentFirNode.firstAncestorOfType<FirModuleRoot>()
             ?: DiagnosticPipe.report (
                 CompilerDiagnostic (
                     level = CompilerDiagnostic.Level.Internal,
@@ -21,7 +22,7 @@ object ImportStatementLower : Ast2FirLower<CyanImportStatement, FirNullNode> {
                     astNode = astNode
                 )
             )
-        val resolvedModule = containingModule.findModuleByReference(moduleRef)
+        val resolvedModule = ModuleLoader.findModuleByReference(moduleRef)
             ?: DiagnosticPipe.report (
                 CompilerDiagnostic (
                     level = CompilerDiagnostic.Level.Error,

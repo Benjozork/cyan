@@ -25,6 +25,4 @@ class FirFunctionDeclaration (
 
     override val declaredSymbols get() = (args.toList() + this + receiver).filterNotNull().toMutableSet()
 
-    override val localFunctions = mutableSetOf<FirFunctionDeclaration>()
-
 }

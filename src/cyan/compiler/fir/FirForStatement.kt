@@ -2,7 +2,6 @@ package cyan.compiler.fir
 
 import cyan.compiler.common.types.Type
 import cyan.compiler.fir.expression.FirExpression
-import cyan.compiler.fir.functions.FirFunctionDeclaration
 
 class FirForStatement (
     override val parent: FirNode,
@@ -18,9 +17,6 @@ class FirForStatement (
     override val isInheriting = true
 
     override val declaredSymbols = mutableSetOf<FirSymbol>()
-
-    override val localFunctions: MutableSet<FirFunctionDeclaration>
-        get() = TODO("Not yet implemented")
 
     lateinit var block: FirSource
 

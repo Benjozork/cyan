@@ -7,9 +7,10 @@ import cyan.compiler.codegen.wasm.lower.WasmExpressionLower
 import cyan.compiler.codegen.wasm.lower.WasmFunctionDeclarationLower
 import cyan.compiler.codegen.wasm.lower.WasmStatementLower
 import cyan.compiler.codegen.wasm.utils.Allocator
-import cyan.compiler.fir.FirModule
+import cyan.compiler.fir.FirModuleRoot
 import cyan.compiler.fir.FirSource
 import cyan.compiler.fir.FirTypeDeclaration
+import cyan.compiler.fir.functions.FirFunctionDeclaration
 
 import java.io.File
 
@@ -31,8 +32,8 @@ class WasmCompilerBackend : FirCompilerBackend<Wasm.OrderedElement>() {
     override fun translateSource(source: FirSource, context: LoweringContext, isRoot: Boolean): String {
         val newSource = StringBuilder()
 
-        if (source.parent is FirModule) source.parent.let { module ->
-            val functionsToEmit = (module as FirModule).localFunctions.filter { !it.isExtern }.toMutableList()
+        if (source.parent is FirModuleRoot) source.parent.let { module ->
+            val functionsToEmit = (module as FirModuleRoot).declaredSymbols.filterIsInstance<FirFunctionDeclaration>().filter { !it.isExtern }.toMutableList()
 
             // Add derives from declared structs
             functionsToEmit += module.declaredSymbols
@@ -43,7 +44,7 @@ class WasmCompilerBackend : FirCompilerBackend<Wasm.OrderedElement>() {
             for (function in functionsToEmit) {
                 newSource.appendLine(lowerFunctionDeclaration(function))
             }
-        } else for (function in source.localFunctions) {
+        } else for (function in source.declaredSymbols.filterIsInstance<FirFunctionDeclaration>()) {
             newSource.appendLine(lowerFunctionDeclaration(function))
         }
 

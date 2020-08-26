@@ -1,7 +1,5 @@
 package cyan.compiler.fir
 
-import cyan.compiler.fir.functions.FirFunctionDeclaration
-
 open class FirSource (
     override var parent: FirNode,
     override val isInheriting: Boolean
@@ -11,8 +9,6 @@ open class FirSource (
 
     var statements: MutableList<FirStatement> = mutableListOf()
         private set
-
-    override val localFunctions get() = declaredSymbols.filterIsInstance<FirFunctionDeclaration>().toMutableSet()
 
     override fun allReferredSymbols() = statements.flatMap { it.allReferredSymbols() }.toSet()
 

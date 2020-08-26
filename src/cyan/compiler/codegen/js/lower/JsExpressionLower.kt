@@ -3,10 +3,11 @@ package cyan.compiler.codegen.js.lower
 import cyan.compiler.codegen.FirItemLower
 import cyan.compiler.codegen.js.JsLoweringContext
 import cyan.compiler.common.types.Type
-import cyan.compiler.fir.FirModule
+import cyan.compiler.fir.FirModuleRoot
 import cyan.compiler.fir.FirResolvedReference
 import cyan.compiler.fir.expression.FirExpression
 import cyan.compiler.fir.extensions.firstAncestorOfType
+import cyan.compiler.fir.functions.FirFunctionDeclaration
 
 import java.lang.StringBuilder
 
@@ -19,12 +20,12 @@ object JsExpressionLower : FirItemLower<JsLoweringContext, FirExpression, String
             is FirExpression.Literal.String  -> "'${expr.value.replace("'", "\\'")}'"
             is FirExpression.Literal.Boolean -> "${expr.value}"
             is FirExpression.FunctionCall -> {
-                val containingDocument = item.firstAncestorOfType<FirModule>()
+                val containingDocument = item.firstAncestorOfType<FirModuleRoot>()
                     ?: error("fir2js: no FirDocument as ancestor of node")
 
                 val calleeName = expr.callee.resolvedSymbol.name
 
-                val isBuiltin = containingDocument.localFunctions.any { it.isExtern && it.name == calleeName }
+                val isBuiltin = containingDocument.declaredSymbols.filterIsInstance<FirFunctionDeclaration>().any { it.isExtern && it.name == calleeName }
 
                 val jsName = if (isBuiltin) "builtins.$calleeName" else calleeName
 

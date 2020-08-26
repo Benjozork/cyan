@@ -1,7 +1,7 @@
 package cyan
 
-import cyan.compiler.fir.FirModule
 import cyan.compiler.fir.FirNullNode
+import cyan.compiler.lower.ModuleLoader
 import cyan.compiler.codegen.wasm.WasmCompilerBackend
 import cyan.compiler.codegen.wasm.WasmLoweringContext
 
@@ -27,7 +27,7 @@ fun main() {
 
     val file = File("resources/runtime/simple.cy")
 
-    val simpleModule = FirModule.compileModuleFromFile(file)
+    val simpleModule = ModuleLoader.compileModuleFromFile(file)
 
     simpleModule.source.statements.removeAll { it is FirNullNode }
 
