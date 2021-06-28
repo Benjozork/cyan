@@ -131,6 +131,14 @@
     end
 )
 
+(func $cy_free (param $ptr i32)
+    local.get $ptr
+    i32.const 5
+    i32.sub
+    i32.const 0
+    i32.store8
+)
+
 (func $cy_str_char_at (param $str i32) (param $idx i32) (result i32)
     (block $B0
         local.get $idx
@@ -335,12 +343,14 @@
     i32.store
 )
 
-(func $cy_dump_mem
+(func $cy_dump_mem (param $from i32) (param $to i32)
     i32.const 0
-    i32.const 0
+    local.get $from
     i32.store
     i32.const 4
-    i32.const 2048
+    local.get $to
+    local.get $from
+    i32.sub
     i32.store
 
     i32.const 1
@@ -349,6 +359,21 @@
     i32.const 0
     call $fd_write
     drop
+)
+
+(func $cy_dump_heap_block (param $ptr i32)
+    ;; block start
+    local.get $ptr
+
+    ;; block end
+    local.get $ptr
+    i32.const 4
+    i32.sub
+    i32.load
+    i32.const 1
+    i32.sub
+
+    call $cy_dump_mem
 )
 
 ;; cyanc_insert_here

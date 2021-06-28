@@ -1,5 +1,7 @@
 module intrinsics
 
+extern function cy_free(pointer: any): void
+
 extern function cy_str_char_at(string: str, index: i32): i32
 
 extern function cy_str_len(string: str): i32
@@ -20,4 +22,6 @@ extern function cy_iov_set_len(iov_ptr: i32, new_len: i32): void
 
 extern function cy_init_heap(): void
 
-extern function cy_dump_mem(): void
+extern function cy_dump_mem(start: i32, end: i32): void
+
+extern function cy_dump_heap_block(pointer: any): void
