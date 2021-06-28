@@ -43,9 +43,6 @@ object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirFunct
             firFunctionDeclaration.receiver = FirFunctionReceiver(firFunctionDeclaration, firFunctionDeclaration.resolveType(receiver.type))
         }
 
-        // Lower AST function body
-        firFunctionDeclaration.block = astNode.source?.let { SourceLower.lower(it, firFunctionDeclaration) } ?: FirSource(firFunctionDeclaration, isInheriting = false)
-
         // Check function has body if not extern
         if (!astNode.signature.isExtern && parentFirNode !is FirTypeDeclaration.Trait && astNode.source == null) {
             DiagnosticPipe.report (
@@ -81,9 +78,15 @@ object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirFunct
         }
 
         // Register function in module container
-
         if (parentFirNode is FirScope && parentFirNode !is FirTypeDeclaration<*>) {
             parentFirNode.module().functions.functionDeclarations += firFunctionDeclaration
+        }
+
+        // Lower AST function body
+        try {
+            firFunctionDeclaration.block = astNode.source?.let { SourceLower.lower(it, firFunctionDeclaration) } ?: FirSource(firFunctionDeclaration, isInheriting = false)
+        } catch (e: Exception) {
+            parentFirNode.module().functions.functionDeclarations -= firFunctionDeclaration
         }
 
         return firFunctionDeclaration
