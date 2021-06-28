@@ -7,10 +7,14 @@ import cyan.compiler.codegen.wasm.lower.WasmExpressionLower
 import cyan.compiler.codegen.wasm.lower.WasmFunctionDeclarationLower
 import cyan.compiler.codegen.wasm.lower.WasmStatementLower
 import cyan.compiler.codegen.wasm.utils.Allocator
-import cyan.compiler.fir.FirModuleRoot
-import cyan.compiler.fir.FirSource
-import cyan.compiler.fir.FirTypeDeclaration
+import cyan.compiler.common.diagnostic.CompilerDiagnostic
+import cyan.compiler.common.diagnostic.DiagnosticPipe
+import cyan.compiler.fir.*
+import cyan.compiler.fir.expression.FirExpression
+import cyan.compiler.fir.extensions.findSymbol
 import cyan.compiler.fir.functions.FirFunctionDeclaration
+import cyan.compiler.parser.ast.expression.CyanIdentifierExpression
+import cyan.compiler.parser.ast.function.CyanFunctionCall
 
 import java.io.File
 
@@ -31,6 +35,40 @@ class WasmCompilerBackend : FirCompilerBackend<Wasm.OrderedElement>() {
 
     override fun translateSource(source: FirSource, context: LoweringContext, isRoot: Boolean): String {
         val newSource = StringBuilder()
+
+        if (isRoot) {
+            // Add call to cy_init_heap to main function
+            val mainFunction = (source.parent as FirModuleRoot).declaredSymbols
+                .find { it is FirFunctionDeclaration && it.name == "main" } as? FirFunctionDeclaration
+
+            if (mainFunction != null) {
+                val initHeapRef = FirReference(mainFunction, "cy_init_heap", CyanIdentifierExpression("cy_init_heap"))
+                val initHeapResolved = mainFunction.findSymbol(initHeapRef)
+
+                if (initHeapResolved != null) {
+                    val call = FirExpression.FunctionCall(mainFunction, CyanFunctionCall(CyanIdentifierExpression("cy_init_heap"), emptyArray()))
+                    call.callee = initHeapResolved
+
+                    mainFunction.block.statements.add(0, call)
+                } else {
+                    DiagnosticPipe.report(
+                        CompilerDiagnostic(
+                            level = CompilerDiagnostic.Level.Internal,
+                            message = "Could not resolve reference to cy_init_heap while inserting it into main. Is the intrinsics module imported?",
+                            astNode = CyanIdentifierExpression("cy_init_heap"),
+                        )
+                    )
+                }
+            } else {
+                DiagnosticPipe.report(
+                    CompilerDiagnostic(
+                        level = CompilerDiagnostic.Level.Internal,
+                        message = "No main function found",
+                        astNode = CyanIdentifierExpression("<nyi>"),
+                    )
+                )
+            }
+        }
 
         if (source.parent is FirModuleRoot) source.parent.let { module ->
             // Add declared functions

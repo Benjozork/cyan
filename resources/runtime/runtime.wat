@@ -1,6 +1,8 @@
 (import "wasi_unstable" "fd_write" (func $fd_write (param i32 i32 i32 i32) (result i32)))
 (import "wasi_unstable" "fd_read" (func $fd_read (param i32 i32 i32 i32) (result i32)))
 
+(start $main)
+
 (memory 1)
 
 (export "memory" (memory 0))
@@ -344,7 +346,7 @@
     i32.const 1
     i32.const 0
     i32.const 1
-    i32.const 24
+    i32.const 0
     call $fd_write
     drop
 )
