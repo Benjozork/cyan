@@ -166,7 +166,7 @@
     local.get $str
     local.get $idx
     i32.add
-    i32.load
+    i32.load8_u
 
     i32.store8
 
