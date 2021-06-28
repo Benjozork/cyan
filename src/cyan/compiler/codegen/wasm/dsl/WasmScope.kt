@@ -35,6 +35,22 @@ interface WasmScope : Wasm.OrderedElement {
         pushElement(Wasm.Instruction("i32.mul"))
 
     @WasmInstructionsBuilderDsl
+    val Int32Instructions.div_s get() =
+        pushElement(Wasm.Instruction("i32.div_s"))
+
+    @WasmInstructionsBuilderDsl
+    val Int32Instructions.div_u get() =
+        pushElement(Wasm.Instruction("i32.div_u"))
+
+    @WasmInstructionsBuilderDsl
+    val Int32Instructions.rem_s get() =
+        pushElement(Wasm.Instruction("i32.rem_s"))
+
+    @WasmInstructionsBuilderDsl
+    val Int32Instructions.rem_u get() =
+        pushElement(Wasm.Instruction("i32.rem_u"))
+
+    @WasmInstructionsBuilderDsl
     val Int32Instructions.lt_u get() =
         pushElement(Wasm.Instruction("i32.lt_u"))
 

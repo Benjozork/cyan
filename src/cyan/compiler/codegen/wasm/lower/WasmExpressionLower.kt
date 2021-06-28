@@ -148,6 +148,8 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
                         CyanBinaryPlusOperator          -> i32.add
                         CyanBinaryMinusOperator         -> i32.sub
                         CyanBinaryTimesOperator         -> i32.mul
+                        CyanBinaryDivOperator           -> i32.div_s
+                        CyanBinaryModOperator           -> i32.rem_s
                         CyanBinaryLesserOperator        -> i32.lt_u
                         CyanBinaryLesserEqualsOperator  -> i32.le_u
                         CyanBinaryGreaterOperator       -> i32.gt_u
