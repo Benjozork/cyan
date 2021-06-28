@@ -45,3 +45,16 @@ function (str).contains(other: str): bool {
 
     return match
 }
+
+function (i32).toString(base: i32): str {
+    let convertString = "0123456789ABCDEF"
+
+    var ret = ""
+    if (this < base) {
+        ret = convertString[this]
+    } else {
+        ret = (this / base).toString(base) + convertString[this % base]
+    }
+
+    return ret
+}
