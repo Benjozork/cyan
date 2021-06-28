@@ -127,11 +127,18 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
                         ?: error("fir2wasm: no local generated for '${originalDeclaration.name}'")
 
                     when (val declType = originalDeclaration.initializationExpr.type()) {
+                        // Arrays of strings, i32s
                         Type.Primitive(CyanType.Str, true),
                         Type.Primitive(CyanType.I32, true) -> instructions {
                             local.get(ptr)
                             +context.backend.lowerExpression(expr.index, context)
                             cy.array_get
+                        }
+                        // String value
+                        Type.Primitive(CyanType.Str, false) -> instructions {
+                            local.get(ptr)
+                            +context.backend.lowerExpression(expr.index, context)
+                            cy.strcharat_as_str
                         }
                         else -> error("fir2wasm: cannot lower array index on array of type '$declType'")
                     }

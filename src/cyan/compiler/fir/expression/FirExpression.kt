@@ -181,7 +181,7 @@ open class FirExpression(override var parent: FirNode, val fromAstNode: CyanExpr
              is ArrayIndex -> {
                  val baseExprType = base.type()
 
-                 if (!baseExprType.array) {
+                 if (!(baseExprType.array || baseExprType == Type.Primitive(CyanType.Str))) {
                      DiagnosticPipe.report (
                          CompilerDiagnostic (
                              level = CompilerDiagnostic.Level.Error,

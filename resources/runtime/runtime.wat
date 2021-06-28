@@ -155,6 +155,24 @@
     i32.load8_u
 )
 
+(func $cy_str_char_at_as_str (param $str i32) (param $idx i32) (result i32)
+    (local $new_str_ptr i32)
+
+    ;; allocate new string
+    call $cy_malloc
+    local.tee $new_str_ptr
+
+    ;; load char
+    local.get $str
+    local.get $idx
+    i32.add
+    i32.load
+
+    i32.store8
+
+    local.get $new_str_ptr
+)
+
 (func $cy_str_len (param $str i32) (result i32)
     (local $curr_idx i32)
 

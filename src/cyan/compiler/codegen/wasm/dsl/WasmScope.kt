@@ -124,6 +124,14 @@ interface WasmScope : Wasm.OrderedElement {
         pushElement(Wasm.Instruction("call \$cy_array_set"))
 
     @WasmInstructionsBuilderDsl
+    val CyanIntrinsics.strcharat get() =
+        pushElement(Wasm.Instruction("call \$cy_str_char_at"))
+
+    @WasmInstructionsBuilderDsl
+    val CyanIntrinsics.strcharat_as_str get() =
+        pushElement(Wasm.Instruction("call \$cy_str_char_at_as_str"))
+
+    @WasmInstructionsBuilderDsl
     val CyanIntrinsics.strlen get() =
         pushElement(Wasm.Instruction("call \$cy_str_len"))
 
