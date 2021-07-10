@@ -295,6 +295,26 @@ class ExpressionsTest {
             )
         )
 
+        @Test fun `end function call`() = doTest (
+            """
+                thing.member.doSomething(something)
+            """.trimIndent(),
+            CyanFunctionCall (
+                CyanMemberAccessExpression (
+                    CyanMemberAccessExpression(
+                        CyanIdentifierExpression("thing"),
+                        CyanIdentifierExpression("member")
+                    ),
+                    CyanIdentifierExpression("doSomething")
+                ),
+                arrayOf (
+                    CyanFunctionCall.Argument (
+                        null, CyanIdentifierExpression("something")
+                    )
+                )
+            )
+        )
+
         @Test fun `base is array index`() = doTest (
             """
                 array[0].member

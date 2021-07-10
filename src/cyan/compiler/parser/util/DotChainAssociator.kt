@@ -25,7 +25,11 @@ object DotChainAssociator {
 
                 CyanArrayIndexExpression(base, acc.index, span(base, acc))
             }
-            is CyanFunctionCall -> CyanFunctionCall(CyanMemberAccessExpression(term, acc.base as CyanIdentifierExpression), acc.args, span(term, acc))
+            is CyanFunctionCall -> {
+                val base = associate(dotChain.dropLast(1))
+
+                CyanFunctionCall(CyanMemberAccessExpression(base, acc.base as CyanIdentifierExpression), acc.args, span(term, acc))
+            }
             else -> error("cannot associate with right-hand side '${acc::class.simpleName}'")
         }
     }
