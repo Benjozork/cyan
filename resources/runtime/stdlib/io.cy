@@ -1,6 +1,7 @@
 module io
 
 import intrinsics
+import primitive
 import wasi
 
 function print(content: str): void {
@@ -21,4 +22,16 @@ function read_bytes(num_bytes: i32): i32 {
     read_iov(iov)
 
     return iov
+}
+
+function readln(): str {
+    var ret = ""
+
+    while ret[ret.length() - 1] != "\n" {
+        let chr = cy_iov_to_str(read_bytes(2))
+
+        ret = cy_str_cat(ret, chr)
+    }
+
+    return ret
 }

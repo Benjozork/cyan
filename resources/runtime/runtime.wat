@@ -305,6 +305,70 @@
     local.get $addr
 )
 
+(func $cy_str_cmp (param $first i32) (param $second i32) (result i32)
+    (local $are_equal i32)
+    (local $did_check i32)
+    (local $curr_idx i32)
+    (local $first_max_idx i32)
+
+    i32.const 0
+    local.set $are_equal
+
+    i32.const 0
+    local.set $curr_idx
+
+    ;; get length of first
+    local.get $first
+    call $cy_str_len
+    i32.const 1
+    i32.sub
+    local.set $first_max_idx
+
+    ;; early bail if it's not the same length as second
+    local.get $second
+    call $cy_str_len
+    i32.const 1
+    i32.sub
+    local.get $first_max_idx
+    i32.eq
+    if $do_check
+        loop $check_char
+            ;; check if done
+            local.get $curr_idx
+            local.get $first_max_idx
+            i32.le_u
+            if $check_iter
+                local.get $first
+                local.get $curr_idx
+                i32.add
+                i32.load8_u
+                local.get $second
+                local.get $curr_idx
+                i32.add
+                i32.load8_u
+                i32.eq
+                if $next_iter
+                    local.get $curr_idx
+                    i32.const 1
+                    i32.add
+                    local.set $curr_idx
+                    br $check_char
+                end
+
+                ;; char not equal - break out of $do_check
+                br $do_check
+            end
+
+            ;; done checking
+            i32.const 1
+            local.set $are_equal
+        end
+    end
+
+    local.get $are_equal
+    i32.eqz
+)
+
 (func $cy_iov_to_str (param $iov_ptr i32) (result i32)
     local.get $iov_ptr
     i32.load

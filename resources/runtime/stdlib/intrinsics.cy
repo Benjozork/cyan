@@ -8,7 +8,11 @@ extern function cy_str_char_at_as_str(string: str, index: i32): str
 
 extern function cy_str_len(string: str): i32
 
+extern function cy_str_cat(first: str, second: str): str
+
 extern function cy_str_to_iov(string: str): i32
+
+extern function cy_str_cmp(first: str, second: str): i32
 
 extern function cy_iov_to_str(iov_ptr: i32): str
 

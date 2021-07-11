@@ -112,8 +112,8 @@ interface WasmScope : Wasm.OrderedElement {
             pushElement(Wasm.Instruction("(local.tee \$$numLocal ${i32.const(value)})"))
 
     @WasmInstructionsBuilderDsl
-    fun CyanIntrinsics.malloc(size: Int) = if (size > 60) error("only types with size < 60 can be allocated by cy_malloc at the moment (size: $size)") else
-            pushElement(Wasm.Instruction("call \$cy_malloc"))
+    fun CyanIntrinsics.malloc(size: Int) =
+            pushElement(Wasm.Instruction("(call \$cy_malloc (i32.const $size))"))
 
     @WasmInstructionsBuilderDsl
     val CyanIntrinsics.array_get get() =
@@ -147,6 +147,9 @@ interface WasmScope : Wasm.OrderedElement {
     val CyanIntrinsics.strtoiov get() =
         pushElement(Wasm.Instruction("call \$cy_str_to_iov"))
 
+    @WasmInstructionsBuilderDsl
+    val CyanIntrinsics.strcmp get() =
+        pushElement(Wasm.Instruction("call \$cy_str_cmp"))
 
     @WasmInstructionsBuilderDsl
     fun br(blockNum: Int, block: Boolean = false): Boolean {
