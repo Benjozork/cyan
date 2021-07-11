@@ -82,7 +82,6 @@ object FunctionCallLower : Ast2FirLower<CyanFunctionCall, FirNode> {
     }
 
     private fun processFunctionCall(firCall: FirExpression.FunctionCall, functionSymbol: FirFunctionDeclaration, callAstNode: CyanFunctionCall): FirExpression.FunctionCall {
-
         // Set FirFunctionCall callee to the resolved function
         firCall.callee = functionSymbol.makeResolvedRef(firCall)
 
