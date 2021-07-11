@@ -179,8 +179,6 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
                         }
                         CyanBinaryNotEqualsOperator -> +instructions {
                             cy.strcmp
-                            i32.eqz
-                            i32.eqz
                         }
                         else -> error("fir2wasm: cannot lower string binary expression with operator '${expr.operator::class.simpleName}'")
                     }
