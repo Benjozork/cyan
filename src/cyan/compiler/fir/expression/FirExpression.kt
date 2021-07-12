@@ -113,7 +113,30 @@ open class FirExpression(override var parent: FirNode, val fromAstNode: CyanExpr
                  when (val referee = containingScope?.findSymbol(this.reference())?.resolvedSymbol) {
                      is FirForStatement.IteratorVariable -> referee.typeAnnotation!!
                      is FirVariableDeclaration -> referee.initializationExpr.type()
-                     is FirFunctionDeclaration -> Type.Primitive(CyanType.Any, false)
+                     is FirFunctionDeclaration -> {
+                         val functionStruct = referee.findSymbol(FirReference(referee, "Function", CyanIdentifierExpression("Function")))
+                             ?: DiagnosticPipe.report (
+                                 CompilerDiagnostic (
+                                     level = CompilerDiagnostic.Level.Internal,
+                                     astNode = this.fromAstNode,
+                                     message = "Could not find 'Function' struct in scope",
+                                     span = this.fromAstNode.span,
+                                 )
+                             )
+
+                         if (functionStruct.resolvedSymbol !is FirTypeDeclaration.Struct) {
+                             DiagnosticPipe.report (
+                                 CompilerDiagnostic (
+                                     level = CompilerDiagnostic.Level.Internal,
+                                     astNode = this.fromAstNode,
+                                     message = "Found 'Function' in scope, but it was not a struct declaration",
+                                     span = this.fromAstNode.span,
+                                 )
+                             )
+                         }
+
+                         functionStruct.resolvedSymbol.type
+                     }
                      is FirFunctionArgument -> referee.typeAnnotation
                      is FirFunctionReceiver -> referee.type
                      null -> error("cannot find symbol '${text}'")

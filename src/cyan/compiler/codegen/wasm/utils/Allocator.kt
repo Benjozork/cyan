@@ -6,6 +6,16 @@ import java.nio.ByteBuffer
 
 class Allocator {
 
+    var heap = ByteArray(64)
+
+    var heapEndPtr = 0x10
+
+    var EMBEDDED_STRING_ALLOCATION_FAILED_END_OF_HEAP = 0
+
+    init {
+        EMBEDDED_STRING_ALLOCATION_FAILED_END_OF_HEAP = allocateStringNullTerminated("cy_malloc: allocation failure: reached end of heap\n")
+    }
+
     private fun Int.bytes() =  ByteBuffer.allocate(Integer.BYTES).putInt(this).array().reversed().toByteArray()
 
     private fun arrayToBytes(array: FirExpression.Literal.Array): List<Byte> {
@@ -80,10 +90,6 @@ class Allocator {
     fun allocateStringNullTerminated(string: String): Int {
         return prealloc(string.toByteArray() + 0x00)
     }
-
-    var heap = ByteArray(64)
-
-    var heapEndPtr = 0x10
 
     private fun prealloc(bytes: ByteArray, alignment: Byte? = null): Int {
         val baseAddr = heapEndPtr.let {

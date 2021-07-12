@@ -7,6 +7,7 @@ import cyan.compiler.common.diagnostic.DiagnosticPipe
 import cyan.compiler.fir.*
 import cyan.compiler.fir.expression.FirExpression
 import cyan.compiler.fir.extensions.findSymbol
+import cyan.compiler.fir.functions.FirFunctionDeclaration
 import cyan.compiler.lower.ast2fir.Ast2FirLower
 import cyan.compiler.lower.ast2fir.FunctionCallLower
 import cyan.compiler.lower.ast2fir.expression.string.StringContentParser
@@ -50,6 +51,40 @@ object ExpressionLower : Ast2FirLower<CyanExpression, FirExpression> {
                     )
                 )
 
+                if (parentFirNode !is FirExpression.FunctionCall && resolvedReference.resolvedSymbol is FirReflectedElement) {
+                    val makeFunctionBoxRef = FirReference(parentFirNode, "make_function_box", CyanIdentifierExpression("make_empty_function_box"))
+                    val makeFunctionBox = parentFirNode.findSymbol(makeFunctionBoxRef)
+
+                    makeFunctionBox ?: DiagnosticPipe.report (
+                        CompilerDiagnostic (
+                            level = CompilerDiagnostic.Level.Internal,
+                            astNode = astNode,
+                            message = "could not find 'make_function_box' function",
+                            span = astNode.span
+                        )
+                    )
+
+                    val firCall = FirExpression.FunctionCall(parentFirNode, CyanFunctionCall(astNode, emptyArray()))
+                    firCall.callee = makeFunctionBox
+                    firCall.args += listOf (
+                        FirExpression.Literal.String(resolvedReference.resolvedSymbol.name, firCall, CyanStringLiteralExpression(resolvedReference.resolvedSymbol.name)),
+                        FirExpression.Literal.Array (
+                            elements = (resolvedReference.resolvedSymbol as FirFunctionDeclaration).attributes
+                                .map { FirExpression.Literal.String(it.ident.text, firCall, CyanStringLiteralExpression(it.ident.text)) },
+                            parent = firCall,
+                            fromAstNode = CyanArrayExpression(resolvedReference.resolvedSymbol.attributes.map { CyanStringLiteralExpression(it.ident.text) }.toTypedArray())
+                        ),
+                        FirExpression.Literal.Array (
+                            elements = resolvedReference.resolvedSymbol.args
+                                .map { FirExpression.Literal.String(it.name, firCall, CyanStringLiteralExpression(it.name)) },
+                            parent = firCall,
+                            fromAstNode = CyanArrayExpression(resolvedReference.resolvedSymbol.args.map { CyanStringLiteralExpression(it.name) }.toTypedArray())
+                        )
+                    )
+
+                    return firCall
+                }
+
                 resolvedReference
             }
             is CyanArrayExpression -> {
@@ -64,7 +99,7 @@ object ExpressionLower : Ast2FirLower<CyanExpression, FirExpression> {
                     )
                 )
 
-                loweredElements.map(FirExpression::type).toSet().takeIf { it.size == 1 } ?: DiagnosticPipe.report (
+                loweredElements.map(FirExpression::type).toSet().takeIf { it.size <= 1 } ?: DiagnosticPipe.report (
                     CompilerDiagnostic (
                         level = CompilerDiagnostic.Level.Error,
                         message = "Arrays can only contain elements of the same type",
