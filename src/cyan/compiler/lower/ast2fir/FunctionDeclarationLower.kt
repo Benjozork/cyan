@@ -11,7 +11,9 @@ import cyan.compiler.fir.extensions.module
 import cyan.compiler.fir.extensions.resolveType
 import cyan.compiler.fir.functions.FirFunctionArgument
 import cyan.compiler.fir.functions.FirFunctionReceiver
+import cyan.compiler.lower.ast2fir.expression.ExpressionLower
 import cyan.compiler.parser.ast.expression.CyanIdentifierExpression
+import cyan.compiler.parser.ast.function.CyanFunctionAttribute
 import cyan.compiler.parser.ast.function.CyanFunctionDeclaration
 
 object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirFunctionDeclaration> {
@@ -25,17 +27,34 @@ object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirFunct
             name = functionDeclarationName,
             returnType = parentFirNode.resolveType(astNode.signature.typeAnnotation),
             isExtern = astNode.signature.isExtern,
-            args = emptyArray()
+            args = emptyArray(),
+            fromAstNode = astNode
         )
 
         // Add attributes
-        firFunctionDeclaration.attributes += astNode.signature.attributes
-                .map { FirReference(firFunctionDeclaration, it.ident.value, it.ident) }
-                .map { FirFunctionDeclaration.Attribute(it) }
+        for (attribute in astNode.signature.attributes) {
+            firFunctionDeclaration.attributes += when (attribute) {
+                is CyanFunctionAttribute.Keyword -> {
+                    val ref = FirReference(firFunctionDeclaration, attribute.ident.value, attribute.ident)
+
+                    FirFunctionDeclaration.Attribute.Keyword(firFunctionDeclaration, ref, attribute)
+                }
+                is CyanFunctionAttribute.Value -> {
+                    val ref = FirReference(firFunctionDeclaration, attribute.ident.value, attribute.ident)
+
+                    val firAttribute = FirFunctionDeclaration.Attribute.Value(firFunctionDeclaration, ref, attribute)
+
+                    firAttribute.expr = ExpressionLower.lower(attribute.value, firAttribute)
+
+                    firAttribute
+                }
+                else -> error("ast2fir: cannot lower attributes of type ${attribute::class.simpleName}")
+            }
+        }
 
         // Resolve types for AST arguments and assign them to FIR func declaration
         firFunctionDeclaration.args = astNode.signature.args
-                .map { FirFunctionArgument(firFunctionDeclaration, it.name, firFunctionDeclaration.resolveType(it.typeAnnotation, astNode)) }
+                .map { FirFunctionArgument(firFunctionDeclaration, it.name, firFunctionDeclaration.resolveType(it.typeAnnotation, astNode), it) }
                 .toTypedArray()
 
         // Resolve type for AST receiver and add a `this` symbol if needed
@@ -83,11 +102,7 @@ object FunctionDeclarationLower : Ast2FirLower<CyanFunctionDeclaration, FirFunct
         }
 
         // Lower AST function body
-        try {
-            firFunctionDeclaration.block = astNode.source?.let { SourceLower.lower(it, firFunctionDeclaration) } ?: FirSource(firFunctionDeclaration, isInheriting = false)
-        } catch (e: Exception) {
-            parentFirNode.module().functions.functionDeclarations -= firFunctionDeclaration
-        }
+        firFunctionDeclaration.block = astNode.source?.let { SourceLower.lower(it, firFunctionDeclaration) } ?: FirSource(firFunctionDeclaration, isInheriting = false)
 
         return firFunctionDeclaration
     }

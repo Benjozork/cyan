@@ -250,11 +250,17 @@ class CyanModuleParser : Grammar<CyanModule>() {
 
     val block by (lcur * -znws * parser(this::sourceParser) * -znws * rcur) use { CyanSource(t2.statements, span(t1, t3)) }
 
+    // Function attributes
+
+    val valueAttribute   by (referenceParser * -znws * -assign * -znws * expr) use { CyanFunctionAttribute.Value(t1, t2, span(t1, t2)) }
+    val keywordAttribute by (referenceParser)                                  use { CyanFunctionAttribute.Keyword(this, span(this)) }
+
     // Functions
 
-    val functionAttributes by (lsq * separatedTerms(referenceParser, commaParser, false) * rsq) use { t2.map { CyanFunctionAttribute(it) } }
-    val functionReceiver   by (leap * (litType or refType) * -reap * dot)                 use { CyanFunctionReceiver(t2, span(t1, t3)) }
-    val functionArgument   by (referenceParser * -znws * typeSignature)                   use { CyanFunctionArgument(t1.value, t2, span(t1, t2)) }
+    val functionAttribute  by (valueAttribute or keywordAttribute)
+    val functionAttributes by (lsq * separatedTerms(functionAttribute, commaParser, false) * rsq) use { t2 }
+    val functionReceiver   by (leap * (litType or refType) * -reap * dot)                         use { CyanFunctionReceiver(t2, span(t1, t3)) }
+    val functionArgument   by (referenceParser * -znws * typeSignature)                           use { CyanFunctionArgument(t1.value, t2, span(t1, t2)) }
     val functionArguments  by (-leap * separatedTerms(functionArgument, commaParser, true) * reap)
     val functionSignature  by (optional(functionAttributes * -znws) * optional(extern) * -znws * function * -znws * optional(functionReceiver) * referenceParser * -znws * functionArguments * -znws * optional(typeSignature))
             .use {

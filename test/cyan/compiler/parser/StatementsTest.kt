@@ -9,6 +9,7 @@ import cyan.compiler.parser.ast.expression.CyanArrayExpression
 import cyan.compiler.parser.ast.expression.CyanBinaryExpression
 import cyan.compiler.parser.ast.expression.CyanIdentifierExpression
 import cyan.compiler.parser.ast.expression.literal.CyanNumericLiteralExpression
+import cyan.compiler.parser.ast.expression.literal.CyanStringLiteralExpression
 import cyan.compiler.parser.ast.function.*
 import cyan.compiler.parser.ast.operator.CyanBinaryPlusOperator
 import cyan.compiler.parser.ast.types.CyanStructDeclaration
@@ -435,54 +436,166 @@ class StatementsTest {
             )
         )
 
-        @Test fun `one attribute`() = doTest (
-            """
-                [unsafe]
-                function doSomethingWithInt(a: str, b: i64): i32
-            """.trimIndent(),
-            listOf (
-                CyanFunctionDeclaration (
-                    signature = CyanFunctionSignature (
-                        attributes = listOf (
-                            CyanFunctionAttribute(CyanIdentifierExpression("unsafe"))
-                        ),
-                        name = CyanIdentifierExpression("doSomethingWithInt"),
-                        args = listOf (
-                            CyanFunctionArgument("a", CyanTypeAnnotation.Literal(Type.Primitive(CyanType.Str))),
-                            CyanFunctionArgument("b", CyanTypeAnnotation.Literal(Type.Primitive(CyanType.I64)))
-                        ),
-                        typeAnnotation = CyanTypeAnnotation.Literal(Type.Primitive(CyanType.I32)),
-                        isExtern = false
-                    ),
-                    source = null
-                )
-            )
-        )
+       @Nested
+       inner class Attributes {
 
-        @Test fun `multiple attributes`() = doTest (
-            """
-                [unsafe, experimental]
-                function doSomethingWithInt(a: str, b: i64): i32
-            """.trimIndent(),
-            listOf (
-                CyanFunctionDeclaration (
-                    signature = CyanFunctionSignature (
-                        attributes = listOf (
-                            CyanFunctionAttribute(CyanIdentifierExpression("unsafe")),
-                            CyanFunctionAttribute(CyanIdentifierExpression("experimental"))
-                        ),
-                        name = CyanIdentifierExpression("doSomethingWithInt"),
-                        args = listOf (
-                            CyanFunctionArgument("a", CyanTypeAnnotation.Literal(Type.Primitive(CyanType.Str))),
-                            CyanFunctionArgument("b", CyanTypeAnnotation.Literal(Type.Primitive(CyanType.I64)))
-                        ),
-                        typeAnnotation = CyanTypeAnnotation.Literal(Type.Primitive(CyanType.I32)),
-                        isExtern = false
-                    ),
-                    source = null
-                )
-            )
-        )
+           @Test fun `one attribute`() = doTest (
+               """
+                   [unsafe]
+                   function doSomethingWithInt(a: str, b: i64): i32
+               """.trimIndent(),
+               listOf (
+                   CyanFunctionDeclaration (
+                       signature = CyanFunctionSignature (
+                           attributes = listOf (
+                               CyanFunctionAttribute.Keyword(CyanIdentifierExpression("unsafe"))
+                           ),
+                           name = CyanIdentifierExpression("doSomethingWithInt"),
+                           args = listOf (
+                               CyanFunctionArgument("a", CyanTypeAnnotation.Literal(Type.Primitive(CyanType.Str))),
+                               CyanFunctionArgument("b", CyanTypeAnnotation.Literal(Type.Primitive(CyanType.I64)))
+                           ),
+                           typeAnnotation = CyanTypeAnnotation.Literal(Type.Primitive(CyanType.I32)),
+                           isExtern = false
+                       ),
+                       source = null
+                   )
+               )
+           )
+
+           @Test fun `multiple attributes`() = doTest (
+               """
+                   [unsafe, experimental]
+                   function doSomethingWithInt(a: str, b: i64): i32
+               """.trimIndent(),
+               listOf (
+                   CyanFunctionDeclaration (
+                       signature = CyanFunctionSignature (
+                           attributes = listOf (
+                               CyanFunctionAttribute.Keyword(CyanIdentifierExpression("unsafe")),
+                               CyanFunctionAttribute.Keyword(CyanIdentifierExpression("experimental"))
+                           ),
+                           name = CyanIdentifierExpression("doSomethingWithInt"),
+                           args = listOf (
+                               CyanFunctionArgument("a", CyanTypeAnnotation.Literal(Type.Primitive(CyanType.Str))),
+                               CyanFunctionArgument("b", CyanTypeAnnotation.Literal(Type.Primitive(CyanType.I64)))
+                           ),
+                           typeAnnotation = CyanTypeAnnotation.Literal(Type.Primitive(CyanType.I32)),
+                           isExtern = false
+                       ),
+                       source = null
+                   )
+               )
+           )
+
+           @Test fun `one value attribute`() = doTest (
+               """
+                   [displayName = "a function"]
+                   function doSomethingWithInt(a: str, b: i64): i32
+               """.trimIndent(),
+               listOf (
+                   CyanFunctionDeclaration (
+                       signature = CyanFunctionSignature (
+                           attributes = listOf (
+                               CyanFunctionAttribute.Value(CyanIdentifierExpression("displayName"), CyanStringLiteralExpression("a function"))
+                           ),
+                           name = CyanIdentifierExpression("doSomethingWithInt"),
+                           args = listOf (
+                               CyanFunctionArgument("a", CyanTypeAnnotation.Literal(Type.Primitive(CyanType.Str))),
+                               CyanFunctionArgument("b", CyanTypeAnnotation.Literal(Type.Primitive(CyanType.I64)))
+                           ),
+                           typeAnnotation = CyanTypeAnnotation.Literal(Type.Primitive(CyanType.I32)),
+                           isExtern = false
+                       ),
+                       source = null
+                   )
+               )
+           )
+
+           @Test fun `complex value attribute`() = doTest (
+               """
+                   [alternative_names = ["do_something", "some_name"]]
+                   function doSomethingWithInt(a: str, b: i64): i32
+               """.trimIndent(),
+               listOf (
+                   CyanFunctionDeclaration (
+                       signature = CyanFunctionSignature (
+                           attributes = listOf (
+                               CyanFunctionAttribute.Value (
+                                   CyanIdentifierExpression("alternative_names"),
+                                   CyanArrayExpression (
+                                       arrayOf (
+                                           CyanStringLiteralExpression("do_something"),
+                                           CyanStringLiteralExpression("some_name"),
+                                       )
+                                   )
+                               )
+                           ),
+                           name = CyanIdentifierExpression("doSomethingWithInt"),
+                           args = listOf (
+                               CyanFunctionArgument("a", CyanTypeAnnotation.Literal(Type.Primitive(CyanType.Str))),
+                               CyanFunctionArgument("b", CyanTypeAnnotation.Literal(Type.Primitive(CyanType.I64)))
+                           ),
+                           typeAnnotation = CyanTypeAnnotation.Literal(Type.Primitive(CyanType.I32)),
+                           isExtern = false
+                       ),
+                       source = null
+                   )
+               )
+           )
+
+           @Test fun `two value attributes`() = doTest (
+               """
+                   [displayName = "a function", simpleName = "something"]
+                   function doSomethingWithInt(a: str, b: i64): i32
+               """.trimIndent(),
+               listOf (
+                   CyanFunctionDeclaration (
+                       signature = CyanFunctionSignature (
+                           attributes = listOf (
+                               CyanFunctionAttribute.Value(CyanIdentifierExpression("displayName"), CyanStringLiteralExpression("a function")),
+                               CyanFunctionAttribute.Value(CyanIdentifierExpression("simpleName"), CyanStringLiteralExpression("something"))
+                           ),
+                           name = CyanIdentifierExpression("doSomethingWithInt"),
+                           args = listOf (
+                               CyanFunctionArgument("a", CyanTypeAnnotation.Literal(Type.Primitive(CyanType.Str))),
+                               CyanFunctionArgument("b", CyanTypeAnnotation.Literal(Type.Primitive(CyanType.I64)))
+                           ),
+                           typeAnnotation = CyanTypeAnnotation.Literal(Type.Primitive(CyanType.I32)),
+                           isExtern = false
+                       ),
+                       source = null
+                   )
+               )
+           )
+
+           @Test fun `two value attributes with a keyword attribute in between`() = doTest (
+               """
+                   [displayName = "a function", unsafe, simpleName = "something"]
+                   function doSomethingWithInt(a: str, b: i64): i32
+               """.trimIndent(),
+               listOf (
+                   CyanFunctionDeclaration (
+                       signature = CyanFunctionSignature (
+                           attributes = listOf (
+                               CyanFunctionAttribute.Value(CyanIdentifierExpression("displayName"), CyanStringLiteralExpression("a function")),
+                               CyanFunctionAttribute.Keyword(CyanIdentifierExpression("unsafe")),
+                               CyanFunctionAttribute.Value(CyanIdentifierExpression("simpleName"), CyanStringLiteralExpression("something"))
+                           ),
+                           name = CyanIdentifierExpression("doSomethingWithInt"),
+                           args = listOf (
+                               CyanFunctionArgument("a", CyanTypeAnnotation.Literal(Type.Primitive(CyanType.Str))),
+                               CyanFunctionArgument("b", CyanTypeAnnotation.Literal(Type.Primitive(CyanType.I64)))
+                           ),
+                           typeAnnotation = CyanTypeAnnotation.Literal(Type.Primitive(CyanType.I32)),
+                           isExtern = false
+                       ),
+                       source = null
+                   )
+               )
+           )
+
+       }
 
     }
 
