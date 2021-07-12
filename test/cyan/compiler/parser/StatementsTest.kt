@@ -389,6 +389,30 @@ class StatementsTest {
             )
         )
 
+        @Test fun `extern explicit i32 with two args and an attribute`() = doTest (
+            """
+                [unsafe]
+                extern function doSomethingWithInt(a: str, b: i64): i32
+            """.trimIndent(),
+            listOf (
+                CyanFunctionDeclaration (
+                    signature = CyanFunctionSignature (
+                        attributes = listOf (
+                            CyanFunctionAttribute.Keyword(CyanIdentifierExpression("unsafe"))
+                        ),
+                        name = CyanIdentifierExpression("doSomethingWithInt"),
+                        args = listOf (
+                            CyanFunctionArgument("a", CyanTypeAnnotation.Literal(Type.Primitive(CyanType.Str))),
+                            CyanFunctionArgument("b", CyanTypeAnnotation.Literal(Type.Primitive(CyanType.I64)))
+                        ),
+                        typeAnnotation = CyanTypeAnnotation.Literal(Type.Primitive(CyanType.I32)),
+                        isExtern = true
+                    ),
+                    source = null
+                )
+            )
+        )
+
         @Test fun `simple receiver`() = doTest (
             """
                 function (Person).describe() {

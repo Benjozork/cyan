@@ -258,7 +258,7 @@ class CyanModuleParser : Grammar<CyanModule>() {
     val functionReceiver   by (leap * (litType or refType) * -reap * dot)                 use { CyanFunctionReceiver(t2, span(t1, t3)) }
     val functionArgument   by (referenceParser * -znws * typeSignature)                   use { CyanFunctionArgument(t1.value, t2, span(t1, t2)) }
     val functionArguments  by (-leap * separatedTerms(functionArgument, commaParser, true) * reap)
-    val functionSignature  by (optional(functionAttributes) * optional(extern) * -znws * function * -znws * optional(functionReceiver) * referenceParser * -znws * functionArguments * -znws * optional(typeSignature))
+    val functionSignature  by (optional(functionAttributes * -znws) * optional(extern) * -znws * function * -znws * optional(functionReceiver) * referenceParser * -znws * functionArguments * -znws * optional(typeSignature))
             .use {
                 val spanStart = t1?.first()?.span?.fromTokenMatches?.first() ?: t2 ?: t3
                 val spanEnd = t7?.span?.fromTokenMatches?.first() ?: t6.t2
