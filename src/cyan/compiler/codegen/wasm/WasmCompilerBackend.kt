@@ -75,7 +75,8 @@ class WasmCompilerBackend : FirCompilerBackend<Wasm.OrderedElement>() {
             val functionsToEmit = (module as FirModuleRoot).mirModule.functions.functionDeclarations.filter { !it.isExtern }.toMutableList()
 
             // Add imported functions
-            functionsToEmit += module.mirModule.imports.importedSymbols.filterIsInstance<FirFunctionDeclaration>().filter { !it.isExtern }
+            functionsToEmit += module.mirModule.imports.importedSymbols.filterIsInstance<FirFunctionDeclaration>()
+                .filter { !it.isExtern || it.attributes.isNotEmpty() }
 
             // Add derive function impls from declared structs
             functionsToEmit += module.mirModule.derives.deriveItems.flatMap { it.functionImpls.values }

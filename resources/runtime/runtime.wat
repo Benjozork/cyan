@@ -93,8 +93,38 @@
     end
 )
 
-(func $cy_malloc (result i32)
+(func $cy_merge_heap_block_with_previous (param $block_ptr i32) (param $prev_block_ptr i32)
+    (local $new_next_block_ptr i32)
+
+    ;; find new next block ptr
+    local.get $block_ptr
+    i32.const 1
+    i32.add
+    i32.load
+    local.set $new_next_block_ptr
+
+    ;; rewrite prev block nextaddr
+    local.get $prev_block_ptr
+    i32.const 1
+    i32.add
+    local.get $new_next_block_ptr
+    i32.store
+
+    ;; remove block start
+    local.get $block_ptr
+    i32.const 0
+    i32.store8
+
+    local.get $block_ptr
+    i32.const 1
+    i32.add
+    i32.const 0
+    i32.store
+)
+
+(func $cy_malloc (param $size i32) (result i32)
     (local $block_ptr i32)
+    (local $next_block_ptr i32)
 
     global.get $heap_start
     local.set $block_ptr
@@ -114,9 +144,41 @@
             i32.add
             i32.load
 
-            local.set $block_ptr
+            local.tee $block_ptr
+            i32.eqz
+            if $end_of_heap
+                i32.const 1
+                i32.const 16
+                call $cy_str_to_iov_panic
+                i32.const 1
+                i32.const 0
+                call $fd_write
+                unreachable
+            end
 
             br $search
+        end
+        ;; check if size > 60
+        local.get $size
+        i32.const 60
+        i32.gt_u
+        if $multi_block
+            ;; check if next block is free
+            i32.const 1
+            local.get $block_ptr
+            i32.add
+            i32.load
+            local.tee $next_block_ptr
+            i32.load8_u
+            i32.eqz
+            if $next_block_free
+                local.get $next_block_ptr
+                local.get $block_ptr
+                call $cy_merge_heap_block_with_previous
+
+                br $multi_block
+            end
+            unreachable
         end
 
         ;; return block if it is free
@@ -159,6 +221,7 @@
     (local $new_str_ptr i32)
 
     ;; allocate new string
+    i32.const 1
     call $cy_malloc
     local.tee $new_str_ptr
 
@@ -254,8 +317,10 @@
 
     local.get $second
     call $cy_str_len
-    local.set $second_len
+    local.tee $second_len
 
+    local.get $first_len
+    i32.add
     call $cy_malloc
     local.set $new_first_addr
 
@@ -286,9 +351,31 @@
 (func $cy_str_to_iov (param $str i32) (result i32)
     (local $addr i32)
 
+    local.get $str
+    call $cy_str_len
     call $cy_malloc
     i32.const 3
     i32.add
+    local.set $addr
+
+    local.get $addr
+    local.get $str
+    i32.store
+
+    local.get $addr
+    i32.const 4
+    i32.add
+    local.get $str
+    call $cy_str_len
+    i32.store
+
+    local.get $addr
+)
+
+(func $cy_str_to_iov_panic (param $str i32) (result i32)
+    (local $addr i32)
+
+    i32.const 0
     local.set $addr
 
     local.get $addr
@@ -378,9 +465,10 @@
     (local $buf_ptr i32)
     (local $iov_ptr i32)
 
-    ;; local.get $size
+    local.get $size
     call $cy_malloc
     local.set $buf_ptr
+    i32.const 4
     call $cy_malloc
     i32.const 3
     i32.add
