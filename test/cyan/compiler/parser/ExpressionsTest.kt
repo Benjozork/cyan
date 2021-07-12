@@ -32,6 +32,25 @@ class ExpressionsTest {
             assertEquals(expectedExpr.toString(), parser.parseToEnd(source).toString())
 
     @Nested
+    inner class Identifiers {
+
+        @Test fun word() = doTest (
+            """
+                hello
+            """.trimIndent(),
+            CyanIdentifierExpression("hello")
+        )
+
+        @Test fun `word with numbers`() = doTest (
+            """
+                hello32
+            """.trimIndent(),
+            CyanIdentifierExpression("hello32")
+        )
+
+    }
+
+    @Nested
     inner class Primitives {
 
         @Test fun string() = doTest (

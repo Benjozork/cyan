@@ -187,7 +187,7 @@ class CyanModuleParser : Grammar<CyanModule>() {
 
     // Values
 
-    val ident by regexToken("[a-zA-Z_]+")
+    val ident by regexToken("[a-zA-Z_]([a-zA-Z_0-9]+)?")
 
     val numericLiteralParser = NumericLiteralParser(minus)
     val numericalValueParser by numericLiteralParser
@@ -204,10 +204,8 @@ class CyanModuleParser : Grammar<CyanModule>() {
 
     val literalExpressionParser by (numericalValueParser or stringLiteralParser or booleanLiteralParser)
 
-    val emptyArray            by (arraySuffix)                                                       use { CyanArrayExpression(
-        emptyArray(), span(this)
-    ) }
-    val nonEmptyArray         by (lsq * separatedTerms(parser(this::expr), commaParser, true) * rsq) use { CyanArrayExpression(t2.toTypedArray(), span(t1, t3)) }
+    val emptyArray            by (arraySuffix)                                                                       use { CyanArrayExpression(emptyArray(), span(this)) }
+    val nonEmptyArray         by (lsq * -znws * separatedTerms(parser(this::expr), commaParser, true) * -znws * rsq) use { CyanArrayExpression(t2.toTypedArray(), span(t1, t3)) }
     val arrayExpressionParser by (emptyArray or nonEmptyArray)
 
     val parenTerm = (-leap * parser(this::expr) * -reap)
