@@ -1,5 +1,7 @@
 module intrinsics
 
+extern function cy_malloc(size: i32): i32
+
 extern function cy_free(pointer: any): void
 
 extern function cy_str_char_at(string: str, index: i32): i32

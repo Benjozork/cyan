@@ -1,6 +1,8 @@
 module primitive
 
 import intrinsics
+import io
+import wasm
 
 function (str).length(): i32 {
     return cy_str_len(this)
@@ -44,6 +46,46 @@ function (str).contains(other: str): bool {
     }
 
     return match
+}
+
+function (str).substring(from: i32, to: i32): str {
+    let this_length = this.length()
+
+    if (from < 0) {
+        println("str::substring: from < 0")
+        wasm_trap()
+    }
+
+    if (to > this_length - 1) {
+        println("str::substring: to > length - 1")
+        wasm_trap()
+    }
+
+    if (from > to) {
+        println("str::substring: from > to")
+        wasm_trap()
+    }
+
+    let new_string_ptr = cy_malloc(to - from + 1)
+
+    mem_copy(to_pointer(this), new_string_ptr, to - from + 1)
+
+    return pointer_to_str(new_string_ptr)
+}
+
+function (str).startsWith(other: str): bool {
+    var ret = true
+    let len = this.length()
+
+    var idx = 0
+    while idx < this.length() && idx < other.length() {
+        if (this[idx] != other[idx]) {
+            ret = false
+        }
+        idx = idx + 1
+    }
+
+    return ret
 }
 
 function (i32).toString(base: i32): str {
