@@ -7,50 +7,252 @@ import cyan.compiler.common.types.CyanType
 import cyan.compiler.fir.*
 import cyan.compiler.fir.functions.FirFunctionDeclaration
 import cyan.compiler.fir.functions.FirFunctionArgument
-import cyan.compiler.fir.functions.FirFunctionReceiver
-import cyan.compiler.fir.extensions.findSymbol
-import cyan.compiler.fir.extensions.containingScope
 import cyan.compiler.parser.ast.expression.*
 import cyan.compiler.parser.ast.operator.CyanBinaryOperator
 import cyan.compiler.parser.ast.operator.CyanBinaryComparisonOperator
 
 import com.andreapivetta.kolor.lightGray
+import cyan.compiler.parser.ast.function.CyanFunctionCall
+import cyan.compiler.parser.ast.function.CyanFunctionDeclaration
 
-open class FirExpression(override var parent: FirNode, val fromAstNode: CyanExpression) : FirNode {
+abstract class FirExpression(override var parent: FirNode, val fromAstNode: CyanExpression) : FirNode, FirTyped {
 
-    abstract class Literal(override var parent: FirNode, fromAstNode: CyanExpression) : FirExpression(parent, fromAstNode) {
+    abstract class Literal (
+        override var parent: FirNode,
+        private val forType: Type,
+        fromAstNode: CyanExpression
+    ) : FirExpression(parent, fromAstNode) {
 
-        interface Scalar<TValue : Any> {
-            val value: TValue
+        override fun type() = forType
+
+        abstract class Scalar<TValue : Any> (
+            override var parent: FirNode,
+            forType: Type,
+            fromAstNode: CyanExpression
+        ): Literal(parent, forType, fromAstNode) {
+
+            abstract val value: TValue
+
+            override fun allReferredSymbols(): Set<FirResolvedReference> = emptySet()
+
         }
 
-        class Number(override val value: Int, parent: FirNode, fromAstNode: CyanExpression) : Literal(parent, fromAstNode), Scalar<kotlin.Number>
+        class Number (
+            override val value: Int,
+            parent: FirNode,
+            fromAstNode: CyanExpression
+        ) : Scalar<kotlin.Number>(parent, Type.Primitive(CyanType.I32), fromAstNode)
 
-        class String(override val value: kotlin.String, parent: FirNode, fromAstNode: CyanExpression) : Literal(parent, fromAstNode), Scalar<kotlin.String>
+        class String (
+            override val value: kotlin.String,
+            parent: FirNode,
+            fromAstNode: CyanExpression
+        ) : Scalar<kotlin.String>(parent, Type.Primitive(CyanType.Str), fromAstNode)
 
-        class Boolean(override val value: kotlin.Boolean, parent: FirNode, fromAstNode: CyanExpression) : Literal(parent, fromAstNode), Scalar<kotlin.Boolean>
+        class Boolean (
+            override val value: kotlin.Boolean,
+            parent: FirNode,
+            fromAstNode: CyanExpression
+        ) : Scalar<kotlin.Boolean>(parent, Type.Primitive(CyanType.Bool), fromAstNode)
 
-        class Array(val elements: List<FirExpression>, parent: FirNode, fromAstNode: CyanExpression) : Literal(parent, fromAstNode)
+        class Array (
+            val elements: List<FirExpression>,
+            parent: FirNode,
+            fromAstNode: CyanExpression
+        ) : Literal(parent, elements.firstOrNull()?.type()?.asArrayType() ?: Type.Primitive(CyanType.Any, true), fromAstNode) {
 
-        class Struct(val elements: Map<Type.Struct.Property, FirExpression>, val type: Type.Struct, parent: FirNode, fromAstNode: CyanExpression) : Literal(parent, fromAstNode)
+            override fun allReferredSymbols() = elements.flatMap { it.allReferredSymbols() }.toSet()
+
+        }
+
+        class Struct (
+            val elements: Map<Type.Struct.Property, FirExpression>,
+            val type: Type.Struct,
+            parent: FirNode,
+            fromAstNode: CyanExpression
+        ) : Literal(parent, type, fromAstNode) {
+
+            override fun allReferredSymbols() = elements.flatMap { it.value.allReferredSymbols() }.toSet()
+
+        }
 
     }
 
-    class Binary(var lhs: FirExpression, var operator: CyanBinaryOperator, var rhs: FirExpression, parent: FirNode, fromAstNode: CyanExpression) : FirExpression(parent, fromAstNode) {
+    class Binary (
+        var lhs: FirExpression,
+        var operator: CyanBinaryOperator,
+        var rhs: FirExpression,
+        parent: FirNode,
+        fromAstNode: CyanExpression
+    ) : FirExpression(parent, fromAstNode) {
+
         val commonType get() = if (lhs.realExpr.type() == rhs.realExpr.type()) lhs.realExpr.type() else null
+
+        override fun type(): Type {
+            val (lhsType, rhsType) = lhs.type() to rhs.type()
+
+            if (lhsType != rhsType) {
+                DiagnosticPipe.report (
+                    CompilerDiagnostic (
+                        level = CompilerDiagnostic.Level.Error,
+                        message = "binary expressions with different operand types are not yet supported",
+                        astNode = fromAstNode
+                    )
+                )
+            }
+
+            return if (operator is CyanBinaryComparisonOperator) {
+                Type.Primitive(CyanType.Bool, false)
+            } else lhsType
+        }
+
+        override fun allReferredSymbols() = lhs.allReferredSymbols() + rhs.allReferredSymbols()
+
     }
 
-    class MemberAccess(val base: FirExpression, val member: String, parent: FirNode, fromAstNode: CyanExpression) : FirExpression(parent, fromAstNode)
+    class MemberAccess (
+        val base: FirExpression,
+        val member: String,
+        parent: FirNode,
+        fromAstNode: CyanExpression
+    ) : FirExpression(parent, fromAstNode) {
 
-    class ArrayIndex(val base: FirExpression, val index: FirExpression, parent: FirNode, fromAstNode: CyanExpression) : FirExpression(parent, fromAstNode)
+        override fun type(): Type {
+            val baseType = base.type()
+            val memberName = member
 
-    class FunctionCall(parent: FirNode, fromAstNode: CyanExpression) : FirExpression(parent, fromAstNode), FirStatement {
+            return when (baseType) {
+                is Type.Primitive -> DiagnosticPipe.report (
+                    CompilerDiagnostic (
+                        level = CompilerDiagnostic.Level.Error,
+                        message = "Primitives do not have members",
+                        astNode = fromAstNode
+                    )
+                )
+                is Type.Struct -> {
+                    val matchingStructProperty = baseType.properties.firstOrNull { it.name == memberName }
+                        ?: DiagnosticPipe.report (
+                            CompilerDiagnostic (
+                                level = CompilerDiagnostic.Level.Error,
+                                message = "Type '${baseType.name}' does not have a member called '$memberName'",
+                                astNode = fromAstNode,
+                                span = (fromAstNode as CyanMemberAccessExpression).member.span,
+                                note = CompilerDiagnostic.Note("type '${baseType.name}' is defined as follows\n" + "    | ".lightGray() + "$baseType")
+                            )
+                        )
+
+                    matchingStructProperty.type
+                }
+                is Type.Trait -> {
+                    val matchingTraitElement = baseType.elements.firstOrNull { it.name == memberName }
+                        ?: DiagnosticPipe.report (
+                            CompilerDiagnostic (
+                                level = CompilerDiagnostic.Level.Error,
+                                message = "Type '${baseType.name}' does not have a member called '$memberName'",
+                                astNode = fromAstNode,
+                                span = (fromAstNode as CyanMemberAccessExpression).member.span,
+                                note = CompilerDiagnostic.Note("type '${baseType.name}' is defined as follows\n" + "    | ".lightGray() + "$baseType")
+                            )
+                        )
+
+                    matchingTraitElement.returnType
+                }
+                is Type.Self -> {
+                    val resolvedStructType = baseType.resolveIn(this)
+
+                    val matchingStructMember = resolvedStructType.properties.firstOrNull { it.name == memberName }
+                        ?: DiagnosticPipe.report (
+                            CompilerDiagnostic (
+                                level = CompilerDiagnostic.Level.Error,
+                                message = "Type '${resolvedStructType.name}' does not have a member called '$memberName'",
+                                astNode = fromAstNode,
+                                span = (fromAstNode as CyanMemberAccessExpression).member.span,
+                                note = CompilerDiagnostic.Note("type '${resolvedStructType.name}' is defined as follows\n" + "    | ".lightGray() + "$resolvedStructType")
+                            )
+                        )
+
+                    matchingStructMember.type
+                }
+            }
+        }
+
+        override fun allReferredSymbols() = base.allReferredSymbols()
+
+    }
+
+    class ArrayIndex (
+        val base: FirExpression,
+        val index: FirExpression,
+        parent: FirNode,
+        fromAstNode: CyanExpression
+    ) : FirExpression(parent, fromAstNode) {
+
+        override fun type(): Type {
+            val baseExprType = base.type()
+
+            if (!(baseExprType.array || baseExprType == Type.Primitive(CyanType.Str))) {
+                DiagnosticPipe.report (
+                    CompilerDiagnostic (
+                        level = CompilerDiagnostic.Level.Error,
+                        message = "left-hand side of array index expression must refer to an array",
+                        astNode = fromAstNode
+                    )
+                )
+            }
+
+            return baseExprType.asNonArrayType()
+        }
+
+        override fun allReferredSymbols() = base.allReferredSymbols()
+
+    }
+
+    class FunctionCall (
+        parent: FirNode,
+        fromAstNode: CyanFunctionCall,
+    ) : FirExpression(parent, fromAstNode), FirStatement {
 
         lateinit var callee: FirResolvedReference
 
         var receiver: FirExpression? = null
 
-        val args = mutableListOf<FirExpression>()
+        val args = ArgumentsHolder(this, fromAstNode)
+
+        override fun type(): Type {
+            val firFunctionDeclaration = callee.resolvedSymbol as FirFunctionDeclaration
+
+            val functionDeclarationArgsToPassedArgs = (firFunctionDeclaration.args zip args).toMap()
+
+            functionDeclarationArgsToPassedArgs.entries.forEachIndexed { i, (firArg, astArg) -> // Type check args
+                val astArgType = astArg.type()
+
+                if (!(firArg.typeAnnotation accepts astArgType)) {
+                    DiagnosticPipe.report (
+                        CompilerDiagnostic (
+                            level = CompilerDiagnostic.Level.Error,
+                            message = "Type mismatch for argument $i: expected '${firArg.typeAnnotation}', found '${astArgType}'",
+                            astNode = fromAstNode
+                        )
+                    )
+                }
+            }
+
+            return firFunctionDeclaration.returnType
+        }
+
+        override fun allReferredSymbols() = setOf(callee) + args.flatMap { it.allReferredSymbols() }
+
+        class ArgumentsHolder (
+            parent: FirNode,
+            fromAstNode: CyanExpression,
+            val args: MutableList<FirExpression> = mutableListOf()
+        ): FirExpression(parent, fromAstNode), MutableList<FirExpression> by args {
+
+            override fun type() = Type.Primitive(CyanType.Any)
+
+            override fun allReferredSymbols() = args.flatMapTo(mutableSetOf()) { it.allReferredSymbols() }
+
+        }
 
     }
 
@@ -58,181 +260,6 @@ open class FirExpression(override var parent: FirNode, val fromAstNode: CyanExpr
      * Contains the inline expression if an expression was inlined to replace this expression.
      */
     var inlinedExpr: FirExpression? = null
-
-    /**
-     * Infers the type of this FirExpression node.
-     */
-    fun type(): Type {
-         return when (this) {
-             is Literal.Number  -> Type.Primitive(CyanType.I32)
-             is Literal.String  -> Type.Primitive(CyanType.Str)
-             is Literal.Boolean -> Type.Primitive(CyanType.Bool)
-             is FunctionCall -> {
-                 val firFunctionDeclaration = callee.resolvedSymbol as FirFunctionDeclaration
-
-                 val functionDeclarationArgsToPassedArgs = (firFunctionDeclaration.args zip args).toMap()
-
-                 functionDeclarationArgsToPassedArgs.entries.forEachIndexed { i, (firArg, astArg) -> // Type check args
-                     val astArgType = astArg.type()
-
-                     if (!(firArg.typeAnnotation accepts astArgType)) {
-                         DiagnosticPipe.report (
-                             CompilerDiagnostic (
-                                 level = CompilerDiagnostic.Level.Error,
-                                 message = "Type mismatch for argument $i: expected '${firArg.typeAnnotation}', found '${astArgType}'",
-                                 astNode = fromAstNode
-                             )
-                         )
-                     }
-                 }
-
-                 firFunctionDeclaration.returnType
-             }
-             is Literal.Struct -> type
-             is Literal.Array -> elements.first().type().asArrayType()
-             is Binary -> {
-                 val (lhsType, rhsType) = lhs.type() to rhs.type()
-
-                 if (lhsType != rhsType) {
-                     DiagnosticPipe.report (
-                         CompilerDiagnostic (
-                             level = CompilerDiagnostic.Level.Error,
-                             message = "binary expressions with different operand types are not yet supported",
-                             astNode = fromAstNode
-                         )
-                     )
-                 }
-
-                 if (operator is CyanBinaryComparisonOperator) {
-                     Type.Primitive(CyanType.Bool, false)
-                 } else lhsType
-             }
-             is FirResolvedReference -> {
-                 val containingScope = this.containingScope()
-
-                 when (val referee = containingScope?.findSymbol(this.reference())?.resolvedSymbol) {
-                     is FirForStatement.IteratorVariable -> referee.typeAnnotation!!
-                     is FirVariableDeclaration -> referee.initializationExpr.type()
-                     is FirFunctionDeclaration -> {
-                         val functionStruct = referee.findSymbol(FirReference(referee, "Function", CyanIdentifierExpression("Function")))
-                             ?: DiagnosticPipe.report (
-                                 CompilerDiagnostic (
-                                     level = CompilerDiagnostic.Level.Internal,
-                                     astNode = this.fromAstNode,
-                                     message = "Could not find 'Function' struct in scope",
-                                     span = this.fromAstNode.span,
-                                 )
-                             )
-
-                         if (functionStruct.resolvedSymbol !is FirTypeDeclaration.Struct) {
-                             DiagnosticPipe.report (
-                                 CompilerDiagnostic (
-                                     level = CompilerDiagnostic.Level.Internal,
-                                     astNode = this.fromAstNode,
-                                     message = "Found 'Function' in scope, but it was not a struct declaration",
-                                     span = this.fromAstNode.span,
-                                 )
-                             )
-                         }
-
-                         functionStruct.resolvedSymbol.type
-                     }
-                     is FirFunctionArgument -> referee.typeAnnotation
-                     is FirFunctionReceiver -> referee.type
-                     null -> error("cannot find symbol '${text}'")
-                     else -> error("can't infer type of ${referee::class.simpleName}")
-                 }
-             }
-             is MemberAccess -> {
-                 val baseType = base.type()
-                 val memberName = member
-
-                 when (baseType) {
-                     is Type.Primitive -> DiagnosticPipe.report (
-                         CompilerDiagnostic (
-                             level = CompilerDiagnostic.Level.Error,
-                             message = "Primitives do not have members",
-                             astNode = fromAstNode
-                         )
-                     )
-                     is Type.Struct -> {
-                         val matchingStructProperty = baseType.properties.firstOrNull { it.name == memberName }
-                             ?: DiagnosticPipe.report (
-                                 CompilerDiagnostic (
-                                     level = CompilerDiagnostic.Level.Error,
-                                     message = "Type '${baseType.name}' does not have a member called '$memberName'",
-                                     astNode = fromAstNode,
-                                     span = (fromAstNode as CyanMemberAccessExpression).member.span,
-                                     note = CompilerDiagnostic.Note("type '${baseType.name}' is defined as follows\n" + "    | ".lightGray() + "$baseType")
-                                 )
-                             )
-
-                         matchingStructProperty.type
-                     }
-                     is Type.Trait -> {
-                         val matchingTraitElement = baseType.elements.firstOrNull { it.name == memberName }
-                             ?: DiagnosticPipe.report (
-                                 CompilerDiagnostic (
-                                     level = CompilerDiagnostic.Level.Error,
-                                     message = "Type '${baseType.name}' does not have a member called '$memberName'",
-                                     astNode = fromAstNode,
-                                     span = (fromAstNode as CyanMemberAccessExpression).member.span,
-                                     note = CompilerDiagnostic.Note("type '${baseType.name}' is defined as follows\n" + "    | ".lightGray() + "$baseType")
-                                 )
-                             )
-
-                         matchingTraitElement.returnType
-                     }
-                     is Type.Self -> {
-                         val resolvedStructType = baseType.resolveIn(this)
-
-                         val matchingStructMember = resolvedStructType.properties.firstOrNull { it.name == memberName }
-                             ?: DiagnosticPipe.report (
-                                 CompilerDiagnostic (
-                                     level = CompilerDiagnostic.Level.Error,
-                                     message = "Type '${resolvedStructType.name}' does not have a member called '$memberName'",
-                                     astNode = fromAstNode,
-                                     span = (fromAstNode as CyanMemberAccessExpression).member.span,
-                                     note = CompilerDiagnostic.Note("type '${resolvedStructType.name}' is defined as follows\n" + "    | ".lightGray() + "$resolvedStructType")
-                                 )
-                             )
-
-                         matchingStructMember.type
-                     }
-                 }
-             }
-             is ArrayIndex -> {
-                 val baseExprType = base.type()
-
-                 if (!(baseExprType.array || baseExprType == Type.Primitive(CyanType.Str))) {
-                     DiagnosticPipe.report (
-                         CompilerDiagnostic (
-                             level = CompilerDiagnostic.Level.Error,
-                             message = "left-hand side of array index expression must refer to an array",
-                             astNode = fromAstNode
-                         )
-                     )
-                 }
-
-                 baseExprType.asNonArrayType()
-             }
-             else -> error("can't infer type of ${this::class.simpleName}")
-        }
-    }
-
-    override fun allReferredSymbols(): Set<FirResolvedReference> = when (this) {
-        is Literal.Number,
-        is Literal.String,
-        is Literal.Boolean -> emptySet()
-        is FunctionCall -> setOf(callee) + args.flatMap { it.allReferredSymbols() }
-        is Literal.Struct -> elements.flatMap { it.value.allReferredSymbols() }.toSet()
-        is Literal.Array -> elements.flatMap { it.allReferredSymbols() }.toSet()
-        is Binary -> lhs.allReferredSymbols() + rhs.allReferredSymbols()
-        is FirResolvedReference -> setOf(this)
-        is MemberAccess -> base.allReferredSymbols()
-        is ArrayIndex -> base.allReferredSymbols()
-        else -> error("cannot find resolved symbols for expression of type '${this::class.simpleName}'")
-    }
 
     /**
      * Whether or not this expression is pure (doesn't have any side effects on evaluation). For example, an addition of two constants is

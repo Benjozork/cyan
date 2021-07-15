@@ -96,7 +96,7 @@ object FunctionCallLower : Ast2FirLower<CyanFunctionCall, FirNode> {
                 )
             )
 
-            val loweredArg = ExpressionLower.lower(astArg.value, firCall)
+            val loweredArg = ExpressionLower.lower(astArg.value, firCall.args)
             val functionArg = functionSymbol.args[index]
 
             // Check arg value is accepted by type
