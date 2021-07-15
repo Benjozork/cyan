@@ -71,6 +71,18 @@ interface WasmScope : Wasm.OrderedElement {
         pushElement(Wasm.Instruction("i32.eq"))
 
     @WasmInstructionsBuilderDsl
+    val Int32Instructions.ne get() =
+        pushElement(Wasm.Instruction("i32.ne"))
+
+    @WasmInstructionsBuilderDsl
+    val Int32Instructions.and get() =
+        pushElement(Wasm.Instruction("i32.and"))
+
+    @WasmInstructionsBuilderDsl
+    val Int32Instructions.or get() =
+        pushElement(Wasm.Instruction("i32.or"))
+
+    @WasmInstructionsBuilderDsl
     val Int32Instructions.eqz get() =
         pushElement(Wasm.Instruction("i32.eqz"))
 

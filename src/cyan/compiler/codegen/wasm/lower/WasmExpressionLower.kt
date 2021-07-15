@@ -94,20 +94,7 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
                 val fieldIndex = baseStruct.properties.indexOfFirst { it == baseStructField }.takeIf { it >= 0 }
                         ?: error("fir2wasm: base struct field index was -1")
 
-                require (expr.base is FirResolvedReference)
-
-                val baseSymbol = expr.base.resolvedSymbol
-
-                require (
-                    baseSymbol is FirVariableDeclaration || baseSymbol is FirFunctionArgument || baseSymbol is FirFunctionReceiver
-                ) { "fir2wasm: member access is currently only supported on references to local variables, function arguments or function receivers" }
-
-                when (baseSymbol) {
-                    is FirVariableDeclaration -> local.get(context.locals[baseSymbol]!!)
-                    is FirFunctionArgument    -> local.get(baseSymbol.name)
-                    is FirFunctionReceiver    -> local.get("_r")
-                    else -> error("fir2wasm: cannot lower access to a reference to '${baseSymbol::class.simpleName}'")
-                }
+                +context.backend.lowerExpression(expr.base, context)
 
                 val fieldOffset = fieldIndex * 4
 
@@ -118,25 +105,18 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
                 i32.load
             }
             is FirExpression.ArrayIndex -> when (val base = expr.base) {
-                is FirResolvedReference -> {
-                    val originalDeclaration = base.resolvedSymbol
+                is FirResolvedReference -> instructions {
+                    +context.backend.lowerExpression(base, context)
 
-                    require(originalDeclaration is FirVariableDeclaration)
-
-                    val ptr = context.locals[originalDeclaration]
-                        ?: error("fir2wasm: no local generated for '${originalDeclaration.name}'")
-
-                    when (val declType = originalDeclaration.initializationExpr.type()) {
+                    when (val declType = base.type()) {
                         // Arrays of strings, i32s
                         Type.Primitive(CyanType.Str, true),
-                        Type.Primitive(CyanType.I32, true) -> instructions {
-                            local.get(ptr)
+                        Type.Primitive(CyanType.I32, true) -> {
                             +context.backend.lowerExpression(expr.index, context)
                             cy.array_get
                         }
                         // String value
-                        Type.Primitive(CyanType.Str, false) -> instructions {
-                            local.get(ptr)
+                        Type.Primitive(CyanType.Str, false) -> {
                             +context.backend.lowerExpression(expr.index, context)
                             cy.strcharat_as_str
                         }
@@ -162,7 +142,21 @@ object WasmExpressionLower : FirItemLower<WasmLoweringContext, FirExpression, Wa
                         CyanBinaryGreaterOperator       -> i32.gt_u
                         CyanBinaryGreaterEqualsOperator -> i32.ge_u
                         CyanBinaryEqualsOperator        -> i32.eq
-                        else -> error("fir2wasm: cannot lower binary expression with operator '${expr.operator::class.simpleName}'")
+                        CyanBinaryNotEqualsOperator     -> i32.ne
+                        else -> error("fir2wasm: cannot lower binary i32 expression with operator '${expr.operator::class.simpleName}'")
+                    }
+                }
+                Type.Primitive(CyanType.Bool) -> instructions {
+                    +lower(context, expr.lhs)
+                    +lower(context, expr.rhs)
+
+
+                    when (expr.operator) {
+                        CyanBinaryAndOperator           -> i32.and
+                        CyanBinaryOrOperator            -> i32.or
+                        CyanBinaryEqualsOperator        -> i32.eq
+                        CyanBinaryNotEqualsOperator     -> i32.ne
+                        else -> error("fir2wasm: cannot lower binary bool expression with operator '${expr.operator::class.simpleName}'")
                     }
                 }
                 Type.Primitive(CyanType.Str) -> instructions {
